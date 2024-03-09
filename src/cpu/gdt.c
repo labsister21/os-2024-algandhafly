@@ -7,13 +7,12 @@
  */
 struct GlobalDescriptorTable global_descriptor_table = {
     .table = {
-        {
+        { 
             .segment_low = 0,
             .base_low = 0,
             .base_mid = 0,
             .type_bit = 0,
-            // .non_system = 0,
-            .descriptor_type = 0,
+            .non_system = 0,
             .descriptor_privilege_level = 0,
             .segment_present = 0,
             .segment_limit_high = 0,
@@ -21,39 +20,37 @@ struct GlobalDescriptorTable global_descriptor_table = {
             .code_segment = 0,
             .default_operation_size = 0,
             .granularity = 0,
-            .base_high = 0,
+            .base_high = 0
         },
         {
             .segment_low = 0xFFFFF,
             .base_low = 0,
             .base_mid = 0,
             .type_bit = 0b1010,
-            // .non_system = 1,
-            .descriptor_type = 0,
+            .non_system = 1,
             .descriptor_privilege_level = 0,
             .segment_present = 1,
             .segment_limit_high = 0xF,
-            .available = 0,
-            .code_segment = 0,
+            .available = 1,
+            .code_segment = 1,
             .default_operation_size = 1,
             .granularity = 1,
-            .base_high = 0,
+            .base_high = 0
         },
         {
             .segment_low = 0xFFFFF,
             .base_low = 0,
             .base_mid = 0,
             .type_bit = 0b0010,
-            // .non_system = 1,
-            .descriptor_type = 1,
+            .non_system = 1,
             .descriptor_privilege_level = 0,
             .segment_present = 1,
             .segment_limit_high = 0xF,
-            .available = 0,
+            .available = 1,
             .code_segment = 0,
             .default_operation_size = 1,
             .granularity = 1,
-            .base_high = 0,
+            .base_high = 0
         }
     }
 };

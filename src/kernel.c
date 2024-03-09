@@ -3,15 +3,18 @@
 #include "header/cpu/gdt.h"
 #include "header/kernel-entrypoint.h"
 #include "header/text/framebuffer.h"
+#include "header/text/stringdrawer.h"
 
 void kernel_setup(void) {
-    framebuffer_clear();
-    framebuffer_write(3, 12, 'k', 0, 0xF);
-    framebuffer_write(3, 13, 'o', 0, 0xF);
-    framebuffer_write(3, 14, 'd', 0, 0xF);
-    framebuffer_write(3, 15, 'o', 0, 0xF);
-    framebuffer_write(3, 16, 'k', 0, 0xF);
-    framebuffer_write(3, 17, '!', 0, 0xF);
-    framebuffer_set_cursor(3, 18);
+    // framebuffer_clear();
+    // drawWelcomeScreen();
+    // framebuffer_set_cursor(79, 24);
+
+    load_gdt(&_gdt_gdtr);
+    // pic_remap();
+    // initialize_idt();
+    // framebuffer_clear();
+    // framebuffer_set_cursor(0, 0);
+    // __asm__("int $0x4");
     while (true);
 }
