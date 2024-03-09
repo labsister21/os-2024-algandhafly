@@ -1,6 +1,6 @@
 #include "header/interrupt/interrupt.h"
 #include "header/cpu/portio.h"
-#include "header/text/framebuffer.h"
+#include "header/text/stringdrawer.h"
 
 
 void io_wait(void) {
@@ -42,7 +42,7 @@ void main_interrupt_handler(struct InterruptFrame frame) {
     switch (frame.int_number) {
         
     }
-    // Test
-    pic_ack(frame.int_number);
-    drawTextWhite("Interrupt!", 2, 2);
+    
+    while(true);
+    
 }
