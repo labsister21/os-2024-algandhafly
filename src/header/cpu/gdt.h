@@ -19,11 +19,19 @@ extern struct GDTR _gdt_gdtr;
  * Struct defined exactly as Intel Manual Segment Descriptor definition (Figure 3-8 Segment Descriptor).
  * Manual can be downloaded at www.intel.com/content/www/us/en/architecture-and-technology/64-ia-32-architectures-software-developer-vol-3a-part-1-manual.html/ 
  *
- * @param segment_low  16-bit lower-bit segment limit
- * @param base_low     16-bit lower-bit base address
- * @param base_mid     8-bit middle-bit base address
- * @param type_bit     4-bit contain type flags
- * @param non_system   1-bit contain system
+ * @param segment_low                   16-bit lower-bit segment limit
+ * @param base_low                      16-bit lower-bit base address
+ * @param base_mid                      8-bit  middle-bit base address
+ * @param type_bit                      4-bit  contain type flags
+ * @param non_system                    1-bit  contain system
+ * @param descriptor_privilege_level    2-bit  DPL
+ * @param segment_present               1-bit  P
+ * @param segment_limit_high            4-bit  LIMIT
+ * @param available                     1-bit  AVL
+ * @param code_segment                  1-bit  L
+ * @param default_operation_size        1-bit  D/B
+ * @param granularity                   1-bit  G
+ * @param base_high                     8-bit  BASE
  */
 struct SegmentDescriptor {
     // First 32-bit

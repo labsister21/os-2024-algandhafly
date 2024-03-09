@@ -35,9 +35,6 @@ struct IDTGate {
     uint16_t offset_low;
     uint16_t segment;
 
-    // TODO : Implement
-
-
     // Next 16-bit (Bit 32 to 47)
     uint8_t _reserved: 5;
     uint8_t _r_bit_1: 3;
