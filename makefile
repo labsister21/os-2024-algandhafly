@@ -45,6 +45,7 @@ kernel:
 	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/text/stringdrawer.c -o $(OUTPUT_FOLDER)/text/stringdrawer.o
 	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/interrupt/interrupt.c -o $(OUTPUT_FOLDER)/interrupt/interrupt.o
 	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/interrupt/idt.c -o $(OUTPUT_FOLDER)/interrupt/idt.o
+	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/driver/keyboard.c -o $(OUTPUT_FOLDER)/driver/keyboard.o
 	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/driver/disk.c -o $(OUTPUT_FOLDER)/driver/disk.o
 	@$(LIN) $(LFLAGS) bin/*.o bin/cpu/*.o bin/interrupt/*.o bin/text/*.o bin/driver/*.o -o $(OUTPUT_FOLDER)/kernel
 	@rm -f *.o

@@ -7,6 +7,7 @@
 #include "header/interrupt/interrupt.h"
 #include "header/interrupt/idt.h"
 #include "header/driver/disk.h"
+#include "header/driver/keyboard.h"
 #include "header/filesystem/fat32.h"
 
 
@@ -21,17 +22,34 @@ void kernel_setup(void) {
     // framebuffer_set_cursor(79, 24);
 
     // Milestone 1.2
+    // load_gdt(&_gdt_gdtr);
+    // pic_remap();
+    // initialize_idt();
+    // framebuffer_clear();
+    // framebuffer_set_cursor(0, 0);
+    // __asm__("int $0x4");
+
+    // Milestone 1.3
     load_gdt(&_gdt_gdtr);
     pic_remap();
     initialize_idt();
+    activate_keyboard_interrupt();
     framebuffer_clear();
     framebuffer_set_cursor(0, 0);
-    __asm__("int $0x4");
+        
+    int col = 0;
+    keyboard_state_activate();
+    while (true) {
+         char c;
+         get_keyboard_buffer(&c);
+         if (c) {
+            framebuffer_write(0, col++, c, 0xF, 0);
+            framebuffer_set_cursor(0, col);
+         }
+    }
 
 
-
-
-
+    // Milestone 1.4
     // load_gdt(&_gdt_gdtr);
     // pic_remap();
     // activate_keyboard_interrupt();
