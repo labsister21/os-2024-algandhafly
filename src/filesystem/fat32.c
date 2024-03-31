@@ -1,6 +1,3 @@
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
 #include "header/stdlib/string.h"
 #include "header/filesystem/fat32.h"
 #include "header/driver/disk.h"
@@ -162,7 +159,33 @@ int8_t read_directory(struct FAT32DriverRequest request){
  * @return Error code: 0 success - 1 not a file - 2 not enough buffer - 3 not found - -1 unknown
  */
 int8_t read(struct FAT32DriverRequest request){
-    
+    read_clusters(&fat32driver_state.dir_table_buf, request.parent_cluster_number, 1);
+    struct FAT32DirectoryEntry *table = fat32driver_state.dir_table_buf.table;
+
+    for(uint8_t i = 1; i < DIRECTORY_TABLE_SIZE;i++){
+        // If name same or extension same
+        if(!memcmp(table[i].name,request.name,8) && !memcmp(table[i].ext,request.ext,3)){
+            // Check if it's a file or not
+            if(table[i].attribute == 1){
+                return 1; 
+            }
+            // Check if the request has enough buffer size
+            if(request.buffer_size < table[i].filesize){
+                return 2;
+            }
+            // Load the requested buffer
+            uint16_t count_cluster = (table[i].filesize + CLUSTER_SIZE - 1) / CLUSTER_SIZE; // Rounded-up division
+            uint16_t cluster = table[i].cluster_low;
+            for(uint16_t j=0;j<count_cluster;j++){
+                read_clusters(request.buf + j * CLUSTER_SIZE,cluster,1);
+                cluster = fat32driver_state.fat_table.cluster_map[cluster];
+            }
+
+            return 0;
+        }
+    }   
+    // Not found
+    return 0;
 }
 
 /**
