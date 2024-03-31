@@ -16,18 +16,24 @@ CFLAGS        = $(DEBUG_CFLAG) $(STRIP_CFLAG) -m32 -c -I$(SOURCE_FOLDER)
 AFLAGS        = -f elf32 -g -F dwarf
 LFLAGS        = -T $(SOURCE_FOLDER)/linker.ld -melf_i386
 
+DISK_NAME = storage
+
 run: all
-	@qemu-system-i386 -s -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso
+	@qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso -no-reboot -d cpu_reset,int
+
+disk:
+	@qemu-img create -f raw $(OUTPUT_FOLDER)/$(DISK_NAME).bin 4M
+
 all: build
 build: iso
 clean:
-	rm -rf $(OUTPUT_FOLDER)/*.o $(OUTPUT_FOLDER)/*.iso $(OUTPUT_FOLDER)/kernel $(OUTPUT_FOLDER)/cpu $(OUTPUT_FOLDER)/interrupt $(OUTPUT_FOLDER)/stdlib $(OUTPUT_FOLDER)/text
+	rm -rf $(OUTPUT_FOLDER)/*.o $(OUTPUT_FOLDER)/*.iso $(OUTPUT_FOLDER)/kernel $(OUTPUT_FOLDER)/cpu $(OUTPUT_FOLDER)/interrupt $(OUTPUT_FOLDER)/stdlib $(OUTPUT_FOLDER)/text $(OUTPUT_FOLDER)/driver
 
 
 
 kernel:
 	@echo Linking object files and generate elf32...
-	@mkdir -p $(OUTPUT_FOLDER)/cpu $(OUTPUT_FOLDER)/interrupt $(OUTPUT_FOLDER)/stdlib $(OUTPUT_FOLDER)/text
+	@mkdir -p $(OUTPUT_FOLDER)/cpu $(OUTPUT_FOLDER)/interrupt $(OUTPUT_FOLDER)/stdlib $(OUTPUT_FOLDER)/text $(OUTPUT_FOLDER)/driver
 	
 	@$(ASM) $(AFLAGS) $(SOURCE_FOLDER)/kernel-entrypoint.s -o $(OUTPUT_FOLDER)/kernel-entrypoint.o
 	@$(ASM) $(AFLAGS) $(SOURCE_FOLDER)/interrupt/intsetup.s -o $(OUTPUT_FOLDER)/interrupt/intsetup.o
@@ -39,7 +45,8 @@ kernel:
 	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/text/stringdrawer.c -o $(OUTPUT_FOLDER)/text/stringdrawer.o
 	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/interrupt/interrupt.c -o $(OUTPUT_FOLDER)/interrupt/interrupt.o
 	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/interrupt/idt.c -o $(OUTPUT_FOLDER)/interrupt/idt.o
-	@$(LIN) $(LFLAGS) bin/*.o bin/cpu/*.o bin/interrupt/*.o bin/text/*.o -o $(OUTPUT_FOLDER)/kernel
+	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/driver/disk.c -o $(OUTPUT_FOLDER)/driver/disk.o
+	@$(LIN) $(LFLAGS) bin/*.o bin/cpu/*.o bin/interrupt/*.o bin/text/*.o bin/driver/*.o -o $(OUTPUT_FOLDER)/kernel
 	@rm -f *.o
 	@echo Linking object files and generate elf32 finished!
 

@@ -24,7 +24,7 @@ uint16_t char_to_color(char c);
 
 void drawBg(uint16_t bgColor, int y, int x);
 
-void drawBgFromStringList(char** stringList);
+void drawBgFromStringList(const char** stringList);
 
 void drawTextWhite(char* string, int y, int x);
 

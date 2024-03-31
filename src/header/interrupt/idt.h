@@ -73,8 +73,8 @@ extern struct InterruptDescriptorTable interrupt_descriptor_table;
  * @param size      size of IDT
  */
 struct IDTR {
-    struct InterruptDescriptorTable *address;
     uint16_t size;
+    struct InterruptDescriptorTable *address;
 } __attribute__((packed));
 
 

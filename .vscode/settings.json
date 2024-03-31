@@ -14,6 +14,10 @@
         "txtdrawer.h": "c",
         "interrupt.h": "c",
         "stringdrawer.h": "c",
-        "idt.h": "c"
+        "idt.h": "c",
+        "disk.h": "c",
+        "*.tcc": "c",
+        "typeinfo": "c",
+        "fat32.h": "c"
     },
 }

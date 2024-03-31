@@ -16,7 +16,7 @@ uint16_t char_to_color(char c){
 void drawBg(uint16_t bgColor, int y, int x){
     framebuffer_write(y, x, ' ', Black, bgColor);
 }
-void drawBgFromStringList(char* stringList[]){
+void drawBgFromStringList(const char* stringList[]){
     for(int i = 0; i < HEIGHT; i++){
         for(int j = 0; j < WIDTH; j++){
             drawBg(char_to_color(stringList[i][j]), i, j);
