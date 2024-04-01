@@ -249,18 +249,20 @@ int8_t write(struct FAT32DriverRequest request){
     table[directory_location].cluster_low = locations[0] & 0xFFFF;
     table[directory_location].cluster_high = (locations[0] >> 16) & 0xFFFF;
 
-    // Create whether file or folder
 
+    // === Create whether file or folder ===
     // Requested only want folder
     if(request.buffer_size == 0){
         table[directory_location].attribute = 1;
-        // Initializy new directory table with locations[0] as it's parent
-        init_directory_table(request.buf,request.name,locations[0]); //WHY?
+
+        // Initializ new directory table with locations[0] as it's parent
+        init_directory_table(request.buf,request.name,locations[0]); 
 
     }
     // Requested only want file
     else{
         memcpy(table[directory_location].ext,request.ext,3);
+
         // Iterate locations
         for(uint8_t j = 0; j < cluster_count;j++){
             // Write requested buffer into each location
@@ -290,5 +292,103 @@ int8_t write(struct FAT32DriverRequest request){
  * @return Error code: 0 success - 1 not found - 2 folder is not empty - -1 unknown
  */
 int8_t delete(struct FAT32DriverRequest request){
+    read_clusters(&fat32driver_state.dir_table_buf, request.parent_cluster_number, 1);
+    struct FAT32DirectoryEntry *table = fat32driver_state.dir_table_buf.table;
+
+    /**
+     * Search the requested folder / file in directory table
+    */
+    int designated_index = -1;
+    bool isFound = false;
+    bool isFolder = false;
+    int idx = 0;
+    // Iterate directory table
+    while(!isFound && idx < DIRECTORY_TABLE_SIZE){
+        // If the same name existed
+        if(memcmp(table[idx].name,request.name,8)){
+            // If it's a folder
+            if(table[idx].attribute){
+                isFolder = true;
+                designated_index = idx;
+                isFound = true;
+            } 
+            // If it's a file and has the same extension
+            else if (memcmp(table[idx].ext,request.ext,3)){
+                isFolder = false;
+                designated_index = idx;
+                isFound = true;
+            }
+        }
+        idx++;
+    }
+    // If the requested file / folder doesn't exist
+    if(!isFound){
+        return 1;
+    }
+
+    /**
+     * Deletion of the requested file / folder
+    */
+
+    // Folder Deletion
+    if(isFolder){
+        /**
+         * Check if the folder's directory table has folder / file
+        */
+
+        // Accessing the folder's directory table
+        struct FAT32DirectoryTable dt;
+        read_clusters(&dt,table[designated_index].cluster_low,1);
+
+        // Iterate the folder's directory table
+        for(int i=0;i<DIRECTORY_TABLE_SIZE;i++){
+            // If there exists an entry that is not empty
+            if(dt.table[i].user_attribute == UATTR_NOT_EMPTY){
+                return 2;
+            }
+        }
+
+        // Set the entry into empty
+        fat32driver_state.fat_table.cluster_map[table[designated_index].cluster_low] = 0;
+        table[designated_index].user_attribute = !UATTR_NOT_EMPTY;
+        table[designated_index].undelete = true; // For enabling restoration
+
+        // Rewrite the clusters back into storage
+        write_clusters(&fat32driver_state.fat_table,1,1);
+        write_clusters(&fat32driver_state.dir_table_buf,request.parent_cluster_number,1);
+        return 0;
+    }
+
+    // File Deletion
+    else {
+        /**
+         * Clear the file's partitioned clusters in File Allocation Table
+        */
+
+        // Enumerate all the used clusters into used_clusters list
+        int cluster_amount = (table[designated_index].filesize + CLUSTER_SIZE - 1) / 2;
+        uint16_t used_clusters[cluster_amount];
+        uint16_t current_cluster = table[designated_index].cluster_low;
+        int idx = 0;
+        while(current_cluster != FAT32_FAT_END_OF_FILE){
+            used_clusters[idx] = current_cluster;
+            current_cluster = fat32driver_state.fat_table.cluster_map[current_cluster];
+            idx++;
+        }
+
+        // Set the cluster_map of used_cluster into 0
+        for(int i=0;i<cluster_amount;i++){
+            fat32driver_state.fat_table.cluster_map[used_clusters[i]] = 0;
+        }
+
+        // Set the entry into empty
+        table[designated_index].user_attribute = !UATTR_NOT_EMPTY;
+        table[designated_index].undelete = true; // For enabling restoration
+
+        // Rewrite the clusters back into storage
+        write_clusters(&fat32driver_state.fat_table,1,1);
+        write_clusters(&fat32driver_state.dir_table_buf,request.parent_cluster_number,1);
+        return 0;
+    }
 
 }
