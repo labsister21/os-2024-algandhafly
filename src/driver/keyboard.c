@@ -23,6 +23,7 @@ const char keyboard_scancode_1_to_ascii_map[256] = {
       0,    0,   0,   0,   0,   0,   0,   0,    0,   0,   0,    0,    0,   0,    0,    0,
 };
 
+
 struct KeyboardDriverState keyboard_state = {
     .read_extended_mode = false,
     .keyboard_input_on = false,
@@ -56,7 +57,20 @@ void keyboard_isr(void){
 
     if(keyboard_state.keyboard_input_on){
         char c = keyboard_scancode_1_to_ascii_map[scan_code];
-        
+
+
+        /**
+         * Debugging purpose
+        */
+        // int col = 0;
+        // framebuffer_clear();
+        // while (scan_code > 0) {
+        //     framebuffer_write(20, col++, (scan_code % 10) + '0', 0xF, 0);
+        //     scan_code /= 10;
+        // }
+
+
+
         // Handle shift
         if(keyboard_state.was_shift && c >= 'a' && c <= 'z') c -= 0x20;
         if(scan_code == 0x2A) keyboard_state.was_shift = true;
@@ -64,7 +78,7 @@ void keyboard_isr(void){
           keyboard_state.was_shift = false;
           pic_ack(IRQ_KEYBOARD);
           return;
-        }
+        }   
         
         keyboard_state.keyboard_buffer = c;
     }

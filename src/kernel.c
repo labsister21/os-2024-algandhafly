@@ -30,39 +30,43 @@ void kernel_setup(void) {
     // __asm__("int $0x4");
 
     // === Milestone 1.3 ===
-    // load_gdt(&_gdt_gdtr);
-    // pic_remap();
-    // initialize_idt();
-    // activate_keyboard_interrupt();
-    // framebuffer_clear();
-    // framebuffer_set_cursor(0, 0);
+    load_gdt(&_gdt_gdtr);
+    pic_remap();
+    initialize_idt();
+    activate_keyboard_interrupt();
+    framebuffer_clear();
+    framebuffer_set_cursor(0, 0);
         
-    // int col = 0;
-    // keyboard_state_activate();
-    // while (true) {
-    //      char c;
-    //      get_keyboard_buffer(&c);
-    //      if (c) {
-    //         framebuffer_write(0, col++, c, 0xF, 0);
-    //         framebuffer_set_cursor(0, col);
-    //      }
-    // }
+    int col = 0;
+    keyboard_state_activate();
+    while (true) {
+         char c;
+         get_keyboard_buffer(&c);
+         if (c == '\b') {
+            if (col == 0) continue;
+            framebuffer_write(0, --col, ' ', 0xF, 0);
+            framebuffer_set_cursor(0, col);
+         } else if (c) {
+            framebuffer_write(0, col++, c, 0xF, 0);
+            framebuffer_set_cursor(0, col);
+         }
+    }
 
 
     // === Milestone 1.4 ===
-    load_gdt(&_gdt_gdtr);
-    pic_remap();
-    activate_keyboard_interrupt();
-    initialize_idt();
+    // load_gdt(&_gdt_gdtr);
+    // pic_remap();
+    // activate_keyboard_interrupt();
+    // initialize_idt();
 
-    struct BlockBuffer b;
-    for (int i = 0; i < 512; i++) b.buf[i] = 3;
-    write_blocks(&b, 0, 1);
+    // struct BlockBuffer b;
+    // for (int i = 0; i < 512; i++) b.buf[i] = 3;
+    // write_blocks(&b, 0, 1);
 
-    struct BlockBuffer b2;
-    read_blocks(&b2, 0, 1);
-    for (int i = 0 ; i < 128; i++) b2.buf[i] *= 2;
-    write_blocks(&b2, 0, 1);
+    // struct BlockBuffer b2;
+    // read_blocks(&b2, 0, 1);
+    // for (int i = 0 ; i < 128; i++) b2.buf[i] *= 2;
+    // write_blocks(&b2, 0, 1);
 
     while (true);
 }
