@@ -71,13 +71,15 @@ void keyboard_isr(void){
 
     if(keyboard_state.keyboard_input_on){
         int key_down_code = scan_code % (0b10000000);
+        
 
         // handle shift pressing
-        if (key_down_code == 0x2A) {
+        if (key_down_code == 0x2A || key_down_code == 0x36) {
             keyboard_state.was_shift = true;
             pic_ack(IRQ_KEYBOARD);
             return;
-        } else if (key_down_code == 0x2A + 0b10000000) {
+
+        } else if (key_down_code == 0x2A + 0b10000000 || key_down_code == 0x36 + 0b10000000) {
             keyboard_state.was_shift = false;
             pic_ack(IRQ_KEYBOARD);
             return;

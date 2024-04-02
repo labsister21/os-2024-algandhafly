@@ -11,6 +11,20 @@
 #include "header/filesystem/fat32.h"
 
 
+/**
+ * Keyboard havent handle enter key perfectly:
+ * - Not handling edge cases
+ * 
+*/
+
+char frame[WIDTH][HEIGHT];
+
+void handleEnterKey(int *row, int *col) {
+    *row += 1;
+    *col = 0;
+    framebuffer_set_cursor(*row, *col);
+}
+
 void kernel_setup(void) {
     
     // === Milestone 0 ===
@@ -37,18 +51,37 @@ void kernel_setup(void) {
     framebuffer_clear();
     framebuffer_set_cursor(0, 0);
         
-    int col = 0;
+    int col = 0, row = 0;
     keyboard_state_activate();
     while (true) {
          char c;
          get_keyboard_buffer(&c);
          if (c == '\b') {
-            if (col == 0) continue;
-            framebuffer_write(0, --col, ' ', 0xF, 0);
-            framebuffer_set_cursor(0, col);
-         } else if (c) {
-            framebuffer_write(0, col++, c, 0xF, 0);
-            framebuffer_set_cursor(0, col);
+            if (col == 0 && row == 0) continue;
+
+            if (col == 0 && row > 0) {
+                row--;
+                col = 79;
+            } else {
+                col--;
+            }
+
+            framebuffer_write(row, col, ' ', 0xF, 0);
+            framebuffer_set_cursor(row, col);
+
+
+
+         } else if (c == '\n') {
+            handleEnterKey(&row, &col);
+         }  else if (c) {
+            framebuffer_write(row, col++, c, 0xF, 0);
+            framebuffer_set_cursor(row, col);
+         }
+
+         if (col == 80) {
+            col = 0;
+            row++;
+            framebuffer_set_cursor(row, col);
          }
     }
 
