@@ -34,6 +34,7 @@ struct KeyboardDriverState {
     bool keyboard_input_on;
     char keyboard_buffer;
     bool was_shift;
+    bool caps_lock_on;
 } __attribute((packed));
 extern struct KeyboardDriverState keyboard_state;
 
