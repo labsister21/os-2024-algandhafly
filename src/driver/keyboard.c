@@ -57,6 +57,18 @@ void get_keyboard_buffer(char *buf){
 void keyboard_isr(void){
     uint8_t scan_code = in(KEYBOARD_DATA_PORT);
 
+    // handle shift pressing
+    if (scan_code == 0x2A || scan_code == 0x36) {
+        keyboard_state.was_shift = true;
+        pic_ack(IRQ_KEYBOARD);
+        return;
+
+    } else if (scan_code == 0x2A + 0b10000000 || scan_code == 0x36 + 0b10000000) {
+        keyboard_state.was_shift = false;
+        pic_ack(IRQ_KEYBOARD);
+        return;
+    }
+
     // Ignore "key up" scancodes
     if (scan_code & 0x80) {
         pic_ack(IRQ_KEYBOARD);
@@ -73,17 +85,7 @@ void keyboard_isr(void){
         int key_down_code = scan_code % (0b10000000);
         
 
-        // handle shift pressing
-        if (key_down_code == 0x2A || key_down_code == 0x36) {
-            keyboard_state.was_shift = true;
-            pic_ack(IRQ_KEYBOARD);
-            return;
 
-        } else if (key_down_code == 0x2A + 0b10000000 || key_down_code == 0x36 + 0b10000000) {
-            keyboard_state.was_shift = false;
-            pic_ack(IRQ_KEYBOARD);
-            return;
-        }
 
 
         if (key_down_code <= 55 && key_down_code >= 30) {
@@ -92,7 +94,7 @@ void keyboard_isr(void){
 
         // handle pressing shift with other key
         if (keyboard_state.was_shift) {
-            scan_code = (scan_code + 128)%256;
+            scan_code = (scan_code + 128) % 256;
         }
 
         char c = keyboard_scancode_1_to_ascii_map[scan_code];
