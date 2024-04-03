@@ -31,3 +31,52 @@ void framebuffer_clear(void) {
         }
     }
 }
+
+void framebuffer_write_length(uint8_t row, uint8_t col, const char* str, size_t length, uint8_t fg, uint8_t bg) {
+    if (length == 0) return;
+    size_t i = row;
+    size_t j = col;
+    size_t str_pos = 0;
+    while(i < HEIGHT && j < WIDTH && str_pos < length) {
+        framebuffer_write(i, j, str[str_pos], fg, bg);
+        str_pos++;
+        j++;
+        if (j == WIDTH) {
+            j = 0;
+            i++;
+        }
+    }
+}
+
+void framebuffer_write_int(uint8_t row, uint8_t col, int num, uint8_t fg, uint8_t bg) {
+    if(num == 0) {
+        framebuffer_write(row, col, '0', fg, bg);
+        return;
+    }
+    char str[32];
+    size_t i = 0;
+    bool is_negative = false;
+    if(num < 0) {
+        num = -num;
+        is_negative = true;
+    }
+    while(num > 0) {
+        str[i] = (char)(num % 10 + '0');
+        num /= 10;
+        i++;
+    }
+    
+    char fliped_str[i+1];
+    if(is_negative) {
+        fliped_str[0] = '-';
+        i++;
+        for(size_t j = 1; j < i; j++) {
+            fliped_str[j] = str[i-j-1];
+        }
+    } else {
+        for(size_t j = 0; j < i; j++) {
+            fliped_str[j] = str[i-j-1];
+        }
+    }
+    framebuffer_write_length(row, col, fliped_str, i, fg, bg);
+}

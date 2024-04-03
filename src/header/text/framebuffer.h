@@ -64,4 +64,26 @@ void framebuffer_set_cursor(uint8_t r, uint8_t c);
  */
 void framebuffer_clear(void);
 
+/**
+ * Set framebuffer characters and color until length.
+ * @param row Vertical location (index start 0)
+ * @param col Horizontal location (index start 0)
+ * @param c   Character
+ * @param c   Length
+ * @param fg  Foreground / Character color
+ * @param bg  Background color
+ */
+void framebuffer_write_length(uint8_t row, uint8_t col, const char* str, size_t length, uint8_t fg, uint8_t bg);
+
+/**
+ * Set framebuffer characters and color until length.
+ * @param row Vertical location (index start 0)
+ * @param col Horizontal location (index start 0)
+ * @param num integer
+ * @param fg  Foreground / Character color
+ * @param bg  Background color
+ */
+void framebuffer_write_int(uint8_t row, uint8_t col, int num, uint8_t fg, uint8_t bg);
+
+
 #endif

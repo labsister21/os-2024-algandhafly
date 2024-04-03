@@ -24,7 +24,7 @@ struct FAT32DriverState fat32driver_state;
  * @return uint32_t Logical Block Address
  */
 uint32_t cluster_to_lba(uint32_t cluster){
-    return cluster * CLUSTER_SIZE;
+    return cluster * CLUSTER_BLOCK_COUNT;
 }
 
 /**
@@ -51,7 +51,6 @@ void init_directory_table(struct FAT32DirectoryTable *dir_table, char *name, uin
 
 
     fat32driver_state.fat_table.cluster_map[parent_dir_cluster] = FAT32_FAT_END_OF_FILE; //Cluster menyimpan folder
-    write_clusters(&fat32driver_state.fat_table, 1, 1); // WHY?!?!?
 }
 
 /**
@@ -139,9 +138,9 @@ int8_t read_directory(struct FAT32DriverRequest request){
     read_clusters(&fat32driver_state.dir_table_buf, request.parent_cluster_number, 1);
     struct FAT32DirectoryEntry *table = fat32driver_state.dir_table_buf.table;
     
-    for (uint8_t i = 1; i < DIRECTORY_TABLE_SIZE; i++) {
+    for (uint8_t i = 0; i < DIRECTORY_TABLE_SIZE; i++) {
         if (memcmp(table[i].name, request.name, 8) == 0) {
-            if (table[i].attribute == 1) {
+            if (table[i].attribute == ATTR_SUBDIRECTORY) {
                 read_clusters(request.buf, table[i].cluster_low, 1);
                 return 0; // success
             }
@@ -162,12 +161,13 @@ int8_t read(struct FAT32DriverRequest request){
     read_clusters(&fat32driver_state.dir_table_buf, request.parent_cluster_number, 1);
     struct FAT32DirectoryEntry *table = fat32driver_state.dir_table_buf.table;
 
-    for(uint8_t i = 1; i < DIRECTORY_TABLE_SIZE;i++){
-        // If name same or extension same
+    for(uint8_t i = 0; i < DIRECTORY_TABLE_SIZE;i++){
+        // If name same and extension same
         if(!memcmp(table[i].name,request.name,8) && !memcmp(table[i].ext,request.ext,3)){
+            
             // Check if it's a file or not
-            if(table[i].attribute == 1){
-                return 1; // Is a File
+            if(table[i].attribute == ATTR_SUBDIRECTORY){
+                return 1; // Is not a File
             }
             // Check if the request has enough buffer size
             if(request.buffer_size < table[i].filesize){
@@ -185,7 +185,7 @@ int8_t read(struct FAT32DriverRequest request){
         }
     }   
     // Not found
-    return 0;
+    return 3;
 }
 
 /**
