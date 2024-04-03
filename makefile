@@ -27,32 +27,33 @@ disk:
 
 all: build
 build: iso
-clean:
-	rm -rf $(OUTPUT_FOLDER)/*.o $(OUTPUT_FOLDER)/*.iso $(OUTPUT_FOLDER)/kernel $(OUTPUT_FOLDER)/cpu $(OUTPUT_FOLDER)/interrupt $(OUTPUT_FOLDER)/stdlib $(OUTPUT_FOLDER)/text $(OUTPUT_FOLDER)/driver $(OUTPUT_FOLDER)/filesystem
 
 
+KERNEL = kernel
+SRC_KERNEL = $(KERNEL).c
+OBJ_KERNEL = $(SRC_KERNEL:.c=.o)
+SRC = $(wildcard $(SOURCE_FOLDER)/*/*.c)
+SRC_ASM = $(wildcard $(SOURCE_FOLDER)/*.s) $(wildcard $(SOURCE_FOLDER)/*/*.s)
+OBJS = $(patsubst $(SOURCE_FOLDER)/%,$(OUTPUT_FOLDER)/%,$(SRC:.c=.o)) $(patsubst $(SOURCE_FOLDER)/%,$(OUTPUT_FOLDER)/%,$(SRC_ASM:.s=.o))
 
-kernel:
-	@echo Linking object files and generate elf32...
-	@mkdir -p $(OUTPUT_FOLDER)/cpu $(OUTPUT_FOLDER)/interrupt $(OUTPUT_FOLDER)/stdlib $(OUTPUT_FOLDER)/text $(OUTPUT_FOLDER)/driver $(OUTPUT_FOLDER)/filesystem
-	
-	@$(ASM) $(AFLAGS) $(SOURCE_FOLDER)/kernel-entrypoint.s -o $(OUTPUT_FOLDER)/kernel-entrypoint.o
-	@$(ASM) $(AFLAGS) $(SOURCE_FOLDER)/interrupt/intsetup.s -o $(OUTPUT_FOLDER)/interrupt/intsetup.o
+$(OUTPUT_FOLDER)/%.o: $(SOURCE_FOLDER)/%.c
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/kernel.c -o $(OUTPUT_FOLDER)/kernel.o
-	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/cpu/gdt.c -o $(OUTPUT_FOLDER)/cpu/gdt.o
-	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/cpu/portio.c -o $(OUTPUT_FOLDER)/cpu/portio.o
-	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/text/framebuffer.c -o $(OUTPUT_FOLDER)/text/framebuffer.o
-	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/text/stringdrawer.c -o $(OUTPUT_FOLDER)/text/stringdrawer.o
-	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/interrupt/interrupt.c -o $(OUTPUT_FOLDER)/interrupt/interrupt.o
-	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/interrupt/idt.c -o $(OUTPUT_FOLDER)/interrupt/idt.o
-	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/driver/keyboard.c -o $(OUTPUT_FOLDER)/driver/keyboard.o
-	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/driver/disk.c -o $(OUTPUT_FOLDER)/driver/disk.o
-	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/filesystem/fat32.c -o $(OUTPUT_FOLDER)/filesystem/fat32.o
-	$(CC) $(CFLAGS) $(SOURCE_FOLDER)/stdlib/string.c -o $(OUTPUT_FOLDER)/stdlib/string.o
-	@$(LIN) $(LFLAGS) bin/*.o bin/cpu/*.o bin/interrupt/*.o bin/text/*.o bin/driver/*.o bin/filesystem/*.o bin/stdlib/*.o -o $(OUTPUT_FOLDER)/kernel
+$(OUTPUT_FOLDER)/%.o: $(SOURCE_FOLDER)/%.s
+	mkdir -p $(@D)
+	@$(ASM) $(AFLAGS) -o $@ $<
+
+$(OUTPUT_FOLDER)/%.o: %.s
+	mkdir -p $(@D)
+	@$(ASM) $(AFLAGS) -o $@ $<
+
+kernel: $(OUTPUT_FOLDER)/$(OBJ_KERNEL) $(OBJS)
+	@echo Linking object files...
+	@$(LIN) $(LFLAGS) -o $(OUTPUT_FOLDER)/kernel $^
 	@rm -f *.o
-	@echo Linking object files and generate elf32 finished!
+	@echo Linking object files finished!
+
 
 iso: kernel
 	@echo Generating iso file...
@@ -60,6 +61,12 @@ iso: kernel
 	@cp $(OUTPUT_FOLDER)/kernel     $(OUTPUT_FOLDER)/iso/boot/
 	@cp other/grub1                 $(OUTPUT_FOLDER)/iso/boot/grub/
 	@cp $(SOURCE_FOLDER)/menu.lst   $(OUTPUT_FOLDER)/iso/boot/grub/
+	@echo Generating elf32...
 	@genisoimage -R -b boot/grub/grub1 -no-emul-boot -boot-load-size 4 -A os -input-charset utf8 -quiet -boot-info-table -o $(OUTPUT_FOLDER)/OS2024.iso $(OUTPUT_FOLDER)/iso
+	@echo Generating elf32 finished!
 	@rm -r $(OUTPUT_FOLDER)/iso/
 	@echo New iso file generated!
+
+
+clean:
+	rm -rf $(wildcard $(OUTPUT_FOLDER)/*.iso) $(filter-out $(wildcard $(OUTPUT_FOLDER)/*.bin), $(wildcard $(OUTPUT_FOLDER)/*))

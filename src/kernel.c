@@ -169,6 +169,34 @@ void kernel_setup(void) {
 
 
     // [Test write]
+    framebuffer_clear();
+    struct FAT32DriverRequest request2;
+    memcpy(request2.name, "new1", 4);
+    // // memcpy(request2.name, "blah", 4); // Case not found
+    // // memcpy(request2.name, "folder1", 7); // Case not a file
+    memcpy(request2.ext, ".txt", 3);
+    request2.parent_cluster_number = 2;
+    request2.buffer_size = 0x13C5;
+    // // request2.buffer_size = 0x13C4; // Case not enough buffer
+    // int8_t error_code_2 = read(request2);
+    // if(error_code_2 == 0) {
+    //     framebuffer_write_length(0, 0, "Found name:", 11, White, Black);
+    //     framebuffer_write_length(0, 13, request2.name, 11, White, Black);
+    //     framebuffer_write_length(1, 0, "Content of request.buf:", 23, White, Black);
+    //     framebuffer_write_length(2, 0, request2.buf, CLUSTER_MAP_SIZE, White, Black);
+    // }
+    // else {
+    //     framebuffer_write_length(0, 0, "Error Code:", 11, White, Black);
+    //     framebuffer_write_int(0, 12, error_code_2, White, Black);
+    //     switch (error_code_2)
+    //     {
+    //         case 1: framebuffer_write_length(0, 14, "| Not a file", 12, White, Black); break;
+    //         case 2: framebuffer_write_length(0, 14, "| Not enough buffer", 19, White, Black); break;
+    //         case 3: framebuffer_write_length(0, 14, "| Not found", 11, White, Black); break;
+    //     }
+    //     framebuffer_write_length(1, 0, "Content of fat32driver_state.dir_table_buf.table:", 49, White, Black);
+    //     framebuffer_write_length(2, 0, fat32driver_state.dir_table_buf.table, CLUSTER_MAP_SIZE*CLUSTER_BLOCK_COUNT, White, Black);
+    // }
 
 
     while (true);
