@@ -313,7 +313,7 @@ int8_t delete(struct FAT32DriverRequest request){
     // Iterate directory table
     while(!isFound && idx < DIRECTORY_TABLE_SIZE){
         // If the same name existed
-        if(memcmp(table[idx].name,request.name,8)){
+        if(memcmp(table[idx].name,request.name,8) == 0){
             // If it's a folder
             if(table[idx].attribute == ATTR_SUBDIRECTORY){
                 isFolder = true;
@@ -321,7 +321,7 @@ int8_t delete(struct FAT32DriverRequest request){
                 isFound = true;
             } 
             // If it's a file and has the same extension
-            else if (memcmp(table[idx].ext,request.ext,3)){
+            else if (memcmp(table[idx].ext,request.ext,3) == 0){
                 isFolder = false;
                 designated_index = idx;
                 isFound = true;
@@ -376,7 +376,7 @@ int8_t delete(struct FAT32DriverRequest request){
         // Enumerate all the used clusters into used_clusters list
         int cluster_amount = (table[designated_index].filesize + CLUSTER_SIZE - 1) / 2;
         uint16_t used_clusters[cluster_amount];
-        uint16_t current_cluster = table[designated_index].cluster_low;
+        uint32_t current_cluster = table[designated_index].cluster_low;
         int idx = 0;
         while(current_cluster != FAT32_FAT_END_OF_FILE){
             used_clusters[idx] = current_cluster;
@@ -398,5 +398,5 @@ int8_t delete(struct FAT32DriverRequest request){
         write_clusters(&fat32driver_state.dir_table_buf,request.parent_cluster_number,1);
         return 0;
     }
-
+    return -1;
 }
