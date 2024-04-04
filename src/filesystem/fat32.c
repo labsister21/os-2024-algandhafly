@@ -224,7 +224,7 @@ int8_t write(struct FAT32DriverRequest request){
             // Iterate cluster
             while(cluster_count < cluster_amount && current_cluster < CLUSTER_MAP_SIZE){
                 // Check if cluster available
-                if(fat32driver_state.fat_table.cluster_map[current_cluster] == 0){
+                if(fat32driver_state.fat_table.cluster_map[current_cluster] == FAT32_FAT_EMPTY_ENTRY){
                     locations[cluster_count] = current_cluster;
                     cluster_count++;
                 }
@@ -318,13 +318,13 @@ int8_t delete(struct FAT32DriverRequest request){
             if(table[idx].attribute == ATTR_SUBDIRECTORY){
                 isFolder = true;
                 designated_index = idx;
-                isFound = true;
+                if(table[idx].user_attribute == UATTR_NOT_EMPTY) isFound = true;
             } 
             // If it's a file and has the same extension
-            else if (memcmp(table[idx].ext,request.ext,3) == 0){
+            else if(memcmp(table[idx].ext,request.ext,3) == 0){
                 isFolder = false;
                 designated_index = idx;
-                isFound = true;
+                if(table[idx].user_attribute == UATTR_NOT_EMPTY) isFound = true;
             }
         }
         idx++;
@@ -384,11 +384,10 @@ int8_t delete(struct FAT32DriverRequest request){
             idx++;
         }
 
-        // Set the cluster_map of used_cluster into 0
+        // Set the cluster_map of used_cluster into FAT32_FAT_EMPTY_ENTRY
         for(int i=0;i<cluster_amount;i++){
-            fat32driver_state.fat_table.cluster_map[used_clusters[i]] = 0;
+            fat32driver_state.fat_table.cluster_map[used_clusters[i]] = FAT32_FAT_EMPTY_ENTRY;
         }
-
         // Set the entry into empty
         table[designated_index].user_attribute = !UATTR_NOT_EMPTY;
         table[designated_index].undelete = true; // For enabling restoration
