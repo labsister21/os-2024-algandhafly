@@ -207,7 +207,7 @@ int8_t write(struct FAT32DriverRequest request){
     read_clusters(&fat32driver_state.dir_table_buf, request.parent_cluster_number, 1);
     struct FAT32DirectoryEntry *table = fat32driver_state.dir_table_buf.table;
 
-    if(fat32driver_state.fat_table.cluster_map[request.parent_cluster_number] != FAT32_FAT_END_OF_FILE){ // Plus one because for some reason, the storage file is like that
+    if(fat32driver_state.fat_table.cluster_map[request.parent_cluster_number] != FAT32_FAT_END_OF_FILE){
         return 2;
     }
 
@@ -261,7 +261,7 @@ int8_t write(struct FAT32DriverRequest request){
     // === Create whether file or folder ===
     // Requested only want folder
     if(request.buffer_size == 0){
-        table[directory_location].attribute = 1;
+        table[directory_location].attribute = ATTR_SUBDIRECTORY;
 
         // Initialize new directory table with locations[0] as its parent
         init_directory_table(request.buf,request.name,locations[0]); 

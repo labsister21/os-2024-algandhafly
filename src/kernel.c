@@ -93,18 +93,6 @@ void kernel_setup(void) {
     // activate_keyboard_interrupt();
     // initialize_idt();
 
-    // [Test create_fat32]
-    initialize_filesystem_fat32();
-    framebuffer_clear();
-    framebuffer_write_length(0, 0, fat32driver_state.dir_table_buf.table, 1*CLUSTER_MAP_SIZE, White, Black);
-    // return;
-    
-    framebuffer_clear();
-    read_clusters(&fat32driver_state.fat_table, 1, 1);
-    for(int i = 0; i < HEIGHT*4; i++){
-        framebuffer_write_int(i/4, (i % 4)*12, fat32driver_state.fat_table.cluster_map[i], White, Black);
-    }
-    return;
 
     // framebuffer_clear();
     // read_clusters(&fat32driver_state.dir_table_buf, 0, 1);
@@ -120,9 +108,24 @@ void kernel_setup(void) {
 
     // [Test read_blocks]
     // struct BlockBuffer b2;
-    // read_blocks(&b2, 0, 1);
+    // read_blocks(&b2, 8, 1);
     // framebuffer_clear();
     // framebuffer_write_length(0, 0, b2.buf, 1*CLUSTER_MAP_SIZE, White, Black);
+    // return;
+
+    
+    // [Test create_fat32]
+    // initialize_filesystem_fat32();
+    // framebuffer_clear();
+    // framebuffer_write_length(0, 0, fat32driver_state.dir_table_buf.table, 1*CLUSTER_MAP_SIZE, White, Black);
+    // return;
+    
+    // framebuffer_clear();
+    // read_clusters(&fat32driver_state.fat_table, 1, 1);
+    // for(int i = 0; i < HEIGHT*4; i++){
+    //     framebuffer_write_int(i/4, (i % 4)*12, fat32driver_state.fat_table.cluster_map[i], White, Black);
+    // }
+    // return;
 
     // [Test read_clusters]
     // struct BlockBuffer b2;
@@ -166,10 +169,11 @@ void kernel_setup(void) {
     // memset(request2.ext, 0, 3);
     // request2.buffer_size = 0x13C5;
     // // request2.buffer_size = 0x13C4; // Case not enough buffer
+    // request2.parent_cluster_number = 2; 
 
-    // memcpy(request2.name, "new1", 4); // for write test
-    // memcpy(request2.ext, "txt", 3); // for write test
-    // request2.parent_cluster_number = 7; // for write test
+    // // memcpy(request2.name, "new1", 4); // for [Test write]
+    // // memcpy(request2.ext, "txt", 3); // for [Test write]
+    // // request2.parent_cluster_number = 8; // for [Test write]
     // int8_t error_code_2 = read(request2);
     // if(error_code_2 == 0) {
     //     framebuffer_write_length(0, 0, "Found name:", 11, White, Black);
@@ -194,6 +198,12 @@ void kernel_setup(void) {
 
     // [Test write]
     read_clusters(&fat32driver_state.fat_table, 1, 1); // Or call initialize_filesystem_fat32
+    
+    // framebuffer_clear();
+    // for(int i = 0; i < HEIGHT*4; i++){
+    //     framebuffer_write_int(i/4, (i % 4)*12, fat32driver_state.fat_table.cluster_map[i], White, Black);
+    // }
+    // return;
 
     framebuffer_clear();
     struct FAT32DriverRequest request3;
@@ -205,12 +215,13 @@ void kernel_setup(void) {
 
     memcpy(request3.name, "new1", 4);
     memcpy(request3.ext, "txt", 3);
-    request3.parent_cluster_number = 7; // Nandemonai <- rip350pp
+    // request3.parent_cluster_number = 3; // Case is a file, therefore invalid parent cluster
+    request3.parent_cluster_number = 8;
     int8_t error_code_3 = write(request3);
     if(error_code_3 == 0) {
         framebuffer_write_length(0, 0, "Write Successful:", 17, White, Black);
         framebuffer_write_length(0, 19, request3.name, 11, White, Black);
-        framebuffer_write_length(1, 0, "request.buf:", 23, White, Black);
+        framebuffer_write_length(1, 0, "request.buf:", 12, White, Black);
         framebuffer_write_length(2, 0, request3.buf, CLUSTER_MAP_SIZE, White, Black);
     }
     else {
