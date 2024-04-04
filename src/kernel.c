@@ -242,11 +242,11 @@ void kernel_setup(void) {
     // [Test delete]
     read_clusters(&fat32driver_state.fat_table, 1, 1); // Or call initialize_filesystem_fat32
     
-    framebuffer_clear();
-    for(int i = 0; i < HEIGHT*4; i++){
-        framebuffer_write_int(i/4, (i % 4)*12, fat32driver_state.fat_table.cluster_map[i], White, Black);
-    }
-    return;
+    // framebuffer_clear();
+    // for(int i = 0; i < HEIGHT*4; i++){
+    //     framebuffer_write_int(i/4, (i % 4)*12, fat32driver_state.fat_table.cluster_map[i], White, Black);
+    // }
+    // return;
 
     framebuffer_clear();
     struct FAT32DriverRequest request3;
@@ -266,7 +266,7 @@ void kernel_setup(void) {
     // request3.parent_cluster_number = 8;
     int8_t error_code_3 = delete(request3);
     if(error_code_3 == 0) {
-        framebuffer_write_length(0, 0, "Delete Successful:", 17, White, Black);
+        framebuffer_write_length(0, 0, "Delete Successful:", 18, White, Black);
         framebuffer_write_length(0, 19, request3.name, 11, White, Black);
         framebuffer_write_length(1, 0, "request.buf:", 12, White, Black);
         framebuffer_write_length(2, 0, request3.buf, CLUSTER_MAP_SIZE, White, Black);

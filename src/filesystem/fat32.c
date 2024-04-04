@@ -374,8 +374,8 @@ int8_t delete(struct FAT32DriverRequest request){
         */
 
         // Enumerate all the used clusters into used_clusters list
-        int cluster_amount = (table[designated_index].filesize + CLUSTER_SIZE - 1) / 2;
-        uint16_t used_clusters[cluster_amount];
+        int cluster_amount = (table[designated_index].filesize + CLUSTER_SIZE - 1) / CLUSTER_SIZE;
+        uint32_t used_clusters[cluster_amount];
         uint32_t current_cluster = table[designated_index].cluster_low;
         int idx = 0;
         while(current_cluster != FAT32_FAT_END_OF_FILE){
