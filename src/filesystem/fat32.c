@@ -54,7 +54,7 @@ void init_directory_table(struct FAT32DirectoryTable *dir_table, char *name, uin
 
     for (int i = 2; i < DIRECTORY_TABLE_SIZE; i++) 
     {
-        dir_table->table[i].user_attribute = 0; // UATTR_EMPTY
+        dir_table->table[i].user_attribute = !UATTR_NOT_EMPTY; // UATTR_EMPTY
     }
     write_clusters(dir_table->table, parent_dir_cluster, 1);
 
@@ -357,7 +357,7 @@ int8_t delete(struct FAT32DriverRequest request){
         }
 
         // Set the entry into empty
-        fat32driver_state.fat_table.cluster_map[table[designated_index].cluster_low] = 0;
+        fat32driver_state.fat_table.cluster_map[table[designated_index].cluster_low] = FAT32_FAT_EMPTY_ENTRY;
         table[designated_index].user_attribute = !UATTR_NOT_EMPTY;
         table[designated_index].undelete = true; // For enabling restoration
 
@@ -384,8 +384,10 @@ int8_t delete(struct FAT32DriverRequest request){
             idx++;
         }
 
+
         // Set the cluster_map of used_cluster into FAT32_FAT_EMPTY_ENTRY
         for(int i=0;i<cluster_amount;i++){
+            framebuffer_write_int(i,0, used_clusters[i], Black, White);
             fat32driver_state.fat_table.cluster_map[used_clusters[i]] = FAT32_FAT_EMPTY_ENTRY;
         }
         // Set the entry into empty
