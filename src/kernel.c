@@ -93,6 +93,26 @@ void kernel_setup(void) {
     // activate_keyboard_interrupt();
     // initialize_idt();
 
+    // [Test create_fat32]
+    initialize_filesystem_fat32();
+    framebuffer_clear();
+    framebuffer_write_length(0, 0, fat32driver_state.dir_table_buf.table, 1*CLUSTER_MAP_SIZE, White, Black);
+    // return;
+    
+    framebuffer_clear();
+    read_clusters(&fat32driver_state.fat_table, 1, 1);
+    for(int i = 0; i < HEIGHT*4; i++){
+        framebuffer_write_int(i/4, (i % 4)*12, fat32driver_state.fat_table.cluster_map[i], White, Black);
+    }
+    return;
+
+    // framebuffer_clear();
+    // read_clusters(&fat32driver_state.dir_table_buf, 0, 1);
+    // framebuffer_write_length(0, 0, fat32driver_state.dir_table_buf.table, 1*CLUSTER_MAP_SIZE, White, Black);
+    // read_clusters(&fat32driver_state.dir_table_buf, 2, 1);
+    // framebuffer_write_length(8, 0, fat32driver_state.dir_table_buf.table, 1*CLUSTER_MAP_SIZE, White, Black);
+    // return;
+
     // [Test write_blocks]
     // struct BlockBuffer b;
     // for (int i = 0; i < CLUSTER_MAP_SIZE; i++) b.buf[i] = 3;
@@ -121,7 +141,7 @@ void kernel_setup(void) {
     // if(error_code == 0) {
     //     framebuffer_write_length(0, 0, "Found name:", 11, White, Black);
     //     framebuffer_write_length(0, 13, request.name, 11, White, Black);
-    //     framebuffer_write_length(1, 0, "Content of request.buf:", 23, White, Black);
+    //     framebuffer_write_length(1, 0, "request.buf:", 12, White, Black);
     //     framebuffer_write_length(2, 0, request.buf, CLUSTER_MAP_SIZE, White, Black);
     // }
     // else {
@@ -132,7 +152,7 @@ void kernel_setup(void) {
     //         case 1: framebuffer_write_length(0, 14, "| Not a folder", 14, White, Black); break;
     //         case 2: framebuffer_write_length(0, 14, "| Not found", 11, White, Black); break;
     //     }
-    //     framebuffer_write_length(1, 0, "Content of fat32driver_state.dir_table_buf.table:", 49, White, Black);
+    //     framebuffer_write_length(1, 0, "fat32driver_state.dir_table_buf.table:", 38, White, Black);
     //     framebuffer_write_length(2, 0, fat32driver_state.dir_table_buf.table, CLUSTER_MAP_SIZE*CLUSTER_BLOCK_COUNT, White, Black);
     // }
 
@@ -143,15 +163,18 @@ void kernel_setup(void) {
     // memcpy(request2.name, "kano", 4);
     // // memcpy(request2.name, "blah", 4); // Case not found
     // // memcpy(request2.name, "folder1", 7); // Case not a file
-    // memcpy(request2.ext, "\0\0\0", 3);
-    // request2.parent_cluster_number = 2;
+    // memset(request2.ext, 0, 3);
     // request2.buffer_size = 0x13C5;
     // // request2.buffer_size = 0x13C4; // Case not enough buffer
+
+    // memcpy(request2.name, "new1", 4); // for write test
+    // memcpy(request2.ext, "txt", 3); // for write test
+    // request2.parent_cluster_number = 7; // for write test
     // int8_t error_code_2 = read(request2);
     // if(error_code_2 == 0) {
     //     framebuffer_write_length(0, 0, "Found name:", 11, White, Black);
     //     framebuffer_write_length(0, 13, request2.name, 11, White, Black);
-    //     framebuffer_write_length(1, 0, "Content of request.buf:", 23, White, Black);
+    //     framebuffer_write_length(1, 0, "request.buf:", 12, White, Black);
     //     framebuffer_write_length(2, 0, request2.buf, CLUSTER_MAP_SIZE, White, Black);
     // }
     // else {
@@ -163,40 +186,44 @@ void kernel_setup(void) {
     //         case 2: framebuffer_write_length(0, 14, "| Not enough buffer", 19, White, Black); break;
     //         case 3: framebuffer_write_length(0, 14, "| Not found", 11, White, Black); break;
     //     }
-    //     framebuffer_write_length(1, 0, "Content of fat32driver_state.dir_table_buf.table:", 49, White, Black);
+    //     framebuffer_write_length(1, 0, "fat32driver_state.dir_table_buf.table:", 38, White, Black);
     //     framebuffer_write_length(2, 0, fat32driver_state.dir_table_buf.table, CLUSTER_MAP_SIZE*CLUSTER_BLOCK_COUNT, White, Black);
     // }
+    // return;
 
 
     // [Test write]
+    read_clusters(&fat32driver_state.fat_table, 1, 1); // Or call initialize_filesystem_fat32
+
     framebuffer_clear();
-    struct FAT32DriverRequest request2;
-    memcpy(request2.name, "new1", 4);
-    // // memcpy(request2.name, "blah", 4); // Case not found
-    // // memcpy(request2.name, "folder1", 7); // Case not a file
-    memcpy(request2.ext, ".txt", 3);
-    request2.parent_cluster_number = 2;
-    request2.buffer_size = 0x13C5;
-    // // request2.buffer_size = 0x13C4; // Case not enough buffer
-    // int8_t error_code_2 = read(request2);
-    // if(error_code_2 == 0) {
-    //     framebuffer_write_length(0, 0, "Found name:", 11, White, Black);
-    //     framebuffer_write_length(0, 13, request2.name, 11, White, Black);
-    //     framebuffer_write_length(1, 0, "Content of request.buf:", 23, White, Black);
-    //     framebuffer_write_length(2, 0, request2.buf, CLUSTER_MAP_SIZE, White, Black);
-    // }
-    // else {
-    //     framebuffer_write_length(0, 0, "Error Code:", 11, White, Black);
-    //     framebuffer_write_int(0, 12, error_code_2, White, Black);
-    //     switch (error_code_2)
-    //     {
-    //         case 1: framebuffer_write_length(0, 14, "| Not a file", 12, White, Black); break;
-    //         case 2: framebuffer_write_length(0, 14, "| Not enough buffer", 19, White, Black); break;
-    //         case 3: framebuffer_write_length(0, 14, "| Not found", 11, White, Black); break;
-    //     }
-    //     framebuffer_write_length(1, 0, "Content of fat32driver_state.dir_table_buf.table:", 49, White, Black);
-    //     framebuffer_write_length(2, 0, fat32driver_state.dir_table_buf.table, CLUSTER_MAP_SIZE*CLUSTER_BLOCK_COUNT, White, Black);
-    // }
+    struct FAT32DriverRequest request3;
+    memcpy(request3.name, "kano", 4);
+    memset(request3.ext, 0, 3);
+    request3.parent_cluster_number = 2;
+    request3.buffer_size = 0x13C5;
+    read(request3);
+
+    memcpy(request3.name, "new1", 4);
+    memcpy(request3.ext, "txt", 3);
+    request3.parent_cluster_number = 7; // Nandemonai <- rip350pp
+    int8_t error_code_3 = write(request3);
+    if(error_code_3 == 0) {
+        framebuffer_write_length(0, 0, "Write Successful:", 17, White, Black);
+        framebuffer_write_length(0, 19, request3.name, 11, White, Black);
+        framebuffer_write_length(1, 0, "request.buf:", 23, White, Black);
+        framebuffer_write_length(2, 0, request3.buf, CLUSTER_MAP_SIZE, White, Black);
+    }
+    else {
+        framebuffer_write_length(0, 0, "Error Code:", 11, White, Black);
+        framebuffer_write_int(0, 12, error_code_3, White, Black);
+        switch (error_code_3)
+        {
+            case 1: framebuffer_write_length(0, 14, "| File/Folder already exist", 27, White, Black); break;
+            case 2: framebuffer_write_length(0, 14, "| Invalid parent cluster", 24, White, Black); break;
+        }
+        framebuffer_write_length(1, 0, "fat32driver_state.dir_table_buf.table:", 38, White, Black);
+        framebuffer_write_length(2, 0, fat32driver_state.dir_table_buf.table, CLUSTER_MAP_SIZE*CLUSTER_BLOCK_COUNT, White, Black);
+    }
 
 
     while (true);
