@@ -349,7 +349,7 @@ int8_t delete(struct FAT32DriverRequest request){
         read_clusters(&dt,table[designated_index].cluster_low,1);
 
         // Iterate the folder's directory table
-        for(int i=0;i<DIRECTORY_TABLE_SIZE;i++){
+        for(int i=2;i<DIRECTORY_TABLE_SIZE;i++){
             // If there exists an entry that is not empty
             if(dt.table[i].user_attribute == UATTR_NOT_EMPTY){
                 return 2;

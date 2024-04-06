@@ -199,11 +199,11 @@ void kernel_setup(void) {
     // [Test write]
     // read_clusters(&fat32driver_state.fat_table, 1, 1); // Or call initialize_filesystem_fat32
     
-    // // framebuffer_clear();
-    // // for(int i = 0; i < HEIGHT*4; i++){
-    // //     framebuffer_write_int(i/4, (i % 4)*12, fat32driver_state.fat_table.cluster_map[i], White, Black);
-    // // }
-    // // return;
+    // framebuffer_clear();
+    // for(int i = 0; i < HEIGHT*4; i++){
+    //     framebuffer_write_int(i/4, (i % 4)*12, fat32driver_state.fat_table.cluster_map[i], White, Black);
+    // }
+    // return;
 
     // framebuffer_clear();
     // struct FAT32DriverRequest request3;
@@ -252,8 +252,10 @@ void kernel_setup(void) {
     framebuffer_clear();
     struct FAT32DriverRequest request4;
     memcpy(request4.name, "kano", 4);
+    // memcpy(request4.name, "folder2", 7); // Case folder not empty
+    // memcpy(request4.name, "nestedf1", 8); // Case delete folder
     memset(request4.ext, 0, 3);
-    request4.parent_cluster_number = 2;
+    request4.parent_cluster_number = 4;
     request4.buffer_size = 0x13C5;
 
     // memcpy(request4.name, "new1", 4);
