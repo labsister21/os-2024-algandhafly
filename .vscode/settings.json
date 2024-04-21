@@ -18,6 +18,7 @@
         "disk.h": "c",
         "*.tcc": "c",
         "typeinfo": "c",
-        "fat32.h": "c"
+        "fat32.h": "c",
+        "paging.h": "c"
     },
 }
