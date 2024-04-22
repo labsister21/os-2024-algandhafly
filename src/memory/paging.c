@@ -46,8 +46,8 @@ void flush_single_tlb(void *virtual_addr) {
 
 /* --- Memory Management --- */
 bool paging_allocate_check(uint32_t amount) {
-    uint32_t bytes = page_manager_state.free_page_frame_count * PAGE_FRAME_SIZE;
-    return bytes >= amount;
+    uint32_t BYTES = page_manager_state.free_page_frame_count * PAGE_FRAME_SIZE;
+    return BYTES >= amount;
 }
 
 
@@ -60,7 +60,7 @@ bool paging_allocate_user_page_frame(struct PageDirectory *page_dir, void *virtu
     for(;;)
     {
         if (page_frame_index > PAGE_FRAME_MAX_COUNT) return false;
-        if (page_manager_state.page_frame_map[page_frame_index]) break;
+        if (!page_manager_state.page_frame_map[page_frame_index]) break;
         else ++page_frame_index;
     }
     
@@ -74,18 +74,21 @@ bool paging_allocate_user_page_frame(struct PageDirectory *page_dir, void *virtu
     page_dir->table[page_index].flags.page_size_4mb     = 1;
     page_dir->table[page_index].lower_address           = physical_addr;
 
+    flush_single_tlb(virtual_addr);
+
     return true;
 }
 
 bool paging_free_user_page_frame(struct PageDirectory *page_dir, void *virtual_addr) {
 
-    uint32_t page_index = (uint32_t) virtual_addr >> 22;
+    uint32_t page_index = ((uint32_t) virtual_addr >> 22) & 0x3FF;
     page_dir->table[page_index].flags.present_bit = 0;
+    flush_single_tlb(virtual_addr);
     
     uint32_t physical_addr = page_dir->table[page_index].lower_address;
     uint32_t page_frame_index = (physical_addr >> 22) & 0x1F;
     page_manager_state.page_frame_map[page_frame_index] = false;
-    page_manager_state.free_page_frame_count--;
+    page_manager_state.free_page_frame_count++;
 
     return true;
 }

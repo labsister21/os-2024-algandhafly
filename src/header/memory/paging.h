@@ -35,6 +35,7 @@ extern struct PageDirectory _paging_kernel_page_directory;
  * Note: 
  * -  4-MiB pages require PSE to be enabled. thus, IMPORTANT: SET page_size bit to 1
  * - `accessed`  bit will not be cleared by the CPU, so that burden falls on the OS (if it needs this bit at all).
+ * 
  */
 struct PageDirectoryEntryFlags {
     uint8_t present_bit      : 1;
@@ -49,7 +50,6 @@ struct PageDirectoryEntryFlags {
 
 /**
  * Page Directory Entry, for page size 4 MB.
- * Check Intel Manual 3a - Ch 4 Paging - Figure 4-4 PDE: 4MB page
  *
  * @param flags            Contain 8-bit page directory entry flags
  * @param global_page     Is this page translation global & cannot be flushed?
@@ -57,10 +57,8 @@ struct PageDirectoryEntryFlags {
  * @param pat             If PAT is supported, then PAT along with PCD and PWT shall indicate the memory caching type. Otherwise, it is reserved and must be set to 0.  
  * @param higher_address   8-bit page frame higher address
  * @param reserved_2      Reserved bit (1-bit) (must be 0)
- * @param lower_address   10-bit page frame lower address, note directly correspond with 4 MiB memory (= 0x40 0000 = 1
- * Note:
- * - "Bits 39:32 of address" (higher_address) is 8-bit
- * - "Bits 31:22 of address" is called lower_address in kit
+ * @param lower_address   10-bit page frame lower address
+ * 
  */
 struct PageDirectoryEntry {
     struct PageDirectoryEntryFlags flags; // 8 bits
@@ -99,9 +97,6 @@ struct PageDirectory {
 struct PageManagerState {
     bool     page_frame_map[PAGE_FRAME_MAX_COUNT];
     uint32_t free_page_frame_count;
-    // TODO: Add if needed ...
-    // TODO: Add if needed ...
-    // TODO: Add if needed ...
 } __attribute__((packed));
 
 
