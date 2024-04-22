@@ -241,46 +241,46 @@ void kernel_setup(void) {
 
 
     // [Test delete]
-    read_clusters(&fat32driver_state.fat_table, 1, 1); // Or call initialize_filesystem_fat32
+    // read_clusters(&fat32driver_state.fat_table, 1, 1); // Or call initialize_filesystem_fat32
     
-    framebuffer_clear();
-    for(int i = 0; i < HEIGHT*4; i++){
-        framebuffer_write_int(i/4, (i % 4)*12, fat32driver_state.fat_table.cluster_map[i], White, Black);
-    }
-    return;
+    // framebuffer_clear();
+    // for(int i = 0; i < HEIGHT*4; i++){
+    //     framebuffer_write_int(i/4, (i % 4)*12, fat32driver_state.fat_table.cluster_map[i], White, Black);
+    // }
+    // return;
 
-    framebuffer_clear();
-    struct FAT32DriverRequest request4;
-    memcpy(request4.name, "kano", 4);
-    // memcpy(request4.name, "folder2", 7); // Case folder not empty
-    // memcpy(request4.name, "nestedf1", 8); // Case delete folder
-    memset(request4.ext, 0, 3);
-    request4.parent_cluster_number = 4;
-    request4.buffer_size = 0x13C5;
+    // framebuffer_clear();
+    // struct FAT32DriverRequest request4;
+    // memcpy(request4.name, "kano", 4);
+    // // memcpy(request4.name, "folder2", 7); // Case folder not empty
+    // // memcpy(request4.name, "nestedf1", 8); // Case delete folder
+    // memset(request4.ext, 0, 3);
+    // request4.parent_cluster_number = 4;
+    // request4.buffer_size = 0x13C5;
 
-    // memcpy(request4.name, "new1", 4);
-    // memcpy(request4.ext, "txt", 3);
-    // request4.parent_cluster_number = 3; // Case is a file, therefore invalid parent cluster
-    // request4.parent_cluster_number = 8;
-    int8_t error_code_4 = delete(request4);
-    if(error_code_4 == 0) {
-        framebuffer_write_length(0, 0, "Delete Successful:", 18, White, Black);
-        framebuffer_write_length(0, 19, request4.name, 11, White, Black);
-        framebuffer_write_length(1, 0, "request.buf:", 12, White, Black);
-        framebuffer_write_length(2, 0, request4.buf, CLUSTER_MAP_SIZE, White, Black);
-    }
-    else {
-        framebuffer_write_length(0, 0, "Error Code:", 11, White, Black);
-        framebuffer_write_int(0, 12, error_code_4, White, Black);
-        switch (error_code_4)
-        {
-            case 1: framebuffer_write_length(0, 14, "| File/Folder not found", 23, White, Black); break;
-            case 2: framebuffer_write_length(0, 14, "| Folder is not empty", 21, White, Black); break;
-            case -1: framebuffer_write_length(0, 14, "| Unknown", 9, White, Black); break;
-        }
-        framebuffer_write_length(1, 0, "fat32driver_state.dir_table_buf.table:", 38, White, Black);
-        framebuffer_write_length(2, 0, fat32driver_state.dir_table_buf.table, CLUSTER_MAP_SIZE*CLUSTER_BLOCK_COUNT, White, Black);
-    }
+    // // memcpy(request4.name, "new1", 4);
+    // // memcpy(request4.ext, "txt", 3);
+    // // request4.parent_cluster_number = 3; // Case is a file, therefore invalid parent cluster
+    // // request4.parent_cluster_number = 8;
+    // int8_t error_code_4 = delete(request4);
+    // if(error_code_4 == 0) {
+    //     framebuffer_write_length(0, 0, "Delete Successful:", 18, White, Black);
+    //     framebuffer_write_length(0, 19, request4.name, 11, White, Black);
+    //     framebuffer_write_length(1, 0, "request.buf:", 12, White, Black);
+    //     framebuffer_write_length(2, 0, request4.buf, CLUSTER_MAP_SIZE, White, Black);
+    // }
+    // else {
+    //     framebuffer_write_length(0, 0, "Error Code:", 11, White, Black);
+    //     framebuffer_write_int(0, 12, error_code_4, White, Black);
+    //     switch (error_code_4)
+    //     {
+    //         case 1: framebuffer_write_length(0, 14, "| File/Folder not found", 23, White, Black); break;
+    //         case 2: framebuffer_write_length(0, 14, "| Folder is not empty", 21, White, Black); break;
+    //         case -1: framebuffer_write_length(0, 14, "| Unknown", 9, White, Black); break;
+    //     }
+    //     framebuffer_write_length(1, 0, "fat32driver_state.dir_table_buf.table:", 38, White, Black);
+    //     framebuffer_write_length(2, 0, fat32driver_state.dir_table_buf.table, CLUSTER_MAP_SIZE*CLUSTER_BLOCK_COUNT, White, Black);
+    // }
 
 
     while (true);
