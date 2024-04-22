@@ -64,14 +64,14 @@ struct PageDirectoryEntryFlags {
  */
 struct PageDirectoryEntry {
     struct PageDirectoryEntryFlags flags; // 8 bits
-    uint16_t global_page    : 1;        // 1
-    uint16_t reserved_1     : 3;        // 3
-    uint16_t pat            : 1;        // 1
-    uint16_t higher_address : 8;        // 8
-    uint16_t reserved_2     : 1;        // 1
-    uint16_t lower_address  : 10;       // 10
-                                        // ------- +
-                                        // 32 bits
+    uint16_t global_page    : 1;          // 1
+    uint16_t reserved_1     : 3;          // 3
+    uint16_t pat            : 1;          // 1
+    uint16_t higher_address : 8;          // 8
+    uint16_t reserved_2     : 1;          // 1
+    uint16_t lower_address  : 10;         // 10
+                                          // ------- +
+                                          // 32 bits
 } __attribute__((packed));
 
 typedef struct PageDirectoryEntry PDE;
@@ -84,7 +84,7 @@ typedef struct PageDirectoryEntry PDE;
  * Warning: Address must be aligned in 4 KB (listed on Intel Manual), use __attribute__((aligned(0x1000))), 
  *   unaligned definition of PageDirectory will cause triple fault
  * 
- * @param table Fixed-width array of PageDirectoryEntry with size PAGE_ENTRY_COUNT
+ * @param table Fixed-width array of PtoryEntry with size PAGE_ENTRY_COUNT
  */
 struct PageDirectory {
     PDE table[PAGE_ENTRY_COUNT];
@@ -92,7 +92,7 @@ struct PageDirectory {
 
 /**
  * Containing page manager states.
- * 
+ * ageDirec
  * @param page_frame_map Keeping track empty space. True when the page frame is currently used
  * ...
  */
