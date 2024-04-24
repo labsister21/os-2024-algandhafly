@@ -19,6 +19,8 @@
         "*.tcc": "c",
         "typeinfo": "c",
         "fat32.h": "c",
-        "paging.h": "c"
+        "paging.h": "c",
+        "stdio.h": "c"
+        
     },
 }
