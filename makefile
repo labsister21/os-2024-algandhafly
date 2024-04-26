@@ -35,7 +35,11 @@ build: iso
 KERNEL = kernel
 SRC_KERNEL = $(KERNEL).c
 OBJ_KERNEL = $(SRC_KERNEL:.c=.o)
-SRC = $(wildcard $(SOURCE_FOLDER)/*/*.c)
+
+SRC_ALL := $(wildcard $(SOURCE_FOLDER)/*/*.c)
+
+SRC := $(filter-out $(SOURCE_FOLDER)/external/external-inserter.c, $(SRC_ALL))
+
 SRC_ASM = $(wildcard $(SOURCE_FOLDER)/*.s) $(wildcard $(SOURCE_FOLDER)/*/*.s)
 OBJS = $(patsubst $(SOURCE_FOLDER)/%,$(OUTPUT_FOLDER)/%,$(SRC:.c=.o)) $(patsubst $(SOURCE_FOLDER)/%,$(OUTPUT_FOLDER)/%,$(SRC_ASM:.s=.o))
 
@@ -53,7 +57,9 @@ $(OUTPUT_FOLDER)/%.o: %.s
 
 kernel: $(OUTPUT_FOLDER)/$(OBJ_KERNEL) $(OBJS)
 	@echo Linking object files...
-	@$(LIN) $(LFLAGS) -o $(OUTPUT_FOLDER)/kernel $^
+	# Filter out the specific file
+	$(eval FILTERED_OBJS := $(filter-out $(OUTPUT_FOLDER)/exclude_this_file.o,$(OBJS)))
+	@$(LIN) $(LFLAGS) -o $(OUTPUT_FOLDER)/kernel $(OUTPUT_FOLDER)/$(OBJ_KERNEL) $(FILTERED_OBJS)
 	@rm -f *.o
 	@echo Linking object files finished!
 
