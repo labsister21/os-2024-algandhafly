@@ -26,6 +26,8 @@ run: all
 disk:
 	@qemu-img create -f raw $(OUTPUT_FOLDER)/$(DISK_NAME).bin 4M
 
+$(OUTPUT_FOLDER)/$(DISK_NAME).bin: disk
+
 all: build
 build: iso
 
@@ -76,6 +78,22 @@ inserter:
 		$(SOURCE_FOLDER)/text/framebuffer.c \
 		$(SOURCE_FOLDER)/cpu/portio.c \
 		-o $(OUTPUT_FOLDER)/inserter
+
+user-shell:
+	@$(ASM) $(AFLAGS) $(SOURCE_FOLDER)/user/crt0.s -o crt0.o
+	@$(CC)  $(CFLAGS) -fno-pie $(SOURCE_FOLDER)/user/user-shell.c -o user-shell.o
+	@$(LIN) -T $(SOURCE_FOLDER)/user/user-linker.ld -melf_i386 --oformat=binary \
+		crt0.o user-shell.o -o $(OUTPUT_FOLDER)/shell
+	@echo Linking object shell object files and generate flat binary...
+	@size --target=binary $(OUTPUT_FOLDER)/shell
+	@rm -f *.o
+
+insert-shell: inserter user-shell $(OUTPUT_FOLDER)/$(DISK_NAME).bin
+	@echo Inserting shell into root directory...
+	./$(OUTPUT_FOLDER)/inserter $(OUTPUT_FOLDER)/shell 2 $(OUTPUT_FOLDER)/$(DISK_NAME).bin
+	@echo Inserting shell into root directory finished!
+
+
 
 
 copydisk:
