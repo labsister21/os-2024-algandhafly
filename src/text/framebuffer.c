@@ -81,12 +81,27 @@ void framebuffer_write_int(uint8_t row, uint8_t col, int num, uint8_t fg, uint8_
     framebuffer_write_length(row, col, fliped_str, i, fg, bg);
 }
 
+void framebuffer_write_until_null(uint8_t row, uint8_t col, const char* str, uint8_t fg, uint8_t bg) {
+    size_t i = 0;
+    while(str[i] != '\0') {
+        framebuffer_write(row, col, str[i], fg, bg);
+        i++;
+        col++;
+        if(col == WIDTH) {
+            col = 0;
+            row++;
+        }
+    }
+}
+
 void put_char(char c, uint32_t color)
 {
+    framebuffer_write_length(0, 0, &c, 1, 0x0F, 0x00); // sementara
     // TODO: IMPLEMENT
 }
 
-void puts(const char *str, uint32_t count, uint32_t color)
+void puts(const char *str, uint32_t color)
 {
+    framebuffer_write_until_null(0, 0, str, 0x0F, 0x00); // sementara
     // TODO: IMPLEMENT
 }

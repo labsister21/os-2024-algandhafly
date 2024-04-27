@@ -387,7 +387,6 @@ int8_t delete(struct FAT32DriverRequest request){
 
         // Set the cluster_map of used_cluster into FAT32_FAT_EMPTY_ENTRY
         for(int i=0;i<cluster_amount;i++){
-            framebuffer_write_int(i,0, used_clusters[i], Black, White);
             fat32driver_state.fat_table.cluster_map[used_clusters[i]] = FAT32_FAT_EMPTY_ENTRY;
         }
         // Set the entry into empty

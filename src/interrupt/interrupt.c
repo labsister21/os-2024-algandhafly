@@ -47,18 +47,6 @@ void pic_remap(void) {
 }
 
 
-void main_interrupt_handler(struct InterruptFrame frame) {
-    switch (frame.int_number) {
-        case PIC1_OFFSET + IRQ_KEYBOARD:
-            keyboard_isr();
-            break;
-        case 0xd:
-            pic_ack(0xd);
-    }
-    
-    
-}
-
 
 void activate_keyboard_interrupt(void) {
     out(PIC1_DATA, in(PIC1_DATA) & ~(1 << IRQ_KEYBOARD));
@@ -98,15 +86,16 @@ void syscall(struct InterruptFrame frame) {
             get_keyboard_buffer((char*) frame.cpu.general.ebx);
             break;
         case 5:
-            char c = frame.cpu.general.eax;
-            uint32_t color = frame.cpu.general.ebx;
-            put_char(c, color);
+            char* c = (char*)frame.cpu.general.ebx;
+            uint32_t color = frame.cpu.general.ecx;
+            puts(c, color);
+            c[0]++;
             break;
         case 6: 
             char*string = (char*)frame.cpu.general.ebx;
             uint32_t count = frame.cpu.general.ecx;
             uint32_t color_ = frame.cpu.general.edx; 
-            puts(string, count, color_);
+            puts(string, color_);
             break;
         case 7: 
             keyboard_state_activate();
@@ -124,5 +113,19 @@ void syscall(struct InterruptFrame frame) {
             // framebuffer_write_int();
         case 11:
             // framebuffer_write_length();
+    }
+}
+
+void main_interrupt_handler(struct InterruptFrame frame) {
+    switch (frame.int_number) {
+        case PIC1_OFFSET + IRQ_KEYBOARD:
+            keyboard_isr();
+            break;
+        case 0xd:
+            syscall(frame);
+            // pic_ack(frame.int_number - PIC1_OFFSET);
+            out(PIC2_COMMAND, PIC_ACK);
+            out(PIC1_COMMAND, PIC_ACK);
+            break;
     }
 }

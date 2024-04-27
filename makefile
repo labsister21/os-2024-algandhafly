@@ -81,7 +81,6 @@ inserter:
 		$(SOURCE_FOLDER)/stdlib/string.c \
 		$(SOURCE_FOLDER)/filesystem/fat32.c \
 		$(SOURCE_FOLDER)/external/external-inserter.c \
-		$(SOURCE_FOLDER)/text/framebuffer.c \
 		$(SOURCE_FOLDER)/cpu/portio.c \
 		-o $(OUTPUT_FOLDER)/inserter
 

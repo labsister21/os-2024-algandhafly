@@ -29,11 +29,14 @@ int main(void) {
     // if (retcode == 0)
     //     systemCall(6, (uint32_t) "owo\n", 4, 0xF);
 
-    char buf;
+    char *buf = "ayam";
     // systemCall(7, 0, 0, 0);
+    buf[0]++;
+    systemCall(5, (uint32_t) buf, 0, 0);
     while (true) {
-        systemCall(4, (uint32_t) &buf, 0, 0);
-        systemCall(5, (uint32_t) &buf, 0xF, 0);
+        // systemCall(4, (uint32_t) &buf, 0, 0);
+        buf[0]++;
+        systemCall(5, (uint32_t) buf, 0, 0);
     }
 
 
