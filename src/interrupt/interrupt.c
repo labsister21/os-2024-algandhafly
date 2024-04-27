@@ -103,8 +103,8 @@ void syscall(struct InterruptFrame frame) {
         case 6: 
             char*string = (char*)frame.cpu.general.ebx;
             uint32_t count = frame.cpu.general.ecx;
-            uint32_t color = frame.cpu.general.ecx; 
-            puts(string, count, color);
+            uint32_t color_ = frame.cpu.general.edx; 
+            puts(string, count, color_);
             break;
         case 7: 
             keyboard_state_activate();
