@@ -123,9 +123,6 @@ void main_interrupt_handler(struct InterruptFrame frame) {
             break;
         case 0x30:
             syscall(frame);
-            // pic_ack(frame.int_number - PIC1_OFFSET);
-            out(PIC2_COMMAND, PIC_ACK);
-            out(PIC1_COMMAND, PIC_ACK);
             break;
     }
 }

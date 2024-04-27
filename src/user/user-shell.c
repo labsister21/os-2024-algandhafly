@@ -33,11 +33,8 @@ int main(void) {
     // systemCall(7, 0, 0, 0);
     buf[0]++;
     systemCall(5, (uint32_t) buf, 0, 0);
-    while (true) {
-        // systemCall(4, (uint32_t) &buf, 0, 0);
-        buf[0]++;
-        systemCall(5, (uint32_t) buf, 0, 0);
-    }
+    buf = "reticulum endoplasma";
+    systemCall(5, (uint32_t) buf, 0, 0);
 
 
     return 0;
