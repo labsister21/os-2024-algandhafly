@@ -83,21 +83,16 @@ void syscall(struct InterruptFrame frame) {
             );
             break;
         case 4:
-            get_keyboard_buffer((char*) frame.cpu.general.ebx);
+            get_keyboard_buffer((char*)frame.cpu.general.ebx);
             break;
         case 5:
-            char* c = (char*)frame.cpu.general.ebx;
-            uint32_t color = frame.cpu.general.ecx;
-            puts(c, color);
-            c[0]++;
+            kernel_puts((char*)frame.cpu.general.ebx, frame.cpu.general.ecx, frame.cpu.general.edx);
             break;
         case 6: 
-            char*string = (char*)frame.cpu.general.ebx;
-            uint32_t count = frame.cpu.general.ecx;
-            uint32_t color_ = frame.cpu.general.edx; 
-            puts(string, color_);
+            kernel_get_line((char*)frame.cpu.general.ebx, frame.cpu.general.ecx, frame.cpu.general.edx);
             break;
         case 7: 
+            activate_keyboard_interrupt();
             keyboard_state_activate();
             break;
         case 8:

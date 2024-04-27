@@ -29,6 +29,12 @@
 #define Yellow 14
 #define White 15
 
+extern struct FramebufferState framebuffer_state;
+struct FramebufferState {
+    uint8_t cursor_x;
+    uint8_t cursor_y;
+} __attribute__((packed));
+
 /**
  * Terminal framebuffer
  * Resolution: 80x25
@@ -86,11 +92,12 @@ void framebuffer_write_length(uint8_t row, uint8_t col, const char* str, size_t 
  */
 void framebuffer_write_int(uint8_t row, uint8_t col, int num, uint8_t fg, uint8_t bg);
 
-void framebuffer_write_until_null(uint8_t row, uint8_t col, const char* str, uint8_t fg, uint8_t bg);
+// return the length of the string
+void framebuffer_write_and_move_cursor_until_null(const char* str, uint8_t fg, uint8_t bg);
 
 
-void put_char(char c, uint32_t color);
+void kernel_puts(char *str, uint8_t fg, uint8_t bg);
 
-void puts(const char *str, uint32_t color);
+void kernel_get_line(char *buf, uint8_t fg, uint8_t bg);
 
 #endif

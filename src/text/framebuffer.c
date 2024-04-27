@@ -4,9 +4,10 @@
 #include "header/text/framebuffer.h"
 #include "header/stdlib/string.h"
 #include "header/cpu/portio.h"
-// #include <sys/io.h>
+#include "header/driver/keyboard.h"
 
 uint16_t* framebuffer = (uint16_t*)(FRAMEBUFFER_MEMORY_OFFSET);
+struct FramebufferState framebuffer_state;
 
 void framebuffer_set_cursor(uint8_t r, uint8_t c) {
     uint16_t pos = r * WIDTH + c;
@@ -81,27 +82,74 @@ void framebuffer_write_int(uint8_t row, uint8_t col, int num, uint8_t fg, uint8_
     framebuffer_write_length(row, col, fliped_str, i, fg, bg);
 }
 
-void framebuffer_write_until_null(uint8_t row, uint8_t col, const char* str, uint8_t fg, uint8_t bg) {
+void framebuffer_write_and_move_cursor_until_null(const char* str, uint8_t fg, uint8_t bg) {
     size_t i = 0;
     while(str[i] != '\0') {
-        framebuffer_write(row, col, str[i], fg, bg);
+        if(str[i] == '\n') {
+            framebuffer_state.cursor_x = 0;
+            framebuffer_state.cursor_y++;
+            i++;
+            continue;
+        }
+        framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x, str[i], fg, bg);
         i++;
-        col++;
-        if(col == WIDTH) {
-            col = 0;
-            row++;
+        framebuffer_state.cursor_x++;
+        if(framebuffer_state.cursor_x == WIDTH) {
+            framebuffer_state.cursor_x = 0;
+            framebuffer_state.cursor_y++;
         }
     }
+    framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
 }
 
-void put_char(char c, uint32_t color)
+
+void kernel_puts(char *str, uint8_t fg, uint8_t bg)
 {
-    framebuffer_write_length(0, 0, &c, 1, 0x0F, 0x00); // sementara
-    // TODO: IMPLEMENT
+    framebuffer_write_and_move_cursor_until_null(str, fg, bg); // sementara
+    framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
 }
 
-void puts(const char *str, uint32_t color)
-{
-    framebuffer_write_until_null(0, 0, str, 0x0F, 0x00); // sementara
-    // TODO: IMPLEMENT
+void kernel_get_line(char *buf, uint8_t fg, uint8_t bg) {
+    initialize_idt(); // for some reason, the keyboard interrupt is not working without calling this again
+    keyboard_state_activate();
+
+    uint16_t i = 0;
+    while (true) {
+        char c;
+        get_keyboard_buffer(&c);
+
+        if (c == '\b') {
+            if (framebuffer_state.cursor_x == 0 && framebuffer_state.cursor_y == 0) continue;
+
+            if (framebuffer_state.cursor_x == 0 && framebuffer_state.cursor_y > 0) {
+                framebuffer_state.cursor_y--;
+                framebuffer_state.cursor_x = 79;
+            } else {
+                framebuffer_state.cursor_x--;
+            }
+
+            framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x, ' ', fg, bg);
+            framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
+
+
+
+        } else if (c == '\n') {
+            break;
+        }  else if (c) {
+            framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x++, c, fg, bg);
+            framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
+            buf[i] = c;
+            i++;
+        }
+
+        if (framebuffer_state.cursor_x == 80) {
+            framebuffer_state.cursor_x = 0;
+            framebuffer_state.cursor_y++;
+            framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
+        }
+
+    } 
+
+    keyboard_state_deactivate();
+
 }

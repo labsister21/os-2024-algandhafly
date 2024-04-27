@@ -20,7 +20,8 @@
         "typeinfo": "c",
         "fat32.h": "c",
         "paging.h": "c",
-        "stdio.h": "c"
-        
+        "stdio.h": "c",
+        "cstdint": "c",
+        "system.h": "c"
     },
 }

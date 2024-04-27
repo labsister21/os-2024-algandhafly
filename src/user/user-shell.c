@@ -1,41 +1,19 @@
-#include <stdint.h>
-#include <stdbool.h>
-#include "../header/filesystem/fat32.h"
+#include <io.h>
 
-void systemCall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx) {
-    __asm__ volatile("mov %0, %%ebx" : /* <Empty> */ : "r"(ebx));
-    __asm__ volatile("mov %0, %%ecx" : /* <Empty> */ : "r"(ecx));
-    __asm__ volatile("mov %0, %%edx" : /* <Empty> */ : "r"(edx));
-    __asm__ volatile("mov %0, %%eax" : /* <Empty> */ : "r"(eax));
-    // Note : gcc usually use %eax as intermediate register,
-    //        so it need to be the last one to mov
-    __asm__ volatile("int $0x30");
-}
-
+#define MAX_COMMAND_LENGTH 100
 
 int main(void) {
-    // __asm__ volatile("mov %0, %%eax" : /* <Empty> */ : "r"(0xDEADBEEF));
+    puts_color("OSLahPokokNya", Color_LightGreen, Color_Black);
+    puts_color(">", Color_LightBlue, Color_Black);
+    puts_color("$ ", Color_Yellow, Color_Black);
 
-    // struct ClusterBuffer      cl[2]   = {0};
-    // struct FAT32DriverRequest request = {
-    //     .buf                   = &cl,
-    //     .name                  = "shell",
-    //     .ext                   = "\0\0\0",
-    //     .parent_cluster_number = ROOT_CLUSTER_NUMBER,
-    //     .buffer_size           = CLUSTER_SIZE,
-    // };
-    // int32_t retcode;
-    // systemCall(0, (uint32_t) &request, (uint32_t) &retcode, 0);
-    // if (retcode == 0)
-    //     systemCall(6, (uint32_t) "owo\n", 4, 0xF);
+    set_active_keyboard(true);
+    
+    char buf[MAX_COMMAND_LENGTH];
+    get_line(buf);
 
-    char *buf = "ayam";
-    // systemCall(7, 0, 0, 0);
-    buf[0]++;
-    systemCall(5, (uint32_t) buf, 0, 0);
-    buf = "reticulum endoplasma";
-    systemCall(5, (uint32_t) buf, 0, 0);
-
+    puts_color("\nYou entered: ", Color_LightGreen, Color_Black);
+    puts_color(buf, Color_White, Color_Black);
 
     return 0;
 }

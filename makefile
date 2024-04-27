@@ -7,12 +7,13 @@ CC            = gcc
 SOURCE_FOLDER = src
 OUTPUT_FOLDER = bin
 ISO_NAME      = OS2024
+HEADER_DIR = src/header/user
 
 # Flags
 WARNING_CFLAG = -Wall -Wextra -Werror
 DEBUG_CFLAG   = -fshort-wchar -g
 STRIP_CFLAG   = -nostdlib -fno-stack-protector -nostartfiles -nodefaultlibs -ffreestanding
-CFLAGS        = $(DEBUG_CFLAG) $(STRIP_CFLAG) -m32 -c -I$(SOURCE_FOLDER)
+CFLAGS        = $(DEBUG_CFLAG) $(STRIP_CFLAG) -m32 -c -I $(SOURCE_FOLDER) -I $(HEADER_DIR)
 AFLAGS        = -f elf32 -g -F dwarf
 LFLAGS        = -T $(SOURCE_FOLDER)/linker.ld -melf_i386
 
@@ -20,7 +21,7 @@ DISK_NAME = sample-image
 COPY_SUFFIX = -copy
 
 # @qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso -no-reboot -d cpu_reset,int
-run: all disk insert-shell
+run: insert-shell all disk
 	@qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso
 
 disk:
@@ -84,16 +85,35 @@ inserter:
 		$(SOURCE_FOLDER)/cpu/portio.c \
 		-o $(OUTPUT_FOLDER)/inserter
 
-user-shell:
+
+
+
+
+USER_MAIN = user-shell
+USER_MAIN_SRC = $(USER_MAIN).c
+USER_MAIN_OBJ = $(USER_MAIN_SRC:.c=.o)
+
+USER_DIR = $(SOURCE_FOLDER)/user
+USER_SRC_ALL = $(wildcard $(USER_DIR)/*.c)
+USER_OBJS = $(patsubst $(USER_DIR)/%,$(OUTPUT_FOLDER)/user/%,$(USER_SRC_ALL:.c=.o))
+USER_OUTPUT_DIR = $(OUTPUT_FOLDER)/user
+
+$(OUTPUT_FOLDER)/%.o: $(USER_DIR)/%.c
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -fno-pie -c -o $@ $<
+user-shell: CFLAGS += -fno-pie
+user-shell: $(OUTPUT_FOLDER)/$(USER_MAIN_OBJ) $(USER_OBJS)
 	@$(ASM) $(AFLAGS) $(SOURCE_FOLDER)/user/crt0.s -o crt0.o
-	@$(CC)  $(CFLAGS) -fno-pie $(SOURCE_FOLDER)/user/user-shell.c -o user-shell.o
-	@$(CC)  $(CFLAGS) -fno-pie $(SOURCE_FOLDER)/stdlib/string.c -o string.o
+
 	@$(LIN) -T $(SOURCE_FOLDER)/user/user-linker.ld -melf_i386 --oformat=binary \
-		crt0.o user-shell.o -o $(OUTPUT_FOLDER)/shell
+		crt0.o ${USER_OBJS} -o $(OUTPUT_FOLDER)/shell
+
 	@echo Linking object shell object files and generate flat binary...
+
 	@$(LIN) -T $(SOURCE_FOLDER)/user/user-linker.ld -melf_i386 --oformat=elf32-i386 \
-		crt0.o user-shell.o string.o -o $(OUTPUT_FOLDER)/shell_elf
+		crt0.o ${USER_OBJS} -o $(OUTPUT_FOLDER)/shell_elf
 	@echo Linking object shell object files and generate ELF32 for debugging...
+
 	@size --target=binary $(OUTPUT_FOLDER)/shell
 	@rm -f *.o
 

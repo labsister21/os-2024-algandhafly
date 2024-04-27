@@ -79,7 +79,7 @@ void kernel_setup(void) {
     //         row++;
     //         framebuffer_set_cursor(row, col);
     //      }
-    // }
+    // } return;
 
 
     // === Milestone 1.4 ===
@@ -298,14 +298,11 @@ void kernel_setup(void) {
         .parent_cluster_number = ROOT_CLUSTER_NUMBER,
         .buffer_size           = 0x100000,
     };
-    int code = read(request);
-    framebuffer_write_int(0, 0, code, White, Black);
-    framebuffer_write_length(1, 0, fat32driver_state.dir_table_buf.table, 100, White, Black);
+    read(request);
 
     // Set TSS $esp pointer and jump into shell 
     set_tss_kernel_current_stack();
     kernel_execute_user_program((uint8_t*) 0);
-
 
     while (true);
 }
