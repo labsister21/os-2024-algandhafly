@@ -21,7 +21,7 @@ COPY_SUFFIX = -copy
 
 # @qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso -no-reboot -d cpu_reset,int
 run: all
-	@qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME)$(COPY_SUFFIX).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso
+	@qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso
 
 disk:
 	@qemu-img create -f raw $(OUTPUT_FOLDER)/$(DISK_NAME).bin 4M
@@ -100,14 +100,14 @@ user-shell:
 
 insert-shell: inserter user-shell $(OUTPUT_FOLDER)/$(DISK_NAME).bin
 	@echo Inserting shell into root directory...
-	./$(OUTPUT_FOLDER)/inserter $(OUTPUT_FOLDER)/shell 2 $(OUTPUT_FOLDER)/$(DISK_NAME).bin
+	@cd $(OUTPUT_FOLDER); ./inserter shell 2 $(DISK_NAME).bin
 	@echo Inserting shell into root directory finished!
 
 
 
 
 copydisk:
-	@cp $(OUTPUT_FOLDER)/$(DISK_NAME).bin $(OUTPUT_FOLDER)/$(DISK_NAME)$(COPY_SUFFIX).bin
+	@cp $(OUTPUT_FOLDER)/$(DISK_NAME).bin $(OUTPUT_FOLDER)/$(DISK_NAME).bin
 
 clean:
 	rm -rf $(wildcard $(OUTPUT_FOLDER)/*.iso) $(filter-out $(wildcard $(OUTPUT_FOLDER)/*.bin), $(wildcard $(OUTPUT_FOLDER)/*))

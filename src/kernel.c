@@ -298,7 +298,9 @@ void kernel_setup(void) {
         .parent_cluster_number = ROOT_CLUSTER_NUMBER,
         .buffer_size           = 0x100000,
     };
-    read(request);
+    int code = read(request);
+    framebuffer_write_int(0, 0, code, White, Black);
+    framebuffer_write_length(1, 0, fat32driver_state.dir_table_buf.table, 100, White, Black);
 
     // Set TSS $esp pointer and jump into shell 
     set_tss_kernel_current_stack();
