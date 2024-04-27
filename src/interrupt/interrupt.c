@@ -121,7 +121,7 @@ void main_interrupt_handler(struct InterruptFrame frame) {
         case PIC1_OFFSET + IRQ_KEYBOARD:
             keyboard_isr();
             break;
-        case 0xd:
+        case 0x30:
             syscall(frame);
             // pic_ack(frame.int_number - PIC1_OFFSET);
             out(PIC2_COMMAND, PIC_ACK);
