@@ -52,6 +52,8 @@ void main_interrupt_handler(struct InterruptFrame frame) {
         case PIC1_OFFSET + IRQ_KEYBOARD:
             keyboard_isr();
             break;
+        case 0xd:
+            pic_ack(0xd);
     }
     
     

@@ -30,7 +30,7 @@ int main(void) {
     //     systemCall(6, (uint32_t) "owo\n", 4, 0xF);
 
     char buf;
-    systemCall(7, 0, 0, 0);
+    // systemCall(7, 0, 0, 0);
     while (true) {
         systemCall(4, (uint32_t) &buf, 0, 0);
         systemCall(5, (uint32_t) &buf, 0xF, 0);
