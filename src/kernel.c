@@ -29,7 +29,7 @@ void kernel_setup(void) {
 
     // === Milestone 1.1 ===
     // framebuffer_clear();
-    // drawWelcomeScreen();
+    drawWelcomeScreen(); return;
     // framebuffer_set_cursor(79, 24);
 
     // === Milestone 1.2 ===
