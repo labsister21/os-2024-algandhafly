@@ -6,7 +6,7 @@
 #include "header/cpu/portio.h"
 // #include <sys/io.h>
 
-uint16_t* framebuffer = (uint32_t*)(FRAMEBUFFER_MEMORY_OFFSET);
+uint16_t* framebuffer = (uint16_t*)(FRAMEBUFFER_MEMORY_OFFSET);
 
 void framebuffer_set_cursor(uint8_t r, uint8_t c) {
     uint16_t pos = r * WIDTH + c;

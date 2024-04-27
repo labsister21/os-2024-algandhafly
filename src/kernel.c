@@ -23,13 +23,12 @@ void handleEnterKey(int *row, int *col) {
 }
 
 void kernel_setup(void) {
-    
     // === Milestone 0 ===
     // load_gdt(&_gdt_gdtr);
 
     // === Milestone 1.1 ===
     // framebuffer_clear();
-    drawWelcomeScreen(); return;
+    // drawWelcomeScreen();
     // framebuffer_set_cursor(79, 24);
 
     // === Milestone 1.2 ===

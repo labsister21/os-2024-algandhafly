@@ -13,7 +13,6 @@ void initialize_idt(void) {
     for (int i = 0; i < ISR_STUB_TABLE_LIMIT; i++) {
         uint8_t privilege = 0;
         if (i - 0x30) privilege = 0x3; 
-        
         set_interrupt_gate(i, isr_stub_table[i], GDT_KERNEL_CODE_SEGMENT_SELECTOR, privilege);
     }
 
