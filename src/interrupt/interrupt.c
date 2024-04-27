@@ -96,18 +96,17 @@ void syscall(struct InterruptFrame frame) {
             keyboard_state_activate();
             break;
         case 8:
-            uint8_t row, col;
-            row = frame.cpu.general.ebx;
-            col = frame.cpu.general.ecx;
-            framebuffer_set_cursor(row, col);
-            break;
-        case 9:
             framebuffer_clear();
             break;
+        case 9:
+            framebuffer_set_cursor(frame.cpu.general.ebx, frame.cpu.general.ecx);
+            framebuffer_state.cursor_x = frame.cpu.general.ecx;
+            framebuffer_state.cursor_y = frame.cpu.general.ebx;
+            break;
         case 10:
-            // framebuffer_write_int();
+            break;
         case 11:
-            // framebuffer_write_length();
+            break;
     }
 }
 

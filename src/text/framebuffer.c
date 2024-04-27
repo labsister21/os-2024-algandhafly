@@ -119,6 +119,8 @@ void kernel_get_line(char *buf, uint8_t fg, uint8_t bg) {
         get_keyboard_buffer(&c);
 
         if (c == '\b') {
+            if(i == 0) continue;
+            i--;
             if (framebuffer_state.cursor_x == 0 && framebuffer_state.cursor_y == 0) continue;
 
             if (framebuffer_state.cursor_x == 0 && framebuffer_state.cursor_y > 0) {

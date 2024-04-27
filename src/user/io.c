@@ -27,3 +27,10 @@ void set_active_keyboard(bool active) {
     systemCall(7, active, 0, 0);
 }
 
+void clear_screen() {
+    systemCall(8, 0, 0, 0);
+}
+void set_cursor(uint8_t x, uint8_t y) {
+    systemCall(9, x, y, 0);
+}
+

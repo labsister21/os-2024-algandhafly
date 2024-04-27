@@ -34,5 +34,8 @@ void get_line_color(char *buf, uint8_t fg, uint8_t bg);
 
 void set_active_keyboard(bool active);
 
+void clear_screen();
+
+void set_cursor(uint8_t x, uint8_t y);
 
 #endif
