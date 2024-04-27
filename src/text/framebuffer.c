@@ -80,3 +80,13 @@ void framebuffer_write_int(uint8_t row, uint8_t col, int num, uint8_t fg, uint8_
     }
     framebuffer_write_length(row, col, fliped_str, i, fg, bg);
 }
+
+void put_char(char c, uint32_t color)
+{
+    // TODO: IMPLEMENT
+}
+
+void puts(const char *str, uint32_t count, uint32_t color)
+{
+    // TODO: IMPLEMENT
+}

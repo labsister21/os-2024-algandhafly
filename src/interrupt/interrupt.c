@@ -3,6 +3,8 @@
 #include "header/text/stringdrawer.h"
 #include "header/driver/keyboard.h"
 #include "header/cpu/gdt.h"
+#include "header/filesystem/fat32.h"
+#include "header/text/framebuffer.h"
 
 struct TSSEntry _interrupt_tss_entry = {
     .ss0  = GDT_KERNEL_DATA_SEGMENT_SELECTOR,
@@ -66,4 +68,59 @@ void set_tss_kernel_current_stack(void) {
     __asm__ volatile ("mov %%ebp, %0": "=r"(stack_ptr) : /* <Empty> */);
     // Add 8 because 4 for ret address and other 4 is for stack_ptr variable
     _interrupt_tss_entry.esp0 = stack_ptr + 8; 
+}
+
+void syscall(struct InterruptFrame frame) {
+    switch (frame.cpu.general.eax) {
+        case 0:
+            *((int8_t*) frame.cpu.general.ecx) = read(
+                *(struct FAT32DriverRequest*) frame.cpu.general.ebx
+            );
+            break;
+        case 1:
+            *((int8_t*) frame.cpu.general.ecx) = read_directory(
+                *(struct FAT32DriverRequest*) frame.cpu.general.ebx
+            );
+            break;
+        case 2:
+            *((int8_t*) frame.cpu.general.ecx) = write(
+                *(struct FAT32DriverRequest*) frame.cpu.general.ebx
+            );
+            break;
+        case 3:
+            *((int8_t*) frame.cpu.general.ecx) = delete(
+                *(struct FAT32DriverRequest*) frame.cpu.general.ebx
+            );
+            break;
+        case 4:
+            get_keyboard_buffer((char*) frame.cpu.general.ebx);
+            break;
+        case 5:
+            char c = frame.cpu.general.eax;
+            uint32_t color = frame.cpu.general.ebx;
+            put_char(c, color);
+            break;
+        case 6: 
+            char*string = (char*)frame.cpu.general.ebx;
+            uint32_t count = frame.cpu.general.ecx;
+            uint32_t color = frame.cpu.general.ecx; 
+            puts(string, count, color);
+            break;
+        case 7: 
+            keyboard_state_activate();
+            break;
+        case 8:
+            uint8_t row, col;
+            row = frame.cpu.general.ebx;
+            col = frame.cpu.general.ecx;
+            framebuffer_set_cursor(row, col);
+            break;
+        case 9:
+            framebuffer_clear();
+            break;
+        case 10:
+            // framebuffer_write_int();
+        case 11:
+            // framebuffer_write_length();
+    }
 }

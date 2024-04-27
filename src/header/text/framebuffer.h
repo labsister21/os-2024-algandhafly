@@ -86,4 +86,8 @@ void framebuffer_write_length(uint8_t row, uint8_t col, const char* str, size_t 
 void framebuffer_write_int(uint8_t row, uint8_t col, int num, uint8_t fg, uint8_t bg);
 
 
+void put_char(char c, uint32_t color);
+
+void puts(const char *str, uint32_t count, uint32_t color);
+
 #endif
