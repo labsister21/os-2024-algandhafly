@@ -12,19 +12,31 @@ void systemCall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx) {
 }
 
 struct FAT32DriverState user_fat32_state;
+uint32_t current_parent_cluster = 2;
 
 void init_user_driver_state(){
+    current_parent_cluster = 2;
     get_dir(&user_fat32_state.dir_table_buf, "root\0\0\0\0");
 }
 
 void get_dir(struct FAT32DirectoryTable *dir_table, const char folderName[8]) {
     struct FAT32DriverRequest request;
-    request.parent_cluster_number = 2;
+    request.parent_cluster_number = current_parent_cluster;
     memcpy(request.name, folderName, 8);
     request.buf = dir_table;
 
     uint8_t error_code;
     systemCall(1, (uint32_t )&request, (uint32_t )&error_code, 0);
+}
+
+void make_directory(const char folderName[8]) {
+    struct FAT32DriverRequest request;
+    request.parent_cluster_number = current_parent_cluster;
+    memcpy(request.name, folderName, 8);
+    request.buf;
+
+    uint8_t error_code;
+    systemCall(2, (uint32_t )&request, (uint32_t )&error_code, 0);
 }
 
 bool is_empty(struct FAT32DirectoryEntry *entry) {

@@ -26,12 +26,19 @@ void help_command() {
 void print_current_directory() {
     char dirs[MAX_DIR_LENGTH][DIR_NAME_LENGTH];
     uint32_t len = DIR_NAME_LENGTH;
+    struct FAT32DirectoryTable dir_table;
+    get_dir(&dir_table, current_directory);
     puts("\n");
     for(uint32_t i = 2; i < MAX_DIR_LENGTH; i++){
-        if(is_empty(&user_fat32_state.dir_table_buf.table[i])) break;
-        puts(user_fat32_state.dir_table_buf.table[i].name);
+        if(is_empty(&dir_table.table[i])) break;
+        puts(dir_table.table[i].name);
         puts("\n");
     }
+}
+
+void print_make_directory(const char folderName[8]) {
+    make_directory(folderName);
+    puts("\n");
 }
 
 const char clear[5] = "clear";
@@ -55,8 +62,10 @@ void command(char *buf) {
     } else if (memcmp(buf, ls, 2) == 0) {
         print_current_directory();
     } else if (memcmp(buf, mkdir, 4) == 0) {
-        // mkdir
-        puts("\n\nmkdir");
+        char folderName[8];
+        memcpy(folderName, buf + 6, 8);
+        print_make_directory(folderName);
+
     } else if (memcmp(buf, cat, 3) == 0) {
         // cat
         puts("\n\ncat");

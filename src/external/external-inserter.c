@@ -55,11 +55,12 @@ int main(int argc, char *argv[]) {
         fclose(fptr_target);
     }
 
-    printf("Filename : %s\n",  argv[1]);
-    printf("Filesize : %ld bytes\n", filesize);
+    printf("Filename       : %s\n",  argv[1]);
+    printf("Filesize       : %ld bytes\n", filesize);
+    printf("Parent Cluster : %s\n",  argv[2]);
 
     // FAT32 operations
-    initialize_filesystem_fat32();
+    initialize_filesystem_fat32(); 
     struct FAT32DriverRequest request = {
         .buf         = file_buffer,
         .ext         = "\0\0\0",
