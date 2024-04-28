@@ -22,31 +22,14 @@ void help_command() {
     puts("help  : Show this help\n\n");
 }
 
-void get_current_directory(struct FAT32DirectoryTable *dir_table) {
-    struct FAT32DriverRequest request;
-    request.parent_cluster_number = 2;
-    memcpy(request.name, "root\0\0\0\0", 8);
-    request.buf = dir_table;
 
-    uint8_t error_code;
-    systemCall(1, (uint32_t )&request, (uint32_t )&error_code, 0);
-    if(error_code != 0) {
-        puts("\nError code: "); put_int(error_code); puts("\n");
-    }
-}
-
-bool is_empty(struct FAT32DirectoryEntry *entry) {
-    return entry->user_attribute != UATTR_NOT_EMPTY;
-}
 void print_current_directory() {
     char dirs[MAX_DIR_LENGTH][DIR_NAME_LENGTH];
-    struct FAT32DirectoryTable dir_table;
-    get_current_directory(&dir_table);
     uint32_t len = DIR_NAME_LENGTH;
     puts("\n");
-    for(uint32_t i = 0; i < MAX_DIR_LENGTH; i++){
-        if(is_empty(&dir_table.table[i])) break;
-        puts(dir_table.table[i].name);
+    for(uint32_t i = 2; i < MAX_DIR_LENGTH; i++){
+        if(is_empty(&user_fat32_state.dir_table_buf.table[i])) break;
+        puts(user_fat32_state.dir_table_buf.table[i].name);
         puts("\n");
     }
 }

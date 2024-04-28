@@ -4,6 +4,7 @@
 #define MAX_COMMAND_LENGTH 100
 
 int main(void) {
+    init_user_driver_state();
     char buf[MAX_COMMAND_LENGTH];
 
     while(true) {
