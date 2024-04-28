@@ -172,6 +172,7 @@ void kernel_setup(void) {
     // // memcpy(request2.name, "new1", 4); // for [Test write]
     // // memcpy(request2.ext, "txt", 3); // for [Test write]
     // // request2.parent_cluster_number = 8; // for [Test write]
+    // request2.buf = fat32driver_state.dir_table_buf.table;
     // int8_t error_code_2 = read(request2);
     // if(error_code_2 == 0) {
     //     framebuffer_write_length(0, 0, "Found name:", 11, White, Black);

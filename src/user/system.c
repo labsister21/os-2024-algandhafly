@@ -23,8 +23,8 @@ void init_user_driver_state(){
     get_dir(&user_fat32_state.dir_table_buf, "root\0\0\0\0");
 }
 
-void get_cwd(struct FAT32DirectoryTable *dir_table) {
-    get_dir(dir_table, current_directory);
+uint8_t get_cwd(struct FAT32DirectoryTable *dir_table) {
+    return get_dir(dir_table, current_directory);
 }
 
 bool is_in_root() {
@@ -38,7 +38,7 @@ void get_dir_str(char *dir_str) {
     memcpy(dir_str, current_directory, DIR_NAME_LENGTH);
 }
 
-void get_dir(struct FAT32DirectoryTable *dir_table, const char folderName[DIR_NAME_LENGTH]) {
+uint8_t get_dir(struct FAT32DirectoryTable *dir_table, const char folderName[DIR_NAME_LENGTH]) {
     struct FAT32DriverRequest request;
     request.parent_cluster_number = current_parent_cluster;
     memcpy(request.name, folderName, DIR_NAME_LENGTH);
@@ -46,10 +46,10 @@ void get_dir(struct FAT32DirectoryTable *dir_table, const char folderName[DIR_NA
 
     uint8_t error_code;
     systemCall(1, (uint32_t )&request, (uint32_t )&error_code, 0);
+    return error_code;
 }
 
-void make_directory(char folderName[DIR_NAME_LENGTH]) {
-
+uint8_t make_directory(char folderName[DIR_NAME_LENGTH]) {
     struct FAT32DriverRequest request = {
         .parent_cluster_number = current_parent_cluster,
         .buffer_size = 0,
@@ -59,6 +59,7 @@ void make_directory(char folderName[DIR_NAME_LENGTH]) {
 
     uint8_t error_code;
     systemCall(2, (uint32_t )&request, (uint32_t )&error_code, 0);
+    return error_code;
 }
 
 bool is_empty(struct FAT32DirectoryEntry *entry) {
@@ -69,4 +70,19 @@ bool is_directory(struct FAT32DirectoryEntry *entry) {
 }
 bool is_file(struct FAT32DirectoryEntry *entry) {
     return entry->attribute != ATTR_SUBDIRECTORY;
+}
+
+uint8_t read_file(struct FAT32DirectoryEntry *entry, char *buf) {
+    struct FAT32DriverRequest request = {
+        .parent_cluster_number = current_parent_cluster,
+        .buffer_size = entry->filesize,
+    };
+    memcpy(request.name, entry->name, 8);
+    memcpy(request.ext, entry->ext, 3);
+    request.buf = buf;
+
+    uint8_t error_code;
+    systemCall(0, (uint32_t )&request, (uint32_t )&error_code, 0);
+
+    return error_code;
 }

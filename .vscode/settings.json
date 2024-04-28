@@ -24,6 +24,7 @@
         "cstdint": "c",
         "system.h": "c",
         "stdlib.h": "c",
-        "command.h": "c"
+        "command.h": "c",
+        "tes": "c"
     },
 }

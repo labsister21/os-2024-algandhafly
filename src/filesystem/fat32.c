@@ -183,7 +183,7 @@ int8_t read(struct FAT32DriverRequest request){
                 return 2; // Not enough buffer size
             }
             // Load the requested buffer
-            uint16_t count_cluster = (table[i].filesize + CLUSTER_SIZE) / CLUSTER_SIZE; // Rounded-up division
+            uint16_t count_cluster = (table[i].filesize + CLUSTER_SIZE - 1) / CLUSTER_SIZE; // Rounded-up division
             uint16_t cluster = table[i].cluster_low;
             for(uint16_t j=0;j<count_cluster;j++){ // Bisa pake while (cluster != END_OF_BLALAL)
                 read_clusters(request.buf + j * CLUSTER_SIZE,cluster,1);

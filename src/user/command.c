@@ -62,9 +62,31 @@ void handle_ls() {
 void handle_mkdir(char *buf) {
     char folderName[DIR_NAME_LENGTH];
     memcpy(folderName, buf + 6, 8);
-    make_directory(folderName);
-    puts("\n");
+    uint8_t error_code = make_directory(folderName);
+    if(error_code != 0) {
+        puts("\nError Code: ");
+        put_int(error_code);
+    }
 }
+
+void handle_cat(char* buf){
+    char fileName[DIR_NAME_LENGTH];
+    memcpy(fileName, (char*)(buf + 4), 8);
+
+    struct FAT32DirectoryEntry entry = {
+        .filesize = 0x13C5,
+    };
+    memcpy(entry.name, fileName, 8); // kano
+    memcpy(entry.ext, "\0\0\0", 3);
+
+    char content[entry.filesize + 1];
+    uint8_t error_code = read_file(&entry, content);
+
+    // Not working in user mode but works in kernel mode
+    // puts(content);
+    // puts("\n");
+}
+
 
 const char clear[5] = "clear";
 const char help[5] = "help";
@@ -87,10 +109,8 @@ void command(char *buf) {
         handle_ls();
     } else if (memcmp(buf, mkdir, 4) == 0) {
         handle_mkdir(buf);
-
     } else if (memcmp(buf, cat, 3) == 0) {
-        // cat
-        puts("\n\ncat");
+        handle_cat(buf);
     } else if (memcmp(buf, cp, 2) == 0) {
         // cp
         puts("\n\ncp");
@@ -105,8 +125,7 @@ void command(char *buf) {
         puts("\n\nfind");
     } else if (memcmp(buf, help, 4) == 0) {
         help_command();
-    }
-    else {
+    } else {
         puts("\nCommand ");
         puts(buf);
         puts(" not found\n");
