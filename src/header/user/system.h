@@ -24,6 +24,7 @@ bool is_directory(struct FAT32DirectoryEntry *entry);
 bool is_file(struct FAT32DirectoryEntry *entry);
 
 uint8_t read_file(struct FAT32DirectoryEntry *entry, char *buf);
+uint8_t delete_file_or_dir(struct FAT32DirectoryEntry *entry);
 
 // Codes:
 // 0: Read

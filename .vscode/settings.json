@@ -25,6 +25,9 @@
         "system.h": "c",
         "stdlib.h": "c",
         "command.h": "c",
-        "tes": "c"
+        "tes": "c",
+        "concepts": "c",
+        "type_traits": "c",
+        "new": "c"
     },
 }

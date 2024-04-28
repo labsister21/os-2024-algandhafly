@@ -52,9 +52,14 @@ void handle_ls() {
     struct FAT32DirectoryTable dir_table;
     get_cwd(&dir_table);
     puts("\n");
-    for(uint32_t i = 2; i < MAX_DIR_LENGTH; i++){
-        if(is_empty(&dir_table.table[i])) break;
-        puts(dir_table.table[i].name);
+    for(uint32_t i = 2; i < 64; i++){
+        if(is_empty(&dir_table.table[i])) continue;;
+
+        if(is_directory(&dir_table.table[i])) {
+            puts_color(dir_table.table[i].name, Color_LightCyan, Color_Black);
+        } else {
+            puts_color(dir_table.table[i].name, Color_LightBlue, Color_Black);
+        }
         puts("\n");
     }
 }
@@ -74,7 +79,7 @@ void handle_cat(char* buf){
     memcpy(fileName, (char*)(buf + 4), 8);
 
     struct FAT32DirectoryEntry entry = {
-        .filesize = 0x13C5,
+        .filesize = 0xFFFF,
     };
     memcpy(entry.name, fileName, 8); // kano
     memcpy(entry.ext, "\0\0\0", 3);
@@ -87,6 +92,24 @@ void handle_cat(char* buf){
     // puts("\n");
 }
 
+void handle_rm(char* buf){
+    char fileName[DIR_NAME_LENGTH];
+    memcpy(fileName, (char*)(buf + 3), 8);
+
+    struct FAT32DirectoryEntry entry = {
+        .filesize = 0xFFFF,
+    };
+
+    memcpy(entry.name, fileName, 8);
+    memcpy(entry.ext, "\0\0\0", 3);
+
+    uint8_t error_code = delete_file_or_dir(&entry);
+    if(error_code != 0) {
+        puts("\nError Code: ");
+        put_int(error_code);
+        puts("\n");
+    }
+}
 
 const char clear[5] = "clear";
 const char help[5] = "help";
@@ -115,8 +138,7 @@ void command(char *buf) {
         // cp
         puts("\n\ncp");
     } else if (memcmp(buf, rm, 2) == 0) {
-        // rm
-        puts("\n\nrm");
+        handle_rm(buf);
     } else if (memcmp(buf, mv, 2) == 0) {
         // mv
         puts("\n\nmv");

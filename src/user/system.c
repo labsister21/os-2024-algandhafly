@@ -86,3 +86,16 @@ uint8_t read_file(struct FAT32DirectoryEntry *entry, char *buf) {
 
     return error_code;
 }
+
+uint8_t delete_file_or_dir(struct FAT32DirectoryEntry *entry) {
+    struct FAT32DriverRequest request = {
+        .parent_cluster_number = current_parent_cluster,
+        .buffer_size = 0,
+    };
+    memcpy(request.name, entry->name, 8);
+    memcpy(request.ext, entry->ext, 3);
+
+    uint8_t error_code;
+    systemCall(3, (uint32_t )&request, (uint32_t )&error_code, 0);
+    return error_code;
+}
