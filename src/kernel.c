@@ -301,7 +301,12 @@ void kernel_setup(void) {
         .parent_cluster_number = ROOT_CLUSTER_NUMBER,
         .buffer_size           = 0x100000,
     };
-    read(request);
+    uint8_t error_code = read(request);
+    if (error_code != 0) {
+        framebuffer_write_length(0, 0, "Error Code:", 11, White, Black);
+        framebuffer_write_int(0, 13, error_code, White, Black);
+        framebuffer_write_length(1, 0, "Error: Shell not found", 22, White, Black);
+    }
 
     // Set TSS $esp pointer and jump into shell 
     set_tss_kernel_current_stack();

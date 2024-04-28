@@ -183,7 +183,7 @@ int8_t read(struct FAT32DriverRequest request){
                 return 2; // Not enough buffer size
             }
             // Load the requested buffer
-            uint16_t count_cluster = (table[i].filesize + CLUSTER_SIZE - 1) / CLUSTER_SIZE; // Rounded-up division
+            uint16_t count_cluster = (table[i].filesize + CLUSTER_SIZE) / CLUSTER_SIZE; // Rounded-up division
             uint16_t cluster = table[i].cluster_low;
             for(uint16_t j=0;j<count_cluster;j++){ // Bisa pake while (cluster != END_OF_BLALAL)
                 read_clusters(request.buf + j * CLUSTER_SIZE,cluster,1);
@@ -211,7 +211,7 @@ int8_t write(struct FAT32DriverRequest request){
         return 2;
     }
 
-    uint16_t cluster_amount = (request.buffer_size + CLUSTER_SIZE - 1) / CLUSTER_SIZE; // Rounded-up division
+    uint16_t cluster_amount = (request.buffer_size + CLUSTER_SIZE) / CLUSTER_SIZE; // Rounded-up division
     uint16_t locations[cluster_amount];
     uint16_t current_cluster = 3; // Starts from cluster 3
     uint16_t cluster_count = 0;
@@ -263,13 +263,11 @@ int8_t write(struct FAT32DriverRequest request){
     // Requested only want folder
     if(request.buffer_size == 0){
         table[directory_location].attribute = ATTR_SUBDIRECTORY;
-
-        // Initialize new directory table with locations[0] as its parent
-        init_directory_table(request.buf,request.name,locations[0]); 
-
+        init_directory_table(request.buf,request.name,locations[0]);
     }
     // Requested only want file
     else{
+        table[directory_location].attribute = !ATTR_SUBDIRECTORY;
         memcpy(table[directory_location].ext,request.ext,3);
 
         // Iterate locations

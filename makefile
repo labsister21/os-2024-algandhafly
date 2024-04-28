@@ -33,8 +33,6 @@ run:
 disk:
 	@qemu-img create -f raw $(OUTPUT_FOLDER)/$(DISK_NAME).bin 4M
 
-$(OUTPUT_FOLDER)/$(DISK_NAME).bin: disk
-
 all: build
 build: iso
 
