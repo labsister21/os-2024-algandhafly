@@ -7,21 +7,24 @@ CC            = gcc
 SOURCE_FOLDER = src
 OUTPUT_FOLDER = bin
 ISO_NAME      = OS2024
-HEADER_DIR = src/header/user
+HEADER_DIR = src/header
+USER_HEADER_DIR = src/header/user
+STDLIB_HEADER_DIR = src/header/stdlib
 
 # Flags
 WARNING_CFLAG = -Wall -Wextra -Werror
 DEBUG_CFLAG   = -fshort-wchar -g
 STRIP_CFLAG   = -nostdlib -fno-stack-protector -nostartfiles -nodefaultlibs -ffreestanding
-CFLAGS        = $(DEBUG_CFLAG) $(STRIP_CFLAG) -m32 -c -I $(SOURCE_FOLDER) -I $(HEADER_DIR)
+CFLAGS        = $(DEBUG_CFLAG) $(STRIP_CFLAG) -m32 -c -I $(SOURCE_FOLDER) -I ${HEADER_DIR} -I $(USER_HEADER_DIR) -I $(STDLIB_HEADER_DIR)
 AFLAGS        = -f elf32 -g -F dwarf
 LFLAGS        = -T $(SOURCE_FOLDER)/linker.ld -melf_i386
 
-DISK_NAME = sample-image
+DISK_NAME = storage
+SAMPLE_DISK_NAME = sample-image
 COPY_SUFFIX = -copy
 
 # @qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso -no-reboot -d cpu_reset,int
-run: insert-shell all disk
+run: copysampledisk insert-shell all
 	@qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso
 
 disk:
@@ -94,7 +97,8 @@ USER_MAIN_SRC = $(USER_MAIN).c
 USER_MAIN_OBJ = $(USER_MAIN_SRC:.c=.o)
 
 USER_DIR = $(SOURCE_FOLDER)/user
-USER_SRC_ALL = $(wildcard $(USER_DIR)/*.c)
+STDLIB_DIR = $(SOURCE_FOLDER)/stdlib
+USER_SRC_ALL = $(wildcard $(USER_DIR)/*.c) $(wildcard $(STDLIB_DIR)/*.c)
 USER_OBJS = $(patsubst $(USER_DIR)/%,$(OUTPUT_FOLDER)/user/%,$(USER_SRC_ALL:.c=.o))
 USER_OUTPUT_DIR = $(OUTPUT_FOLDER)/user
 
@@ -127,6 +131,9 @@ insert-shell: inserter user-shell $(OUTPUT_FOLDER)/$(DISK_NAME).bin
 
 copydisk:
 	@cp $(OUTPUT_FOLDER)/$(DISK_NAME).bin $(OUTPUT_FOLDER)/$(DISK_NAME).bin
+
+copysampledisk:
+	@cp $(OUTPUT_FOLDER)/$(SAMPLE_DISK_NAME).bin $(OUTPUT_FOLDER)/$(DISK_NAME).bin
 
 clean:
 	rm -rf $(wildcard $(OUTPUT_FOLDER)/*.iso) $(filter-out $(wildcard $(OUTPUT_FOLDER)/*.bin), $(wildcard $(OUTPUT_FOLDER)/*))

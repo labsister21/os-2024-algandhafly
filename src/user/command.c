@@ -1,15 +1,12 @@
 #include <command.h>
+#include <system.h>
 #include <io.h>
-#include "header/stdlib/string.h"
+#include <string.h>
+#include "header/filesystem/fat32.h"
 
-bool strcmp(char *a, char *b, int length) {
-    for(int i = 0; i < length; i++) {
-        if(a[i] != b[i]) {
-            return false;
-        }
-    }
-    return true;
-}
+
+const char current_directory[DIR_NAME_LENGTH] = "root";
+const char current_directory_path[MAX_DIR_LENGTH] = "/";
 
 void help_command() {
     puts("\n\n");
@@ -25,6 +22,35 @@ void help_command() {
     puts("help  : Show this help\n\n");
 }
 
+void get_current_directory(struct FAT32DirectoryTable *dir_table) {
+    struct FAT32DriverRequest request;
+    request.parent_cluster_number = 2;
+    memcpy(request.name, "root\0\0\0\0", 8);
+    request.buf = dir_table;
+
+    uint8_t error_code;
+    systemCall(1, (uint32_t )&request, (uint32_t )&error_code, 0);
+    if(error_code != 0) {
+        puts("\nError code: "); put_int(error_code); puts("\n");
+    }
+}
+
+bool is_empty(struct FAT32DirectoryEntry *entry) {
+    return entry->user_attribute != UATTR_NOT_EMPTY;
+}
+void print_current_directory() {
+    char dirs[MAX_DIR_LENGTH][DIR_NAME_LENGTH];
+    struct FAT32DirectoryTable dir_table;
+    get_current_directory(&dir_table);
+    uint32_t len = DIR_NAME_LENGTH;
+    puts("\n");
+    for(uint32_t i = 0; i < MAX_DIR_LENGTH; i++){
+        if(is_empty(&dir_table.table[i])) break;
+        puts(dir_table.table[i].name);
+        puts("\n");
+    }
+}
+
 const char clear[5] = "clear";
 const char help[5] = "help";
 const char cd[2] = "cd"; // cd	- Mengganti current working directory (termasuk .. untuk naik)
@@ -37,37 +63,38 @@ const char mv[2] = "mv"; // mv	- Memindah dan merename lokasi file/folder
 const char find[4] = "find"; // find	- Mencari file/folder dengan nama yang sama diseluruh file system
 
 void command(char *buf) {
-    if(strcmp(buf, clear, 4)) {
+    if(memcmp(buf, clear, 4) == 0) {
         clear_screen();
         set_cursor(0, 0);
-    } else if (strcmp(buf, cd, 1)) {
+    } else if (memcmp(buf, cd, 2) == 0) {
         // cd
         puts("\n\ncd");
-    } else if (strcmp(buf, ls, 1)) {
-        // ls
-        puts("\n\nls");
-    } else if (strcmp(buf, mkdir, 4)) {
+    } else if (memcmp(buf, ls, 2) == 0) {
+        print_current_directory();
+    } else if (memcmp(buf, mkdir, 4) == 0) {
         // mkdir
         puts("\n\nmkdir");
-    } else if (strcmp(buf, cat, 3)) {
+    } else if (memcmp(buf, cat, 3) == 0) {
         // cat
         puts("\n\ncat");
-    } else if (strcmp(buf, cp, 1)) {
+    } else if (memcmp(buf, cp, 2) == 0) {
         // cp
         puts("\n\ncp");
-    } else if (strcmp(buf, rm, 1)) {
+    } else if (memcmp(buf, rm, 2) == 0) {
         // rm
         puts("\n\nrm");
-    } else if (strcmp(buf, mv, 1)) {
+    } else if (memcmp(buf, mv, 2) == 0) {
         // mv
         puts("\n\nmv");
-    } else if (strcmp(buf, find, 4)) {
+    } else if (memcmp(buf, find, 4) == 0) {
         // find
         puts("\n\nfind");
-    } else if (strcmp(buf, help, 4)) {
+    } else if (memcmp(buf, help, 4) == 0) {
         help_command();
     }
     else {
-        puts("\nCommand not found\n");
+        puts("\nCommand ");
+        puts(buf);
+        puts(" not found\n");
     }
 }

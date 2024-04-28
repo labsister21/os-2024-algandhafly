@@ -1,11 +1,49 @@
 #include <io.h>
 #include <system.h>
+#include <stddef.h>
 
 void puts(char *str) {
     systemCall(5, (uint32_t) str, Color_White, Color_Black);
 }
 void puts_color(char *str, uint8_t fg, uint8_t bg) {
     systemCall(5, (uint32_t) str, fg, bg);
+}
+void put_int_color(int num, uint8_t fg, uint8_t bg) {
+    if(num == 0) {
+        puts_color("0", fg, bg);
+        return;
+    }
+    char str[32];
+    size_t i = 0;
+    bool is_negative = false;
+    if(num < 0) {
+        num = -num;
+        is_negative = true;
+    }
+    while(num > 0) {
+        str[i] = (char)(num % 10 + '0');
+        num /= 10;
+        i++;
+    }
+    
+    char fliped_str[i+2];
+    if(is_negative) {
+        fliped_str[0] = '-';
+        i++;
+        for(size_t j = 1; j < i; j++) {
+            fliped_str[j] = str[i-j-1];
+        }
+    } else {
+        for(size_t j = 0; j < i; j++) {
+            fliped_str[j] = str[i-j-1];
+        }
+    }
+    fliped_str[i] = '\0';
+    puts_color(fliped_str, fg, bg);
+}
+
+void put_int(int num) {
+    put_int_color(num, Color_White, Color_Black);
 }
 
 void put_char(char c) {

@@ -5,6 +5,7 @@
 #include "header/cpu/gdt.h"
 #include "header/filesystem/fat32.h"
 #include "header/text/framebuffer.h"
+#include "header/stdlib/string.h"
 
 struct TSSEntry _interrupt_tss_entry = {
     .ss0  = GDT_KERNEL_DATA_SEGMENT_SELECTOR,
@@ -69,7 +70,7 @@ void syscall(struct InterruptFrame frame) {
             break;
         case 1:
             *((int8_t*) frame.cpu.general.ecx) = read_directory(
-                *(struct FAT32DriverRequest*) frame.cpu.general.ebx
+                *(struct FAT32DriverRequest*)frame.cpu.general.ebx
             );
             break;
         case 2:

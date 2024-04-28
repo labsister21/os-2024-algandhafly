@@ -22,6 +22,8 @@
         "paging.h": "c",
         "stdio.h": "c",
         "cstdint": "c",
-        "system.h": "c"
+        "system.h": "c",
+        "stdlib.h": "c",
+        "command.h": "c"
     },
 }

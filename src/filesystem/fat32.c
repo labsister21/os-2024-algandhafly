@@ -256,6 +256,7 @@ int8_t write(struct FAT32DriverRequest request){
     table[directory_location].filesize = request.buffer_size;
     table[directory_location].cluster_low = locations[0] & 0xFFFF;
     table[directory_location].cluster_high = (locations[0] >> 16) & 0xFFFF;
+    table[directory_location].user_attribute = UATTR_NOT_EMPTY;
 
 
     // === Create whether file or folder ===

@@ -21,10 +21,16 @@
 #define Color_Yellow 14
 #define Color_White 15
 
+#define MAX_DIR_LENGTH 256
+#define DIR_NAME_LENGTH 8
+
 void puts(char *str);
 void puts_color(char *str, uint8_t fg, uint8_t bg);
 
 void put_char(char c);
+
+void put_int_color(int num, uint8_t fg, uint8_t bg);
+void put_int(int num);
 
 void gets(char *buf);
 

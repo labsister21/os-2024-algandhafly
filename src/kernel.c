@@ -83,10 +83,10 @@ void kernel_setup(void) {
 
 
     // === Milestone 1.4 ===
-    // load_gdt(&_gdt_gdtr);
-    // pic_remap();
-    // activate_keyboard_interrupt();
-    // initialize_idt();
+    load_gdt(&_gdt_gdtr);
+    pic_remap();
+    activate_keyboard_interrupt();
+    initialize_idt();
 
 
     // framebuffer_clear();
@@ -103,7 +103,7 @@ void kernel_setup(void) {
 
     // [Test read_blocks]
     // struct BlockBuffer b2;
-    // read_blocks(&b2, 8, 1);
+    // read_blocks(&b2, 8, 1); //0: course designed by..., 8: root
     // framebuffer_clear();
     // framebuffer_write_length(0, 0, b2.buf, 1*CLUSTER_MAP_SIZE, White, Black);
     // return;
@@ -124,14 +124,17 @@ void kernel_setup(void) {
 
     // [Test read_clusters]
     // struct BlockBuffer b2;
-    // read_clusters(&b2, 1, 1);
+    // read_clusters(&b2, 2, 1);
     // framebuffer_clear();
     // framebuffer_write_length(0, 0, b2.buf, CLUSTER_MAP_SIZE*CLUSTER_BLOCK_COUNT, White, Black);
-
+    // return;
+    
     // [Test read_directory]
     // framebuffer_clear();
     // struct FAT32DriverRequest request;
     // request.parent_cluster_number = 2;
+    // // request.buffer_size = sizeof(struct FAT32DirectoryTable);
+    // request.buf = (uint8_t*) &fat32driver_state.dir_table_buf;
     // memcpy(request.name, "root", 4);
     // // memcpy(request.name, "blah", 4); // Case not found
     // // memcpy(request.name, "kano", 4); // Case not a folder
@@ -152,7 +155,7 @@ void kernel_setup(void) {
     //     }
     //     framebuffer_write_length(1, 0, "fat32driver_state.dir_table_buf.table:", 38, White, Black);
     //     framebuffer_write_length(2, 0, fat32driver_state.dir_table_buf.table, CLUSTER_MAP_SIZE*CLUSTER_BLOCK_COUNT, White, Black);
-    // }
+    // } return;
 
 
     // [Test read]
