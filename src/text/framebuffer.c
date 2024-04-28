@@ -5,6 +5,7 @@
 #include "header/stdlib/string.h"
 #include "header/cpu/portio.h"
 #include "header/driver/keyboard.h"
+#include "header/interrupt/idt.h"
 
 uint16_t* framebuffer = (uint16_t*)(FRAMEBUFFER_MEMORY_OFFSET);
 struct FramebufferState framebuffer_state;

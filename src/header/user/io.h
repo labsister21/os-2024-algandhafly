@@ -21,9 +21,6 @@
 #define Color_Yellow 14
 #define Color_White 15
 
-#define MAX_DIR_LENGTH 256
-#define DIR_NAME_LENGTH 8
-
 void puts(char *str);
 void puts_color(char *str, uint8_t fg, uint8_t bg);
 
@@ -43,5 +40,6 @@ void set_active_keyboard(bool active);
 void clear_screen();
 
 void set_cursor(uint8_t x, uint8_t y);
+
 
 #endif

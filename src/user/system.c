@@ -14,26 +14,48 @@ void systemCall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx) {
 struct FAT32DriverState user_fat32_state;
 uint32_t current_parent_cluster = 2;
 
+char current_directory[DIR_NAME_LENGTH] = "root";
+char current_directory_path[MAX_DIR_LENGTH] = "/";
+
+
 void init_user_driver_state(){
     current_parent_cluster = 2;
     get_dir(&user_fat32_state.dir_table_buf, "root\0\0\0\0");
 }
 
-void get_dir(struct FAT32DirectoryTable *dir_table, const char folderName[8]) {
+void get_cwd(struct FAT32DirectoryTable *dir_table) {
+    get_dir(dir_table, current_directory);
+}
+
+bool is_in_root() {
+    return memcmp(current_directory, "root", 4) == 0;
+}
+
+void change_directory(char folderName[DIR_NAME_LENGTH]){
+    memcpy(current_directory, folderName, DIR_NAME_LENGTH);
+}
+void get_dir_str(char *dir_str) {
+    memcpy(dir_str, current_directory, DIR_NAME_LENGTH);
+}
+
+void get_dir(struct FAT32DirectoryTable *dir_table, const char folderName[DIR_NAME_LENGTH]) {
     struct FAT32DriverRequest request;
     request.parent_cluster_number = current_parent_cluster;
-    memcpy(request.name, folderName, 8);
+    memcpy(request.name, folderName, DIR_NAME_LENGTH);
     request.buf = dir_table;
 
     uint8_t error_code;
     systemCall(1, (uint32_t )&request, (uint32_t )&error_code, 0);
 }
 
-void make_directory(const char folderName[8]) {
-    struct FAT32DriverRequest request;
-    request.parent_cluster_number = current_parent_cluster;
-    memcpy(request.name, folderName, 8);
-    request.buf;
+void make_directory(char folderName[DIR_NAME_LENGTH]) {
+
+    struct FAT32DriverRequest request = {
+        .parent_cluster_number = current_parent_cluster,
+        .buffer_size = 0,
+    };
+    memcpy(request.name, folderName, DIR_NAME_LENGTH);
+    memcpy(request.ext, "\0\0\0", 3);
 
     uint8_t error_code;
     systemCall(2, (uint32_t )&request, (uint32_t )&error_code, 0);

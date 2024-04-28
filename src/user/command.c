@@ -5,8 +5,6 @@
 #include "header/filesystem/fat32.h"
 
 
-const char current_directory[DIR_NAME_LENGTH] = "root";
-const char current_directory_path[MAX_DIR_LENGTH] = "/";
 
 void help_command() {
     puts("\n\n");
@@ -22,12 +20,37 @@ void help_command() {
     puts("help  : Show this help\n\n");
 }
 
+void handle_cd(char *cd) {
+    char folderName[8];
+    memcpy(folderName, cd + 3, 8);
 
-void print_current_directory() {
+    if(memcmp(folderName, "..", 2) == 0) {
+        if(is_in_root()) {
+            puts("\n");
+            puts("Already in root directory\n");
+            return;
+        }
+        change_directory("root\0\0\0\0");
+        return;
+    }
+
+    struct FAT32DirectoryTable dir_table;
+    get_dir(&dir_table, folderName);
+    if(is_directory(&dir_table.table[0])) {
+        change_directory(folderName);
+        puts("\n");
+    } else {
+        puts("\n");
+        puts(folderName);
+        puts(" is not a directory\n");
+    }
+}
+
+void handle_ls() {
     char dirs[MAX_DIR_LENGTH][DIR_NAME_LENGTH];
     uint32_t len = DIR_NAME_LENGTH;
     struct FAT32DirectoryTable dir_table;
-    get_dir(&dir_table, current_directory);
+    get_cwd(&dir_table);
     puts("\n");
     for(uint32_t i = 2; i < MAX_DIR_LENGTH; i++){
         if(is_empty(&dir_table.table[i])) break;
@@ -36,7 +59,9 @@ void print_current_directory() {
     }
 }
 
-void print_make_directory(const char folderName[8]) {
+void handle_mkdir(char *buf) {
+    char folderName[DIR_NAME_LENGTH];
+    memcpy(folderName, buf + 6, 8);
     make_directory(folderName);
     puts("\n");
 }
@@ -57,14 +82,11 @@ void command(char *buf) {
         clear_screen();
         set_cursor(0, 0);
     } else if (memcmp(buf, cd, 2) == 0) {
-        // cd
-        puts("\n\ncd");
+        handle_cd(buf);
     } else if (memcmp(buf, ls, 2) == 0) {
-        print_current_directory();
+        handle_ls();
     } else if (memcmp(buf, mkdir, 4) == 0) {
-        char folderName[8];
-        memcpy(folderName, buf + 6, 8);
-        print_make_directory(folderName);
+        handle_mkdir(buf);
 
     } else if (memcmp(buf, cat, 3) == 0) {
         // cat

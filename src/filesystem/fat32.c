@@ -288,7 +288,7 @@ int8_t write(struct FAT32DriverRequest request){
         // Update file allocation table
         write_clusters(&fat32driver_state.fat_table,1,1); 
     }
-    write_clusters(table,request.parent_cluster_number,1);
+    write_clusters(table,request.parent_cluster_number,1); // Update directory table
 
     return 0;
 }
