@@ -1,4 +1,5 @@
 #include <command.h>
+#include <cwdlist.h>
 #include <system.h>
 #include <io.h>
 #include <string.h>
@@ -20,40 +21,54 @@ void help_command() {
     puts("help  : Show this help\n\n");
 }
 
-void handle_cd(char *cd) {
+void handle_cd(char *cd, struct CWDList* cwd_list) {
     char folderName[8];
     memcpy(folderName, cd + 3, 8);
 
     if(memcmp(folderName, "..", 2) == 0) {
-        if(is_in_root()) {
+        if(memcmp(last_dir(cwd_list), "root", 4) == 0) {
             puts("\n");
             puts("Already in root directory\n");
             return;
         }
-        change_directory("root\0\0\0\0");
+        remove_last_dir(cwd_list);
         return;
     }
-
+    
     struct FAT32DirectoryTable dir_table;
-    get_dir(&dir_table, folderName);
-    if(is_directory(&dir_table.table[0])) {
-        change_directory(folderName);
-        puts("\n");
-    } else {
-        puts("\n");
-        puts(folderName);
-        puts(" is not a directory\n");
+    get_dir(&dir_table, last_dir(cwd_list));
+    for(uint32_t i = 2; i < 64; i++){
+        if(is_empty(&dir_table.table[i])) continue;
+        if(memcmp(dir_table.table[i].name, folderName, 8) == 0){
+            if(is_directory(&dir_table.table[i])) {
+                append_dir(cwd_list, folderName);
+                return;
+            } else {
+                puts("\n");
+                puts(folderName);
+                puts(" is not a folder.");
+                return;
+            }
+            break;
+        }
     }
+    puts("\n");
+    puts("Folder ");
+    puts(folderName);
+    puts(" not found");
 }
 
-void handle_ls() {
+void handle_ls(struct CWDList* cwd_list) {
     char dirs[MAX_DIR_LENGTH][DIR_NAME_LENGTH];
     uint32_t len = DIR_NAME_LENGTH;
     struct FAT32DirectoryTable dir_table;
-    get_cwd(&dir_table);
+    get_dir(&dir_table, last_dir(cwd_list));
+
+    bool has_any = false;
     puts("\n");
     for(uint32_t i = 2; i < 64; i++){
-        if(is_empty(&dir_table.table[i])) continue;;
+        if(is_empty(&dir_table.table[i])) continue;
+        has_any = true;
 
         if(is_directory(&dir_table.table[i])) {
             puts_color(dir_table.table[i].name, Color_LightCyan, Color_Black);
@@ -61,6 +76,9 @@ void handle_ls() {
             puts_color(dir_table.table[i].name, Color_LightBlue, Color_Black);
         }
         puts("\n");
+    }
+    if(!has_any){
+        puts("Empty folder");
     }
 }
 
@@ -78,18 +96,26 @@ void handle_cat(char* buf){
     char fileName[DIR_NAME_LENGTH];
     memcpy(fileName, (char*)(buf + 4), 8);
 
-    struct FAT32DirectoryEntry entry = {
-        .filesize = 0xFFFF,
-    };
+    struct FAT32DirectoryEntry entry;
     memcpy(entry.name, fileName, 8); // kano
     memcpy(entry.ext, "\0\0\0", 3);
+    uint32_t content_size = 2048;
 
-    char content[entry.filesize + 1];
-    uint8_t error_code = read_file(&entry, content);
+    uint8_t error_code;
+    while(true) {
+        entry.filesize = content_size;
+        char content[content_size];
+        error_code = read_file(&entry, content);
+        if(error_code == 2) {
+            content_size += 2048;
+            continue;
+        }
 
-    // Not working in user mode but works in kernel mode
-    // puts(content);
-    // puts("\n");
+        puts("\n");
+        puts(content);
+        break;
+    }
+
 }
 
 void handle_rm(char* buf){
@@ -122,14 +148,14 @@ const char rm[2] = "rm"; // rm	- Menghapus suatu file (Folder menjadi bonus)
 const char mv[2] = "mv"; // mv	- Memindah dan merename lokasi file/folder
 const char find[4] = "find"; // find	- Mencari file/folder dengan nama yang sama diseluruh file system
 
-void command(char *buf) {
+void command(char *buf, struct CWDList* cwd_list) {
     if(memcmp(buf, clear, 4) == 0) {
         clear_screen();
         set_cursor(0, 0);
     } else if (memcmp(buf, cd, 2) == 0) {
-        handle_cd(buf);
+        handle_cd(buf, cwd_list);
     } else if (memcmp(buf, ls, 2) == 0) {
-        handle_ls();
+        handle_ls(cwd_list);
     } else if (memcmp(buf, mkdir, 4) == 0) {
         handle_mkdir(buf);
     } else if (memcmp(buf, cat, 3) == 0) {

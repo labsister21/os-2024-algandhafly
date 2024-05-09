@@ -99,3 +99,4 @@ uint8_t delete_file_or_dir(struct FAT32DirectoryEntry *entry) {
     systemCall(3, (uint32_t )&request, (uint32_t )&error_code, 0);
     return error_code;
 }
+

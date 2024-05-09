@@ -6,8 +6,10 @@
 
 #define MAX_DIR_LENGTH 256
 #define DIR_NAME_LENGTH 8
+#define OS_ROOT_NAME "OSLahPokokNya:/"
 
 extern struct FAT32DriverState user_fat32_state;
+
 
 void systemCall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx);
 

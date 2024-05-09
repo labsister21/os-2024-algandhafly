@@ -218,7 +218,7 @@ int8_t write(struct FAT32DriverRequest request){
     uint16_t directory_location = -1;
 
     // Iterate directory table
-    for(uint16_t i=0; i<DIRECTORY_TABLE_SIZE;i++){
+    for(uint16_t i=2; i<DIRECTORY_TABLE_SIZE;i++){
         // If there is an entry empty
         if(table[i].user_attribute != UATTR_NOT_EMPTY){
             // Iterate cluster
@@ -263,7 +263,7 @@ int8_t write(struct FAT32DriverRequest request){
     // Requested only want folder
     if(request.buffer_size == 0){
         table[directory_location].attribute = ATTR_SUBDIRECTORY;
-        init_directory_table(request.buf,request.name,locations[0]);
+        write_clusters(table, request.parent_cluster_number, 1);
     }
     // Requested only want file
     else{

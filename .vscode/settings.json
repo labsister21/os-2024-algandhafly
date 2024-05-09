@@ -28,6 +28,7 @@
         "tes": "c",
         "concepts": "c",
         "type_traits": "c",
-        "new": "c"
+        "new": "c",
+        "cwdlist.h": "c"
     },
 }

@@ -111,7 +111,9 @@ void kernel_puts(char *str, uint8_t fg, uint8_t bg)
 }
 
 void kernel_get_line(char *buf, uint8_t fg, uint8_t bg) {
-    initialize_idt(); // for some reason, the keyboard interrupt is not working without calling this again
+    __asm__ volatile("sti");
+    
+    // initialize_idt(); // for some reason, the keyboard interrupt is not working without calling this again
     keyboard_state_activate();
 
     uint16_t i = 0;
