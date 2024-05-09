@@ -3,7 +3,7 @@
 #include <system.h>
 #include <cwdlist.h>
 
-#define MAX_COMMAND_LENGTH 2000
+#define MAX_COMMAND_LENGTH 4000
 
 int main(void) {
     char buf[MAX_COMMAND_LENGTH];

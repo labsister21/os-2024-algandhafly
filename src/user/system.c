@@ -11,7 +11,7 @@ void systemCall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx) {
     __asm__ volatile("int $0x30");
 }
 
-
+// populates dir_table
 uint8_t get_dir(char folderName[DIR_NAME_LENGTH], uint16_t parent_cluster_number, struct FAT32DirectoryTable* dir_table) {
     struct FAT32DriverRequest request;
 
@@ -24,6 +24,7 @@ uint8_t get_dir(char folderName[DIR_NAME_LENGTH], uint16_t parent_cluster_number
     return error_code;
 }
 
+// write folder to storage
 uint8_t make_directory(char folder_name[DIR_NAME_LENGTH], uint16_t parent_cluster_number) {
     struct FAT32DirectoryTable dir_table;
     get_dir(folder_name, parent_cluster_number, &dir_table);
@@ -51,6 +52,7 @@ bool is_file(struct FAT32DirectoryEntry *entry) {
     return entry->attribute != ATTR_SUBDIRECTORY;
 }
 
+// populates buf
 uint8_t read_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster_number, char *buf) {
     struct FAT32DriverRequest request = {
         .parent_cluster_number = parent_cluster_number,
@@ -66,6 +68,7 @@ uint8_t read_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster_num
     return error_code;
 }
 
+// delete file or dir in storage
 uint8_t delete_file_or_dir(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster) {
     struct FAT32DriverRequest request = {
         .parent_cluster_number = parent_cluster,
@@ -79,3 +82,16 @@ uint8_t delete_file_or_dir(struct FAT32DirectoryEntry *entry, uint16_t parent_cl
     return error_code;
 }
 
+uint8_t write_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster, char* buf){
+    struct FAT32DriverRequest request = {
+        .parent_cluster_number = parent_cluster,
+        .buffer_size = entry->filesize,
+        .buf = buf
+    };
+    memcpy(request.name, entry->name, 8);
+    memcpy(request.ext, entry->ext, 3);
+
+    uint8_t error_code;
+    systemCall(2, (uint32_t )&request, (uint32_t )&error_code, 0);
+    return error_code;
+}
