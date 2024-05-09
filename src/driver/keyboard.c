@@ -62,9 +62,6 @@ void keyboard_isr(void){
     uint8_t scan_code = in(KEYBOARD_DATA_PORT);
 
 
-    // handle arrows
-    framebuffer_write_int(20, 0, scan_code, White, Black);
-
 
     // handle shift pressing
     if (scan_code == 0x2A || scan_code == 0x36) {
