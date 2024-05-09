@@ -139,6 +139,7 @@ void kernel_get_line(char *buf, uint8_t fg, uint8_t bg) {
 
 
         } else if (c == '\n') {
+            buf[i] = '\0';
             break;
         }  else if (c) {
             framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x++, c, fg, bg);

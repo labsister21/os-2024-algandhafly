@@ -5,7 +5,30 @@
 #include <string.h>
 #include "header/filesystem/fat32.h"
 
+#define MAX_COMMAND_ARGS 20
+#define MAX_ARGS_LENGTH 100
 
+uint8_t extract_args(char* line, char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]){
+    uint8_t i = 0;
+    // Skip first spaces
+    while(line[i] == ' ') i++;
+
+    uint8_t curr_char = 0;
+    uint8_t curr_arg = 0;
+    while(line[i] != '\0') {
+        if(line[i] != ' '){
+            args[curr_arg][curr_char] = line[i];
+            curr_char++;
+            i++;
+        } else {
+            // Skip spaces
+            while(line[i] == ' ') i++;
+            curr_arg++;
+            curr_char = 0;
+        }
+    }
+    return curr_arg;
+}
 
 void help_command() {
     puts("\n\n");
@@ -23,7 +46,9 @@ void help_command() {
 
 void handle_cd(char *cd, struct CWDList* cwd_list) {
     char folderName[8];
-    memcpy(folderName, cd + 3, 8);
+    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
+    extract_args(cd, args);
+    memcpy(folderName, args[1], 8);
 
     if(memcmp(folderName, "..", 2) == 0) {
         if(memcmp(last_dir(cwd_list), "root", 4) == 0) {
@@ -31,17 +56,17 @@ void handle_cd(char *cd, struct CWDList* cwd_list) {
             puts("Already in root directory\n");
             return;
         }
-        remove_last_dir(cwd_list);
+        pop_dir(cwd_list);
         return;
     }
     
     struct FAT32DirectoryTable dir_table;
-    get_dir(&dir_table, last_dir(cwd_list));
+    get_dir(last_dir(cwd_list), prev_parent_cluster(cwd_list), &dir_table);
     for(uint32_t i = 2; i < 64; i++){
         if(is_empty(&dir_table.table[i])) continue;
         if(memcmp(dir_table.table[i].name, folderName, 8) == 0){
             if(is_directory(&dir_table.table[i])) {
-                append_dir(cwd_list, folderName);
+                push_dir(cwd_list, folderName, dir_table.table[i].cluster_low);
                 return;
             } else {
                 puts("\n");
@@ -59,10 +84,8 @@ void handle_cd(char *cd, struct CWDList* cwd_list) {
 }
 
 void handle_ls(struct CWDList* cwd_list) {
-    char dirs[MAX_DIR_LENGTH][DIR_NAME_LENGTH];
-    uint32_t len = DIR_NAME_LENGTH;
     struct FAT32DirectoryTable dir_table;
-    get_dir(&dir_table, last_dir(cwd_list));
+    get_dir(last_dir(cwd_list), prev_parent_cluster(cwd_list), &dir_table);
 
     bool has_any = false;
     puts("\n");
@@ -82,10 +105,13 @@ void handle_ls(struct CWDList* cwd_list) {
     }
 }
 
-void handle_mkdir(char *buf) {
+void handle_mkdir(char *buf, struct CWDList* cwd_list) {
     char folderName[DIR_NAME_LENGTH];
-    memcpy(folderName, buf + 6, 8);
-    uint8_t error_code = make_directory(folderName);
+    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
+    extract_args(folderName, args);
+    memcpy(folderName, args[1], 8);
+
+    uint8_t error_code = make_directory(folderName, current_parent_cluster(cwd_list));
     if(error_code != 0) {
         puts("\nError Code: ");
         put_int(error_code);
@@ -94,7 +120,9 @@ void handle_mkdir(char *buf) {
 
 void handle_cat(char* buf){
     char fileName[DIR_NAME_LENGTH];
-    memcpy(fileName, (char*)(buf + 4), 8);
+    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
+    extract_args(buf, args);
+    memcpy(fileName, args[1], 8);
 
     struct FAT32DirectoryEntry entry;
     memcpy(entry.name, fileName, 8); // kano
@@ -149,6 +177,8 @@ const char mv[2] = "mv"; // mv	- Memindah dan merename lokasi file/folder
 const char find[4] = "find"; // find	- Mencari file/folder dengan nama yang sama diseluruh file system
 
 void command(char *buf, struct CWDList* cwd_list) {
+    while(*buf == ' ') buf++; // Skip spaces
+
     if(memcmp(buf, clear, 4) == 0) {
         clear_screen();
         set_cursor(0, 0);
@@ -157,7 +187,7 @@ void command(char *buf, struct CWDList* cwd_list) {
     } else if (memcmp(buf, ls, 2) == 0) {
         handle_ls(cwd_list);
     } else if (memcmp(buf, mkdir, 4) == 0) {
-        handle_mkdir(buf);
+        handle_mkdir(buf, cwd_list);
     } else if (memcmp(buf, cat, 3) == 0) {
         handle_cat(buf);
     } else if (memcmp(buf, cp, 2) == 0) {

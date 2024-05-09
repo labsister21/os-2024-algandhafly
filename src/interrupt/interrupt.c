@@ -66,7 +66,7 @@ void syscall(struct InterruptFrame frame) {
     switch (frame.cpu.general.eax) {
         case 0:
             struct FAT32DriverRequest *request = (struct FAT32DriverRequest*)frame.cpu.general.ebx;
-            *((int8_t*) frame.cpu.general.ecx) = read( // will fill the request->buf but only kernel can access it so we'll copy it to original_buf
+            *((int8_t*) frame.cpu.general.ecx) = read(
                 *request
             );
             break;

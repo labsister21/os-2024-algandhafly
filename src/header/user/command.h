@@ -3,6 +3,5 @@
 #include <cwdlist.h>
 
 void command(char *buf, struct CWDList* cwd_list);
-void init_user_driver_state();
 
 #endif

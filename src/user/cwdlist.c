@@ -4,30 +4,31 @@
 #include <string.h>
 #include <io.h>
 
-uint8_t set_dir(struct CWDList* cwd_list, uint8_t index, char next_dir[DIR_NAME_LENGTH]){
-    if(index < 0 || index >= cwd_list->length) return 1;
-    memcpy(cwd_list->dir[index], next_dir, DIR_NAME_LENGTH);
-    cwd_list->length++;
-    return 0;
-}
-uint8_t remove_dir(struct CWDList* cwd_list, uint8_t index){
-    if(index < 0 || index >= cwd_list->length) return 1;
-    memcpy(cwd_list->dir + index*DIR_NAME_LENGTH, cwd_list->dir + (index+1)*DIR_NAME_LENGTH, cwd_list->length*DIR_NAME_LENGTH - (index+1)*DIR_NAME_LENGTH);
-    cwd_list->length--;
-    return 0;
-}
-uint8_t append_dir(struct CWDList* cwd_list, char next_dir[DIR_NAME_LENGTH]){
+uint8_t push_dir(struct CWDList* cwd_list, char next_dir[DIR_NAME_LENGTH], uint16_t cluster_low){
+    if(cwd_list->length == MAX_DIR_LENGTH) return 1;
     memcpy(cwd_list->dir[cwd_list->length], next_dir, DIR_NAME_LENGTH);
+    cwd_list->parent_cluster[cwd_list->length] = cluster_low;
     cwd_list->length++;
     return 0;
 }
-uint8_t remove_last_dir(struct CWDList* cwd_list){
+uint8_t pop_dir(struct CWDList* cwd_list){
+    if(cwd_list->length == 0) return 1;
     cwd_list->length--;
     return 0;
 }
 char* last_dir(struct CWDList* cwd_list){
     return cwd_list->dir[cwd_list->length-1];
 }
+uint16_t prev_parent_cluster(struct CWDList* cwd_list){
+    if(cwd_list->length == 1)
+        return cwd_list->parent_cluster[0];
+    return cwd_list->parent_cluster[cwd_list->length-2];
+}
+uint16_t current_parent_cluster(struct CWDList* cwd_list){
+    return cwd_list->parent_cluster[cwd_list->length-1];
+}
+
+
 
 void print_cwd(struct CWDList* cwd_list) {
     if(cwd_list->length < 1) return;

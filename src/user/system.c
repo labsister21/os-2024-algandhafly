@@ -11,36 +11,11 @@ void systemCall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx) {
     __asm__ volatile("int $0x30");
 }
 
-struct FAT32DriverState user_fat32_state;
-uint32_t current_parent_cluster = 2;
 
-char current_directory[DIR_NAME_LENGTH] = "root";
-char current_directory_path[MAX_DIR_LENGTH] = "/";
-
-
-void init_user_driver_state(){
-    current_parent_cluster = 2;
-    get_dir(&user_fat32_state.dir_table_buf, "root\0\0\0\0");
-}
-
-uint8_t get_cwd(struct FAT32DirectoryTable *dir_table) {
-    return get_dir(dir_table, current_directory);
-}
-
-bool is_in_root() {
-    return memcmp(current_directory, "root", 4) == 0;
-}
-
-void change_directory(char folderName[DIR_NAME_LENGTH]){
-    memcpy(current_directory, folderName, DIR_NAME_LENGTH);
-}
-void get_dir_str(char *dir_str) {
-    memcpy(dir_str, current_directory, DIR_NAME_LENGTH);
-}
-
-uint8_t get_dir(struct FAT32DirectoryTable *dir_table, const char folderName[DIR_NAME_LENGTH]) {
+uint8_t get_dir(char folderName[DIR_NAME_LENGTH], uint16_t parent_cluster_number, struct FAT32DirectoryTable* dir_table) {
     struct FAT32DriverRequest request;
-    request.parent_cluster_number = current_parent_cluster;
+
+    request.parent_cluster_number = parent_cluster_number;
     memcpy(request.name, folderName, DIR_NAME_LENGTH);
     request.buf = dir_table;
 
@@ -49,13 +24,17 @@ uint8_t get_dir(struct FAT32DirectoryTable *dir_table, const char folderName[DIR
     return error_code;
 }
 
-uint8_t make_directory(char folderName[DIR_NAME_LENGTH]) {
+uint8_t make_directory(char folder_name[DIR_NAME_LENGTH], uint16_t parent_cluster_number) {
+    struct FAT32DirectoryTable dir_table;
+    get_dir(folder_name, parent_cluster_number, &dir_table);
+
     struct FAT32DriverRequest request = {
-        .parent_cluster_number = current_parent_cluster,
+        .parent_cluster_number = parent_cluster_number,
         .buffer_size = 0,
     };
-    memcpy(request.name, folderName, DIR_NAME_LENGTH);
+    memcpy(request.name, folder_name, DIR_NAME_LENGTH);
     memcpy(request.ext, "\0\0\0", 3);
+    
 
     uint8_t error_code;
     systemCall(2, (uint32_t )&request, (uint32_t )&error_code, 0);
@@ -74,7 +53,7 @@ bool is_file(struct FAT32DirectoryEntry *entry) {
 
 uint8_t read_file(struct FAT32DirectoryEntry *entry, char *buf) {
     struct FAT32DriverRequest request = {
-        .parent_cluster_number = current_parent_cluster,
+        .parent_cluster_number = 2,
         .buffer_size = entry->filesize,
     };
     memcpy(request.name, entry->name, 8);
@@ -89,7 +68,7 @@ uint8_t read_file(struct FAT32DirectoryEntry *entry, char *buf) {
 
 uint8_t delete_file_or_dir(struct FAT32DirectoryEntry *entry) {
     struct FAT32DriverRequest request = {
-        .parent_cluster_number = current_parent_cluster,
+        .parent_cluster_number = 2,
         .buffer_size = 0,
     };
     memcpy(request.name, entry->name, 8);

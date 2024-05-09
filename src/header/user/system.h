@@ -6,7 +6,7 @@
 
 #define MAX_DIR_LENGTH 256
 #define DIR_NAME_LENGTH 8
-#define OS_ROOT_NAME "OSLahPokokNya:/"
+#define OS_ROOT_NAME "OSLahPokoknya:/"
 
 extern struct FAT32DriverState user_fat32_state;
 
@@ -14,12 +14,12 @@ extern struct FAT32DriverState user_fat32_state;
 void systemCall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx);
 
 void get_dir_str(char *dir_str);
-uint8_t get_dir(struct FAT32DirectoryTable *dir_table, const char folderName[DIR_NAME_LENGTH]);
+uint8_t get_dir(char folderName[DIR_NAME_LENGTH], uint16_t parent_cluster_number, struct FAT32DirectoryTable *dir_table);
 uint8_t get_cwd(struct FAT32DirectoryTable *dir_table);
 bool is_in_root();
 void change_directory(char folderName[DIR_NAME_LENGTH]);
 
-uint8_t make_directory(char folderName[DIR_NAME_LENGTH]);
+uint8_t make_directory(char folderName[DIR_NAME_LENGTH], uint16_t parent_cluster_number);
 
 bool is_empty(struct FAT32DirectoryEntry *entry);
 bool is_directory(struct FAT32DirectoryEntry *entry);

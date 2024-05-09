@@ -3,13 +3,12 @@
 #include <system.h>
 #include <cwdlist.h>
 
-#define MAX_COMMAND_LENGTH 100
+#define MAX_COMMAND_LENGTH 2000
 
 
 int main(void) {
-    init_user_driver_state();
     char buf[MAX_COMMAND_LENGTH];
-    struct CWDList cwd_list; append_dir(&cwd_list, "root\0\0\0\0");
+    struct CWDList cwd_list; push_dir(&cwd_list, "root\0\0\0\0", 2);
 
     while(true) {
         print_cwd(&cwd_list);
