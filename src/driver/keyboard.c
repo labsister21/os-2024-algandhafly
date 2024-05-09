@@ -62,6 +62,10 @@ void keyboard_isr(void){
     uint8_t scan_code = in(KEYBOARD_DATA_PORT);
 
 
+    // handle arrows
+    framebuffer_write_int(20, 0, scan_code, White, Black);
+
+
     // handle shift pressing
     if (scan_code == 0x2A || scan_code == 0x36) {
         keyboard_state.was_shift = true;
@@ -110,6 +114,9 @@ void keyboard_isr(void){
             if (keyboard_state.command_state.command_length > 0) {
                 keyboard_state.command_state.command_length--;
                 keyboard_state.command_state.command[keyboard_state.command_state.command_length] = 0;
+            } else {
+                pic_ack(IRQ_KEYBOARD);
+                return;
             }
         } else if (keyboard_state.command_state.command_length < MAX_COMMAND_LENGTH) {
             keyboard_state.command_state.command[keyboard_state.command_state.command_length] = c;
