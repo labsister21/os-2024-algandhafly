@@ -172,7 +172,7 @@ int8_t read(struct FAT32DriverRequest request){
 
     for(uint8_t i = 0; i < DIRECTORY_TABLE_SIZE;i++){
         // If name same and extension same
-        if(!memcmp(table[i].name,request.name,8) && !memcmp(table[i].ext,request.ext,3)){
+        if(table[i].user_attribute == UATTR_NOT_EMPTY && !memcmp(table[i].name,request.name,8) && !memcmp(table[i].ext,request.ext,3)){
             
             // Check if it's a file or not
             if(table[i].attribute == ATTR_SUBDIRECTORY){

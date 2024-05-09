@@ -66,9 +66,9 @@ uint8_t read_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster_num
     return error_code;
 }
 
-uint8_t delete_file_or_dir(struct FAT32DirectoryEntry *entry) {
+uint8_t delete_file_or_dir(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster) {
     struct FAT32DriverRequest request = {
-        .parent_cluster_number = 2,
+        .parent_cluster_number = parent_cluster,
         .buffer_size = 0,
     };
     memcpy(request.name, entry->name, 8);

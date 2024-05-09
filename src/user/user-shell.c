@@ -5,7 +5,6 @@
 
 #define MAX_COMMAND_LENGTH 2000
 
-
 int main(void) {
     char buf[MAX_COMMAND_LENGTH];
     struct CWDList cwd_list; push_dir(&cwd_list, "root\0\0\0\0", 2);
@@ -16,7 +15,6 @@ int main(void) {
         command(buf, &cwd_list);
         puts("\n");
     }
-
 
     return 0;
 }

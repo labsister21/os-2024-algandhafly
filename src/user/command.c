@@ -15,10 +15,13 @@ uint8_t extract_args(char* line, char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]){
 
     uint8_t curr_char = 0;
     uint8_t curr_arg = 0;
+
+    uint8_t last_curr_char = 0;
     while(line[i] != '\0') {
         if(line[i] != ' '){
             args[curr_arg][curr_char] = line[i];
             curr_char++;
+            last_curr_char = curr_char;
             i++;
         } else {
             // Skip spaces
@@ -27,6 +30,14 @@ uint8_t extract_args(char* line, char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]){
             curr_char = 0;
         }
     }
+
+    // Clean input
+    uint8_t j = last_curr_char;
+    while(j < MAX_ARGS_LENGTH) {
+        args[curr_arg][j] = '\0';
+        j++;
+    }
+
     return curr_arg;
 }
 
@@ -112,7 +123,7 @@ void handle_ls(struct CWDList* cwd_list) {
 void handle_mkdir(char *buf, struct CWDList* cwd_list) {
     char folderName[DIR_NAME_LENGTH];
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
-    extract_args(folderName, args);
+    extract_args(buf, args);
     memcpy(folderName, args[1], 8);
     if(folderName[0] == '\0'){
         puts("\nPlease provide folder name\n");
@@ -173,9 +184,11 @@ void handle_cat(char* buf, struct CWDList* cwd_list){
 
 }
 
-void handle_rm(char* buf){
+void handle_rm(char* buf, struct CWDList* cwd_list){
     char fileName[DIR_NAME_LENGTH];
-    memcpy(fileName, (char*)(buf + 3), 8);
+    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
+    extract_args(buf, args);
+    memcpy(fileName, args[1], 8);
 
     struct FAT32DirectoryEntry entry = {
         .filesize = 0xFFFF,
@@ -184,11 +197,18 @@ void handle_rm(char* buf){
     memcpy(entry.name, fileName, 8);
     memcpy(entry.ext, "\0\0\0", 3);
 
-    uint8_t error_code = delete_file_or_dir(&entry);
-    if(error_code != 0) {
-        puts("\nError Code: ");
-        put_int(error_code);
+    uint8_t error_code = delete_file_or_dir(&entry, current_parent_cluster(cwd_list));
+    // Error code: 0 success - 1 not found - 2 folder is not empty - -1 unknown
+    if(error_code == 0) {
+        puts("\nDeleted ");
+        puts(entry.name);
         puts("\n");
+    } else if(error_code == 1){
+        puts("\nFolder not found\n");
+    } else if(error_code == 2){
+        puts("\nFolder is not empty\n");
+    } else if(error_code == -1){
+        puts("\nUnknown error has occured\n");
     }
 }
 
@@ -221,7 +241,7 @@ void command(char *buf, struct CWDList* cwd_list) {
         // cp
         puts("\n\ncp");
     } else if (memcmp(buf, rm, 2) == 0) {
-        handle_rm(buf);
+        handle_rm(buf, cwd_list);
     } else if (memcmp(buf, mv, 2) == 0) {
         // mv
         puts("\n\nmv");
