@@ -92,7 +92,7 @@ void syscall(struct InterruptFrame frame) {
             kernel_puts((char*)frame.cpu.general.ebx, frame.cpu.general.ecx, frame.cpu.general.edx);
             break;
         case 6: 
-            kernel_get_line((char*)frame.cpu.general.ebx, frame.cpu.general.ecx, frame.cpu.general.edx);
+            get_command_buffer((char*)frame.cpu.general.ebx);
             break;
         case 7: 
             activate_keyboard_interrupt();

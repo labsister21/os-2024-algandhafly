@@ -16,6 +16,7 @@ int main(void) {
         command(buf, &cwd_list);
         puts("\n");
     }
+    
 
 
     return 0;
