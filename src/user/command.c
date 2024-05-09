@@ -6,7 +6,7 @@
 #include "header/filesystem/fat32.h"
 
 #define MAX_COMMAND_ARGS 20
-#define MAX_ARGS_LENGTH 100
+#define MAX_ARGS_LENGTH 200
 
 uint8_t extract_args(char* line, char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]){
     uint8_t i = 0;
@@ -15,10 +15,13 @@ uint8_t extract_args(char* line, char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]){
 
     uint8_t curr_char = 0;
     uint8_t curr_arg = 0;
+
+    uint8_t last_curr_char = 0;
     while(line[i] != '\0') {
         if(line[i] != ' '){
             args[curr_arg][curr_char] = line[i];
             curr_char++;
+            last_curr_char = curr_char;
             i++;
         } else {
             // Skip spaces
@@ -27,6 +30,14 @@ uint8_t extract_args(char* line, char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]){
             curr_char = 0;
         }
     }
+
+    // Clean input
+    uint8_t j = last_curr_char;
+    while(j < MAX_ARGS_LENGTH) {
+        args[curr_arg][j] = '\0';
+        j++;
+    }
+
     return curr_arg;
 }
 
@@ -112,7 +123,7 @@ void handle_ls(struct CWDList* cwd_list) {
 void handle_mkdir(char *buf, struct CWDList* cwd_list) {
     char folderName[DIR_NAME_LENGTH];
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
-    extract_args(folderName, args);
+    extract_args(buf, args);
     memcpy(folderName, args[1], 8);
     if(folderName[0] == '\0'){
         puts("\nPlease provide folder name\n");
@@ -173,9 +184,11 @@ void handle_cat(char* buf, struct CWDList* cwd_list){
 
 }
 
-void handle_rm(char* buf){
+void handle_rm(char* buf, struct CWDList* cwd_list){
     char fileName[DIR_NAME_LENGTH];
-    memcpy(fileName, (char*)(buf + 3), 8);
+    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
+    extract_args(buf, args);
+    memcpy(fileName, args[1], 8);
 
     struct FAT32DirectoryEntry entry = {
         .filesize = 0xFFFF,
@@ -184,13 +197,83 @@ void handle_rm(char* buf){
     memcpy(entry.name, fileName, 8);
     memcpy(entry.ext, "\0\0\0", 3);
 
-    uint8_t error_code = delete_file_or_dir(&entry);
-    if(error_code != 0) {
-        puts("\nError Code: ");
-        put_int(error_code);
+    uint8_t error_code = delete_file_or_dir(&entry, current_parent_cluster(cwd_list));
+    // Error code: 0 success - 1 not found - 2 folder is not empty - -1 unknown
+    if(error_code == 0) {
+        puts("\nDeleted ");
+        puts(entry.name);
         puts("\n");
+    } else if(error_code == 1){
+        puts("\nFolder not found\n");
+    } else if(error_code == 2){
+        puts("\nFolder is not empty\n");
+    } else if(error_code == -1){
+        puts("\nUnknown error has occured\n");
     }
 }
+
+void handle_cp(char* buf, struct CWDList* cwd_list){
+    char src[MAX_ARGS_LENGTH];
+    char dest[MAX_ARGS_LENGTH];
+    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
+    extract_args(buf, args);
+    memcpy(src, args[1], MAX_ARGS_LENGTH);
+    memcpy(dest, args[2], MAX_ARGS_LENGTH);
+
+    if(src[0] == '\0'){
+        puts("\nPlease provide source file name\n");
+        return;
+    }
+    if(dest[0] == '\0'){
+        puts("\nPlease provide destination file name\n");
+        return;
+    }
+
+    struct FAT32DirectoryEntry entry;
+    memcpy(entry.name, src, 8);
+    memcpy(entry.ext, "\0\0\0", 3);
+    uint32_t content_size = 2048;
+
+
+    // Read src
+    uint8_t error_code;
+    while(true) {
+        entry.filesize = content_size;
+        char content[content_size];
+        error_code = read_file(&entry, current_parent_cluster(cwd_list), content);
+        if(error_code == 1) {
+            puts("\n");
+            puts(src);
+            puts(" is not a file");
+            return;
+        } else if(error_code == 2) {
+            content_size += 2048;
+            continue;
+        } else if(error_code == 3) {
+            puts("\n");
+            puts(src);
+            puts(" not found");
+            continue;
+        } else if(error_code == -1) {
+            puts("\nUnknown error has occured");
+            continue;
+        }
+
+
+        // Success
+        // Write dest
+        struct FAT32DirectoryEntry copy;
+        copy.filesize = entry.filesize;
+        memcpy(copy.name, dest, 8); // TODO: from back because src is a path
+        memcpy(copy.ext, "\0\0\0", 3); // TODO: extract extension from file name
+        write_file(&copy, current_parent_cluster(cwd_list), content); // TODO: get the current_parent_cluster based on the path. Right now its the cwd. Just keep reading the directory to find it
+
+        break;
+    }
+
+
+}
+
 
 const char clear[5] = "clear";
 const char help[5] = "help";
@@ -218,10 +301,9 @@ void command(char *buf, struct CWDList* cwd_list) {
     } else if (memcmp(buf, cat, 3) == 0) {
         handle_cat(buf, cwd_list);
     } else if (memcmp(buf, cp, 2) == 0) {
-        // cp
-        puts("\n\ncp");
+        handle_cp(buf, cwd_list);
     } else if (memcmp(buf, rm, 2) == 0) {
-        handle_rm(buf);
+        handle_rm(buf, cwd_list);
     } else if (memcmp(buf, mv, 2) == 0) {
         // mv
         puts("\n\nmv");

@@ -8,6 +8,11 @@ void puts(char *str) {
 void puts_color(char *str, uint8_t fg, uint8_t bg) {
     systemCall(5, (uint32_t) str, fg, bg);
 }
+
+void put_char_color(char c, uint8_t fg, uint8_t bg){
+    systemCall(5, (uint32_t) &c, fg, bg);
+}
+
 void put_int_color(int num, uint8_t fg, uint8_t bg) {
     if(num == 0) {
         puts_color("0", fg, bg);
