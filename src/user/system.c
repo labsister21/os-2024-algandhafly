@@ -51,9 +51,9 @@ bool is_file(struct FAT32DirectoryEntry *entry) {
     return entry->attribute != ATTR_SUBDIRECTORY;
 }
 
-uint8_t read_file(struct FAT32DirectoryEntry *entry, char *buf) {
+uint8_t read_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster_number, char *buf) {
     struct FAT32DriverRequest request = {
-        .parent_cluster_number = 2,
+        .parent_cluster_number = parent_cluster_number,
         .buffer_size = entry->filesize,
     };
     memcpy(request.name, entry->name, 8);

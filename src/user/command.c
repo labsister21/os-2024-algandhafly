@@ -49,6 +49,10 @@ void handle_cd(char *cd, struct CWDList* cwd_list) {
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
     extract_args(cd, args);
     memcpy(folderName, args[1], 8);
+    if(folderName[0] == '\0'){
+        puts("\nPlease provide folder name\n");
+        return;
+    }
 
     if(memcmp(folderName, "..", 2) == 0) {
         if(memcmp(last_dir(cwd_list), "root", 4) == 0) {
@@ -110,19 +114,28 @@ void handle_mkdir(char *buf, struct CWDList* cwd_list) {
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
     extract_args(folderName, args);
     memcpy(folderName, args[1], 8);
+    if(folderName[0] == '\0'){
+        puts("\nPlease provide folder name\n");
+        return;
+    }
 
     uint8_t error_code = make_directory(folderName, current_parent_cluster(cwd_list));
     if(error_code != 0) {
-        puts("\nError Code: ");
-        put_int(error_code);
+        puts("\nFolder ");
+        puts(folderName);
+        puts(" already exist");
     }
 }
 
-void handle_cat(char* buf){
+void handle_cat(char* buf, struct CWDList* cwd_list){
     char fileName[DIR_NAME_LENGTH];
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
     extract_args(buf, args);
     memcpy(fileName, args[1], 8);
+    if(fileName[0] == '\0'){
+        puts("\nPlease provide file name\n");
+        return;
+    }
 
     struct FAT32DirectoryEntry entry;
     memcpy(entry.name, fileName, 8); // kano
@@ -133,9 +146,23 @@ void handle_cat(char* buf){
     while(true) {
         entry.filesize = content_size;
         char content[content_size];
-        error_code = read_file(&entry, content);
-        if(error_code == 2) {
+        // Error code: 0 success - 1 not a file - 2 not enough buffer - 3 not found - -1 unknown
+        error_code = read_file(&entry, current_parent_cluster(cwd_list), content);
+        if(error_code == 1) {
+            puts("\n");
+            puts(fileName);
+            puts(" is not a file");
+            return;
+        } else if(error_code == 2) {
             content_size += 2048;
+            continue;
+        } else if(error_code == 3) {
+            puts("\n");
+            puts(fileName);
+            puts(" not found");
+            continue;
+        } else if(error_code == -1) {
+            puts("\nUnknown error has occured");
             continue;
         }
 
@@ -189,7 +216,7 @@ void command(char *buf, struct CWDList* cwd_list) {
     } else if (memcmp(buf, mkdir, 4) == 0) {
         handle_mkdir(buf, cwd_list);
     } else if (memcmp(buf, cat, 3) == 0) {
-        handle_cat(buf);
+        handle_cat(buf, cwd_list);
     } else if (memcmp(buf, cp, 2) == 0) {
         // cp
         puts("\n\ncp");
