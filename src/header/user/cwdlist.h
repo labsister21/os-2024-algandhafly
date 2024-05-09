@@ -18,5 +18,7 @@ uint16_t prev_parent_cluster(struct CWDList* cwd_list);
 uint16_t current_parent_cluster(struct CWDList* cwd_list);
 
 void print_cwd(struct CWDList* cwd_list);
+void print_path_to_cwd(struct CWDList* cwd_list);
+
 
 #endif

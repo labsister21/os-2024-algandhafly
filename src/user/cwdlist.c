@@ -40,3 +40,10 @@ void print_cwd(struct CWDList* cwd_list) {
     puts_color(">", Color_LightBlue, Color_Black);
     puts_color("$ ", Color_Yellow, Color_Black);
 }
+
+void print_path_to_cwd(struct CWDList* cwd_list) {
+    for(uint8_t i = 0; i < cwd_list->length; i++){
+        puts_clamped(cwd_list->dir[i], 8);
+        puts("/");
+    }
+}

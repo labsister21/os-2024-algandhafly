@@ -6,6 +6,7 @@
 
 #define MAX_DIR_LENGTH 256
 #define DIR_NAME_LENGTH 8
+#define DIR_EXT_LENGTH 3
 #define OS_ROOT_NAME "OSLahPokoknya:/"
 
 extern struct FAT32DriverState user_fat32_state;

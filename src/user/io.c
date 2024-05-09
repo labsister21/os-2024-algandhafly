@@ -13,6 +13,17 @@ void put_char_color(char c, uint8_t fg, uint8_t bg){
     systemCall(5, (uint32_t) &c, fg, bg);
 }
 
+void puts_clamped(char *str, uint8_t max_length) {
+    char str_plus_one[max_length+1];
+    
+    for(uint8_t i = 0; i < max_length; i++){
+        str_plus_one[i] = str[i];
+    }
+    str_plus_one[max_length] = '\0';
+
+    puts(str_plus_one);
+}
+
 void put_int_color(int num, uint8_t fg, uint8_t bg) {
     if(num == 0) {
         puts_color("0", fg, bg);

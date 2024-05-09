@@ -56,10 +56,10 @@ void help_command() {
 }
 
 void handle_cd(char *cd, struct CWDList* cwd_list) {
-    char folderName[8];
+    char folderName[DIR_NAME_LENGTH];
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
     extract_args(cd, args);
-    memcpy(folderName, args[1], 8);
+    memcpy(folderName, args[1], DIR_NAME_LENGTH);
     if(folderName[0] == '\0'){
         puts("\nPlease provide folder name\n");
         return;
@@ -79,7 +79,7 @@ void handle_cd(char *cd, struct CWDList* cwd_list) {
     get_dir(last_dir(cwd_list), prev_parent_cluster(cwd_list), &dir_table);
     for(uint32_t i = 2; i < 64; i++){
         if(is_empty(&dir_table.table[i])) continue;
-        if(memcmp(dir_table.table[i].name, folderName, 8) == 0){
+        if(memcmp(dir_table.table[i].name, folderName, DIR_NAME_LENGTH) == 0){
             if(is_directory(&dir_table.table[i])) {
                 push_dir(cwd_list, folderName, dir_table.table[i].cluster_low);
                 return;
@@ -124,7 +124,7 @@ void handle_mkdir(char *buf, struct CWDList* cwd_list) {
     char folderName[DIR_NAME_LENGTH];
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
     extract_args(buf, args);
-    memcpy(folderName, args[1], 8);
+    memcpy(folderName, args[1], DIR_NAME_LENGTH);
     if(folderName[0] == '\0'){
         puts("\nPlease provide folder name\n");
         return;
@@ -142,14 +142,14 @@ void handle_cat(char* buf, struct CWDList* cwd_list){
     char fileName[DIR_NAME_LENGTH];
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
     extract_args(buf, args);
-    memcpy(fileName, args[1], 8);
+    memcpy(fileName, args[1], DIR_NAME_LENGTH);
     if(fileName[0] == '\0'){
         puts("\nPlease provide file name\n");
         return;
     }
 
     struct FAT32DirectoryEntry entry;
-    memcpy(entry.name, fileName, 8); // kano
+    memcpy(entry.name, fileName, DIR_NAME_LENGTH); // kano
     memcpy(entry.ext, "\0\0\0", 3);
     uint32_t content_size = 2048;
 
@@ -188,13 +188,13 @@ void handle_rm(char* buf, struct CWDList* cwd_list){
     char fileName[DIR_NAME_LENGTH];
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
     extract_args(buf, args);
-    memcpy(fileName, args[1], 8);
+    memcpy(fileName, args[1], DIR_NAME_LENGTH);
 
     struct FAT32DirectoryEntry entry = {
         .filesize = 0xFFFF,
     };
 
-    memcpy(entry.name, fileName, 8);
+    memcpy(entry.name, fileName, DIR_NAME_LENGTH);
     memcpy(entry.ext, "\0\0\0", 3);
 
     uint8_t error_code = delete_file_or_dir(&entry, current_parent_cluster(cwd_list));
@@ -230,7 +230,7 @@ void handle_cp(char* buf, struct CWDList* cwd_list){
     }
 
     struct FAT32DirectoryEntry entry;
-    memcpy(entry.name, src, 8);
+    memcpy(entry.name, src, DIR_NAME_LENGTH);
     memcpy(entry.ext, "\0\0\0", 3);
     uint32_t content_size = 2048;
 
@@ -264,7 +264,7 @@ void handle_cp(char* buf, struct CWDList* cwd_list){
         // Write dest
         struct FAT32DirectoryEntry copy;
         copy.filesize = entry.filesize;
-        memcpy(copy.name, dest, 8); // TODO: from back because src is a path
+        memcpy(copy.name, dest, DIR_NAME_LENGTH); // TODO: from back because src is a path
         memcpy(copy.ext, "\0\0\0", 3); // TODO: extract extension from file name
         write_file(&copy, current_parent_cluster(cwd_list), content); // TODO: get the current_parent_cluster based on the path. Right now its the cwd. Just keep reading the directory to find it
 
@@ -274,6 +274,73 @@ void handle_cp(char* buf, struct CWDList* cwd_list){
 
 }
 
+void handle_mv(char* buf, struct CWDList* cwd_list){
+    char src[MAX_ARGS_LENGTH];
+    char dest[MAX_ARGS_LENGTH];
+    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
+    extract_args(buf, args);
+    memcpy(src, args[1], MAX_ARGS_LENGTH);
+    memcpy(dest, args[2], MAX_ARGS_LENGTH);
+}
+
+
+// each folder wont contain more than 1 file/folder with same name.
+void recursive_find(struct FAT32DirectoryTable* dir_table, char file_name[MAX_ARGS_LENGTH], uint32_t cluster_number, struct CWDList* cwd_list){ // depth is just for debugging
+
+    for(uint32_t i = 2; i < 64; i++){
+        if(is_empty(&dir_table->table[i])) continue;
+        
+        
+        if(memcmp(dir_table->table[i].name, file_name, DIR_NAME_LENGTH) == 0 /* && memcmp(dir_table.table[i].name, file_name, DIR_EXT_LENGTH) == 0 */ ){
+            // traversal back to populate cwd_list 
+            
+        }
+
+        if(is_directory(&dir_table->table[i])) {
+            struct FAT32DirectoryTable children;
+            get_dir(dir_table->table[i].name, cluster_number, &children);
+            recursive_find(&children, file_name, dir_table->table[i].cluster_low, cwd_list);
+        }
+
+
+        // print from root for debugging
+        // else {
+        //     uint16_t parent_cluster = cluster_number;
+        //     struct FAT32DirectoryTable children;
+        //     struct CWDList list;
+        //     // puts(dir_table->table[i].name);
+        //     // puts("/");
+        //     // puts(dir_table->table[0].name);
+        //     // puts("/");
+        //     push_dir(&list, dir_table->table[i].name, 0);
+        //     push_dir(&list, dir_table->table[0].name, 0);
+            
+        //     while(parent_cluster != ROOT_CLUSTER_NUMBER){
+        //         get_dir("..\0\0\0\0\0\0", parent_cluster, &children);
+        //         parent_cluster = children.table[1].cluster_low;
+        //         // puts("/");
+        //         // puts(children.table[0].name);
+        //         push_dir(&list, children.table[0].name, 0);
+        //     }
+        //     print_path_to_cwd(&list);
+        //     puts("\n");
+        // }
+    }
+}
+
+void handle_find(char* buf){
+    char file_name[MAX_ARGS_LENGTH]; // TODO: validate if this is not a path
+    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
+    extract_args(buf, args);
+    memcpy(file_name, args[1], MAX_ARGS_LENGTH);
+    
+    struct CWDList cwd_list[100];
+    struct FAT32DirectoryTable dir_table;
+    get_dir("root\0\0\0\0", ROOT_CLUSTER_NUMBER, &dir_table);
+    puts("\n");
+    recursive_find(&dir_table, file_name, ROOT_CLUSTER_NUMBER, &cwd_list);
+
+}
 
 const char clear[5] = "clear";
 const char help[5] = "help";
@@ -305,11 +372,9 @@ void command(char *buf, struct CWDList* cwd_list) {
     } else if (memcmp(buf, rm, 2) == 0) {
         handle_rm(buf, cwd_list);
     } else if (memcmp(buf, mv, 2) == 0) {
-        // mv
-        puts("\n\nmv");
+        handle_mv(buf, cwd_list);
     } else if (memcmp(buf, find, 4) == 0) {
-        // find
-        puts("\n\nfind");
+        handle_find(buf);
     } else if (memcmp(buf, help, 4) == 0) {
         help_command();
     } else {

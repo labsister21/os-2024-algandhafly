@@ -23,6 +23,7 @@
 
 void puts(char *str);
 void puts_color(char *str, uint8_t fg, uint8_t bg);
+void puts_clamped(char *str, uint8_t max_length);
 
 void put_char(char c);
 void put_char_color(char c, uint8_t fg, uint8_t bg);
