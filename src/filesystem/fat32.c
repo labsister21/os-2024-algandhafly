@@ -264,6 +264,8 @@ int8_t write(struct FAT32DriverRequest request){
     if(request.buffer_size == 0){
         table[directory_location].attribute = ATTR_SUBDIRECTORY;
         write_clusters(table, request.parent_cluster_number, 1);
+        fat32driver_state.fat_table.cluster_map[locations[0]] = FAT32_FAT_END_OF_FILE;
+        write_clusters(&fat32driver_state.fat_table,1,1); 
     }
     // Requested only want file
     else{
