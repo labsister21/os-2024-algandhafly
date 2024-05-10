@@ -317,4 +317,6 @@ void command(char *buf, struct CWDList* cwd_list) {
         puts(buf);
         puts(" not found\n");
     }
+
+    
 }

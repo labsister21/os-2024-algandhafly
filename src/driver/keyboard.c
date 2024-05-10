@@ -28,6 +28,7 @@ const char keyboard_scancode_1_to_ascii_map[256] = {
 struct KeyboardDriverState keyboard_state = {
     .read_extended_mode = false,
     .keyboard_input_on = false,
+    .show_on_screen = false,
     .keyboard_buffer = 0,
     .caps_lock_on = false,
     .command_state = {
@@ -120,7 +121,9 @@ void keyboard_isr(void){
             keyboard_state.command_state.command_length++;
         }
 
-        update_framebuffer(c);
+        if (keyboard_state.show_on_screen) {
+            update_framebuffer(c);
+        }
     }
     pic_ack(IRQ_KEYBOARD);
 }

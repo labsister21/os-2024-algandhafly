@@ -67,7 +67,7 @@ bool paging_allocate_user_page_frame(struct PageDirectory *page_dir, void *virtu
     page_manager_state.page_frame_map[page_frame_index] = 1;
     page_manager_state.free_page_frame_count--;
     uint16_t physical_addr = page_frame_index;
-
+    
     page_dir->table[page_index].flags.present_bit       = 1;
     page_dir->table[page_index].flags.read_write        = 1;
     page_dir->table[page_index].flags.user_supervisor   = 1;

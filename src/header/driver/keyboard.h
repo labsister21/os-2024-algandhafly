@@ -38,6 +38,7 @@ struct CommandState {
 struct KeyboardDriverState {
     bool read_extended_mode;
     bool keyboard_input_on;
+    bool show_on_screen;
     char keyboard_buffer;
     bool was_shift;
     bool caps_lock_on;
