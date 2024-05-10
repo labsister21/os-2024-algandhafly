@@ -33,7 +33,8 @@ struct KeyboardDriverState keyboard_state = {
     .caps_lock_on = false,
     .command_state = {
         .command = {0},
-        .command_length = 0
+        .command_length = 0,
+        .cursor_at = 0,
     }
 };
 
@@ -52,6 +53,56 @@ void get_keyboard_buffer(char *buf){
     *buf = keyboard_state.keyboard_buffer;
     keyboard_state.keyboard_buffer = 0;
 }
+
+
+/**
+ * Cursor
+*/
+void cursor_move_left() {
+    if (keyboard_state.command_state.cursor_at == 0) return;
+
+    if (framebuffer_state.cursor_x == 0 && framebuffer_state.cursor_y == 0) return;
+
+    if (framebuffer_state.cursor_x == 0 && framebuffer_state.cursor_y > 0) {
+        framebuffer_state.cursor_y--;
+        framebuffer_state.cursor_x = 79;
+    } else {
+        framebuffer_state.cursor_x--;
+    }
+
+    keyboard_state.command_state.cursor_at--;
+    framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
+}
+
+void cursor_move_right() {
+    if (keyboard_state.command_state.cursor_at == keyboard_state.command_state.command_length) return;
+
+    if (framebuffer_state.cursor_x == 79 && framebuffer_state.cursor_y == 24) return;
+
+    if (framebuffer_state.cursor_x == 79 && framebuffer_state.cursor_y < 24) {
+        framebuffer_state.cursor_y++;
+        framebuffer_state.cursor_x = 0;
+    } else {
+        framebuffer_state.cursor_x++;
+    }
+
+    keyboard_state.command_state.cursor_at++;
+    framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
+}
+
+void remove_at_before_cursor() {
+    if (keyboard_state.command_state.cursor_at == 0) return;
+
+    for (int i = keyboard_state.command_state.cursor_at - 1; i < keyboard_state.command_state.command_length - 1; i++) {
+        keyboard_state.command_state.command[i] = keyboard_state.command_state.command[i + 1];
+    }
+
+    keyboard_state.command_state.command_length--;
+    keyboard_state.command_state.cursor_at--;
+    decrement(&framebuffer_state);
+    framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
+}
+
 
 /* -- Keyboard Interrupt Service Routine -- */
 
@@ -88,6 +139,17 @@ void keyboard_isr(void){
         return;
     }
 
+    // Handle left and right arrow
+    if (scan_code == 0x4B) {
+        cursor_move_left();
+        pic_ack(IRQ_KEYBOARD);
+        return;
+    } else if (scan_code == 0x4D) {
+        cursor_move_right();
+        pic_ack(IRQ_KEYBOARD);
+        return;
+    }
+
     if(keyboard_state.keyboard_input_on){
         int key_down_code = scan_code % (0b10000000);
         
@@ -110,8 +172,7 @@ void keyboard_isr(void){
 
         if (keyboard_state.keyboard_buffer == '\b') {
             if (keyboard_state.command_state.command_length > 0) {
-                keyboard_state.command_state.command_length--;
-                keyboard_state.command_state.command[keyboard_state.command_state.command_length] = 0;
+                remove_at_before_cursor();
             } else {
                 pic_ack(IRQ_KEYBOARD);
                 return;
@@ -119,31 +180,30 @@ void keyboard_isr(void){
         } else if (keyboard_state.command_state.command_length < MAX_COMMAND_LENGTH) {
             keyboard_state.command_state.command[keyboard_state.command_state.command_length] = c;
             keyboard_state.command_state.command_length++;
+            keyboard_state.command_state.cursor_at++;
         }
 
         if (keyboard_state.show_on_screen) {
-            update_framebuffer(c);
+            update_text(c);
         }
     }
     pic_ack(IRQ_KEYBOARD);
 }
 
-void update_framebuffer(char c) {
+void update_text(char c) {
     if (c == '\b') {
-        if (framebuffer_state.cursor_x == 0 && framebuffer_state.cursor_y == 0) return;
+        // Handles backspace
 
-        if (framebuffer_state.cursor_x == 0 && framebuffer_state.cursor_y > 0) {
-            framebuffer_state.cursor_y--;
-            framebuffer_state.cursor_x = 79;
-        } else {
-            framebuffer_state.cursor_x--;
+        // for (int i = keyboard_state.command_state.cursor_at; i < keyboard_state.command_state.command_length; i++) {
+        //     framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x + i - keyboard_state.command_state.cursor_at, keyboard_state.command_state.command[i + 1], White, Black);
+        // }
+
+        for (int i = 0; i < keyboard_state.command_state.command_length - keyboard_state.command_state.cursor_at; i++) {
+            framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x + i, keyboard_state.command_state.command[keyboard_state.command_state.cursor_at + i], White, Black);
         }
 
-        framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x, ' ', White, Black);
+        framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x + keyboard_state.command_state.command_length - keyboard_state.command_state.cursor_at, ' ', White, Black);
         framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
-
-
-
     } else if (c) {
         framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x++, c, White, Black);
         framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
@@ -168,4 +228,5 @@ void clear_command_buffer() {
     keyboard_state.command_state.command_length = 0;
     memset(keyboard_state.command_state.command, 0, MAX_COMMAND_LENGTH);
     keyboard_state.keyboard_buffer = 0;
+    keyboard_state.command_state.cursor_at = 0;
 }

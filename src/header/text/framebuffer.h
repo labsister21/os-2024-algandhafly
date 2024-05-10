@@ -100,4 +100,8 @@ void kernel_puts(char *str, uint8_t fg, uint8_t bg);
 
 void kernel_get_line(char *buf, uint8_t fg, uint8_t bg);
 
+void increment(struct FramebufferState *framebuffer_state);
+
+void decrement(struct FramebufferState *framebuffer_state);
+
 #endif

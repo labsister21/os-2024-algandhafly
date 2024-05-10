@@ -26,6 +26,7 @@ extern const char keyboard_scancode_1_to_ascii_map[256];
 struct CommandState {
     char command[MAX_COMMAND_LENGTH];
     size_t command_length;
+    int8_t cursor_at;
 };
 
 /**

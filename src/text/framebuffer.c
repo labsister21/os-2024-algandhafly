@@ -10,6 +10,14 @@
 uint16_t* framebuffer = (uint16_t*)(FRAMEBUFFER_MEMORY_OFFSET);
 struct FramebufferState framebuffer_state;
 
+int round_down_division(int dividend, int divisor) {
+    if (dividend < 0) {
+        return (dividend - (divisor - 1)) / divisor;
+    } else {
+        return dividend / divisor;
+    }
+}
+
 void framebuffer_set_cursor(uint8_t r, uint8_t c) {
     uint16_t pos = r * WIDTH + c;
 
@@ -20,6 +28,10 @@ void framebuffer_set_cursor(uint8_t r, uint8_t c) {
 }
 
 void framebuffer_write(uint8_t row, uint8_t col, char c, uint8_t fg, uint8_t bg) {
+    // Handles newline
+    row += round_down_division(col, 80);
+    col %= 80;
+    
     uint16_t attrib = (bg << 4) | (fg & 0x0F);
     size_t index = row * WIDTH + col;
     framebuffer[index] = c | (attrib << 8);
@@ -158,4 +170,23 @@ void kernel_get_line(char *buf, uint8_t fg, uint8_t bg) {
 
     keyboard_state_deactivate();
 
+}
+
+void increment(struct FramebufferState *framebuffer_state) {
+    framebuffer_state->cursor_x++;
+    if (framebuffer_state->cursor_x == WIDTH) {
+        framebuffer_state->cursor_x = 0;
+        framebuffer_state->cursor_y++;
+    }
+}
+
+void decrement(struct FramebufferState *framebuffer_state) {
+    if (framebuffer_state->cursor_x == 0 && framebuffer_state->cursor_y == 0) return;
+
+    if (framebuffer_state->cursor_x == 0 && framebuffer_state->cursor_y > 0) {
+        framebuffer_state->cursor_y--;
+        framebuffer_state->cursor_x = 79;
+    } else {
+        framebuffer_state->cursor_x--;
+    }
 }
