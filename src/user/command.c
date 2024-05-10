@@ -454,6 +454,7 @@ void command(char *buf, struct DirectoryStack* dir_stack) {
         handle_find(buf);
     } else if (memcmp(buf, help, 4) == 0) {
         help_command();
+    } else if(buf[0] == '\0'){
     } else {
         puts("\nCommand ");
         puts(buf);

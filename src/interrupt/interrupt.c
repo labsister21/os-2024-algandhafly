@@ -89,7 +89,7 @@ void syscall(struct InterruptFrame frame) {
             get_keyboard_buffer((char*)frame.cpu.general.ebx);
             break;
         case 5:
-            kernel_puts((char*)frame.cpu.general.ebx, frame.cpu.general.ecx, frame.cpu.general.edx);
+            kernel_puts_with_overflow_handling((char*)frame.cpu.general.ebx, frame.cpu.general.ecx, frame.cpu.general.edx);
             break;
         case 6: 
             keyboard_state.show_on_screen = true;
