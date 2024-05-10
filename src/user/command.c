@@ -7,78 +7,144 @@
 
 #define MAX_COMMAND_ARGS 20
 #define MAX_ARGS_LENGTH 200
+#define not !
+#define but &&
+#define and &&
+#define or ||
+#define DOT '.'
+#define FWSLASH '/'
+#define NULL_CHAR '\0'
+#define state uint8_t;
+#define _GLOBAL_OFFSET_TABLE_ 727;
 
-// path must end with \0
-// return 1 means error
+bool is_alpha_numeric(char c) {
+    bool is_number = ( c >= 48 and c <= 57 );
+    bool is_lowercase = ( c >= 65 and c <= 90);
+    bool is_uppercase = ( c >= 97 and c <= 122);
+    bool is_underscore = ( c == 95 );
+
+    return is_number or is_lowercase or is_uppercase or is_underscore;
+}
+
 uint8_t path_to_dir_stack(char* path, struct DirectoryStack* dir_stack){
-    char* c = path;
-    if(c[0] == '\0') return 1;
 
-    if(c[0] == '.' && c[1] == '/') {
-        c += 2;
-        if(c[0] == '\0') return 1;
+    int i;
+    init_dir(dir_stack);
+    char* c = path;
+    int infinite_loop_guard = 0;
+
+    if (c[0] == DOT and c[1] == FWSLASH) {
+        c++;++c;
     }
 
-    // populate root in element 0
-    init_dir(dir_stack);
+    char name[DIR_NAME_LENGTH];
+    char ext[DIR_EXT_LENGTH];
+    int l = 0;
+    int e = 0;
+    bool name_state = 0, extension_state = 1;
+    bool current_state = name_state;
 
-    uint8_t i = 0;
-    char dir_name[DIR_NAME_LENGTH];
-    char ext_name[DIR_EXT_LENGTH];
-    bool is_dir = true; // true: dir, false: ext
+    while (1) {
 
-    // just push everything first
-    // ayam/bebek/cicak.cpp/dodol/sapi.txt/buaya/\0
-    // ayam/bebek/cicak.cpp/dodol/sapi.txt/buaya\0
-    while(true) {
-        if(c[i] == '/' || c[i] == '.' || c[i] == '\0' || i+1 == DIR_NAME_LENGTH){
-            struct FAT32DirectoryEntry entry;
-            for(uint8_t j = 0; j < DIR_NAME_LENGTH; j++){
-                if(j < i) entry.name[j] = dir_name[j];
-                else entry.name[j] = '\0';
+        char ch = *(c++);
+
+        if (ch == FWSLASH or ch == NULL_CHAR) {
+            
+            if ((not e) but current_state == extension_state) {
+                goto EXTENSION_EMPTY;
+            } 
+
+            if (l > 0) {
+                struct FAT32DirectoryEntry entry;
+                for (i = 0; i < DIR_NAME_LENGTH; i++) {
+                    entry.name[i] = (i < l ? name[i] : NULL_CHAR);
+                }
+                for (i = 0; i < DIR_EXT_LENGTH; i++) {
+                    entry.ext[i] = (i < e ? ext[i] : NULL_CHAR);
+                }
+                entry.cluster_low = 2; // well this is probably wrong but whatever
+                push_dir(dir_stack, &entry);
             }
-
-            push_dir(dir_stack, &entry);
-
-            if(c[i] == '\0') break;
-
-            if(c[i] == '.') {
-                // extension
-                c += i + 1;
-                while(c[i] != '/' && c[i] != '\0') i++;
+            else if (l == 0 and e != 0) { // found extension but no filename
+                goto FILENAME_EMPTY;
             }
-            if(c[i] == '\0') break;
-
-            c += i + 1;
-            i = 0;
-
-            if(c[i] == '\0') break;
+            
+            l = 0;
+            e = 0;
+            current_state = name_state;
         }
 
-        dir_name[i] = c[i];
-        i++;    
+        else if (ch == DOT) {
+
+            if (current_state == extension_state and l == 0) { // handle double dots ; i.e. "somethingsomething/.."
+
+                // if next char doesnt end this current dir, then it dies, because double dots must be JUST double dots, no addons like "/..a/" or even ".../"
+                if (*c != FWSLASH and *c != NULL_CHAR) {
+                    goto INVALID_NAME;
+                }
+                
+                else ;
+                struct FAT32DirectoryEntry entry = {
+                    .name = "..\0\0\0\0\0\0",
+                    .ext = "\0\0\0",
+                    .cluster_low = 2 // this is probably wrong but whatever for now
+                };
+                push_dir(dir_stack, &entry);
+                current_state = name_state;
+                c++;
+                l = 0; e = 0;
+            }
+            else {
+                current_state = extension_state;
+            }
+
+        }
+
+        else {
+            if (not is_alpha_numeric(ch)) {
+                if (current_state == name_state) goto INVALID_NAME;
+                else goto INVALID_EXTENSION;
+            }
+            else if (current_state == name_state) {
+                if (l <= DIR_NAME_LENGTH) name[l++] = ch;
+                else goto TOO_LONG_FILENAME;
+            }
+            else if (current_state == extension_state) {
+                if (e <= DIR_EXT_LENGTH) ext[e++] = ch;
+                else goto TOO_LONG_EXTENSION;
+            }
+        }
+        
+        if (ch == NULL_CHAR) break;
+        if (++infinite_loop_guard > 10000) goto INFINITE_LOOP;
     }
-    
 
     return 0;
+    
+    INVALID_NAME:
+    return 1;
+    
+    INVALID_EXTENSION:
+    return 2;
+    
+    TOO_LONG_FILENAME:
+    return 3;
+    
+    EXTENSION_EMPTY:
+    return 4;
+    
+    FILENAME_EMPTY:
+    return 5;
 
+    TOO_LONG_EXTENSION: 
+    return 6;
 
-    // validate the path
-    for(uint8_t i = 0; i < dir_stack->length; i++) {
-        break;
-        struct FAT32DirectoryTable dir_table;
-        get_dir(dir_stack->entry[i].name, dir_stack->entry[i].cluster_low, &dir_table);
-        bool found = false;
-        for(uint32_t j = 2; j < 64; j++){
-            if(is_empty(&dir_table.table[j])) continue;
-            if(memcmp(dir_table.table[j].name, dir_stack->entry[i+1].name, DIR_NAME_LENGTH) == 0){
-                found = true;
-                break;
-            }
-        }
-        if(!found) return 1;
-    }
-    puts("\n");
+    INFINITE_LOOP: 
+    return 7;
+
+    /**
+     * TODO: validate path?
+    */
 
 }
 

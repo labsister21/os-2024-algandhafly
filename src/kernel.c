@@ -12,6 +12,7 @@
 #include "header/stdlib/string.h"
 #include "header/kernel-entrypoint.h"
 #include "header/memory/paging.h"
+#include "header/user/directorystack.h"
 
 
 char frame[WIDTH][HEIGHT];
@@ -293,6 +294,82 @@ void kernel_setup(void) {
 
     // Allocate first 4 MiB virtual memory
     paging_allocate_user_page_frame(&_paging_kernel_page_directory, (uint8_t*) 0);
+
+
+
+/**
+ * 
+ * TESTING ALDY
+ * path_to_dir_stack
+ * ~ maaf nyampah di kernel.c hehe tp debugger nya ntah kenapa g mau nyala jd yauda gua do it the old fashioned way dan yang penting works
+ *  Uncomment salah satu entry di bawah ini dan harusnya ke print ke terminal (kalau valid, kalau ngga berarti error code nya)
+ * 
+*/
+            #define not !
+            #include "header/user/io.h"
+            struct DirectoryStack stack;
+            uint8_t error = 0;
+
+            // error = path_to_dir_stack("./pathkepanjangan.osz/b/c/d/e.ppp", &stack);
+            // if (not error) print_path_to_cwd(&stack);
+            // else put_int(error);
+
+            // error = path_to_dir_stack(".nop/nopath", &stack);
+            // if(not error)print_path_to_cwd(&stack);
+            // else put_int(error);
+
+            // error = path_to_dir_stack("lmaolmao.extpanjang/b/c/d/e", &stack);
+            // if(not error)print_path_to_cwd(&stack);
+            // else put_int(error);
+
+            // error = path_to_dir_stack("contoh/path/$alah/", &stack);
+            // if(not error)print_path_to_cwd(&stack);
+            // else put_int(error);
+
+            // error = path_to_dir_stack("contoh/ext/salah.pn-/", &stack);
+            // if(not error)print_path_to_cwd(&stack);
+            // else put_int(error);
+
+            // error = path_to_dir_stack("noext./b/c/d/e", &stack);
+            // if(not error)print_path_to_cwd(&stack);
+            // else put_int(error);
+
+            // error = path_to_dir_stack("../", &stack);
+            // if (not error) print_path_to_cwd(&stack);
+            // else put_int(error);
+
+            // error = path_to_dir_stack("ayam/be/cicak.txt/sa.cpp/buaya.pp", &stack);
+            // if (not error) print_path_to_cwd(&stack);
+            // else put_int(error);
+
+            // error = path_to_dir_stack("./ayam/be/cica_k.txt/sa.cpp/buaya.pp", &stack);
+            // if (not error) print_path_to_cwd(&stack);
+            // else put_int(error);
+
+            // error = path_to_dir_stack("/a/b//c//d/e//p/", &stack);
+            // if (not error) print_path_to_cwd(&stack);
+            // else put_int(error);
+
+            // error = path_to_dir_stack("/", &stack);
+            // if (not error) print_path_to_cwd(&stack);
+            // else put_int(error);
+
+            // error = path_to_dir_stack("Jennifer/Lawrence/Movies.png", &stack);
+            // if (not error) print_path_to_cwd(&stack);
+            // else put_int(error);
+
+            // error = path_to_dir_stack("hello/../world/", &stack);
+            // if (not error) print_path_to_cwd(&stack);
+            // else put_int(error);
+            // for(;;);
+
+
+/**
+ * 
+ * END OF TESTING ALDY
+ * 
+*/
+
 
     // Write shell into memory
     struct FAT32DriverRequest request = {
