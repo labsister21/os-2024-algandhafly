@@ -38,8 +38,6 @@ void framebuffer_write(int8_t row, int8_t col, char c, uint8_t fg, uint8_t bg) {
     uint16_t attrib = (bg << 4) | (fg & 0x0F);
     size_t index = row * WIDTH + col;
     framebuffer[index] = c | (attrib << 8);
-
-    framebuffer[index + 800] = ((round_down_division(col, 80) / 10) +'0') | (attrib << 8);
 }
 
 void framebuffer_clear(void) {
