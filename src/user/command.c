@@ -8,6 +8,80 @@
 #define MAX_COMMAND_ARGS 20
 #define MAX_ARGS_LENGTH 200
 
+// path must end with \0
+// return 1 means error
+uint8_t path_to_dir_stack(char* path, struct DirectoryStack* dir_stack){
+    char* c = path;
+    if(c[0] == '\0') return 1;
+
+    if(c[0] == '.' && c[1] == '/') {
+        c += 2;
+        if(c[0] == '\0') return 1;
+    }
+
+    // populate root in element 0
+    init_dir(dir_stack);
+
+    uint8_t i = 0;
+    char dir_name[DIR_NAME_LENGTH];
+    char ext_name[DIR_EXT_LENGTH];
+    bool is_dir = true; // true: dir, false: ext
+
+    // just push everything first
+    // ayam/bebek/cicak.cpp/dodol/sapi.txt/buaya/\0
+    // ayam/bebek/cicak.cpp/dodol/sapi.txt/buaya\0
+    while(true) {
+        if(c[i] == '/' || c[i] == '.' || c[i] == '\0' || i+1 == DIR_NAME_LENGTH){
+            struct FAT32DirectoryEntry entry;
+            for(uint8_t j = 0; j < DIR_NAME_LENGTH; j++){
+                if(j < i) entry.name[j] = dir_name[j];
+                else entry.name[j] = '\0';
+            }
+
+            push_dir(dir_stack, &entry);
+
+            if(c[i] == '\0') break;
+
+            if(c[i] == '.') {
+                // extension
+                c += i + 1;
+                while(c[i] != '/' && c[i] != '\0') i++;
+            }
+            if(c[i] == '\0') break;
+
+            c += i + 1;
+            i = 0;
+
+            if(c[i] == '\0') break;
+        }
+
+        dir_name[i] = c[i];
+        i++;    
+    }
+    
+
+    return 0;
+
+
+    // validate the path
+    for(uint8_t i = 0; i < dir_stack->length; i++) {
+        break;
+        struct FAT32DirectoryTable dir_table;
+        get_dir(dir_stack->entry[i].name, dir_stack->entry[i].cluster_low, &dir_table);
+        bool found = false;
+        for(uint32_t j = 2; j < 64; j++){
+            if(is_empty(&dir_table.table[j])) continue;
+            if(memcmp(dir_table.table[j].name, dir_stack->entry[i+1].name, DIR_NAME_LENGTH) == 0){
+                found = true;
+                break;
+            }
+        }
+        if(!found) return 1;
+    }
+    puts("\n");
+
+}
+
 uint8_t extract_args(char* line, char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]){
     uint8_t i = 0;
     // Skip first spaces

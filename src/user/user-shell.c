@@ -7,6 +7,11 @@
 #define MAX_COMMAND_LENGTH 4000
 
 int main(void) {
+    struct DirectoryStack stack;
+    path_to_dir_stack("ayam/be/cicak.txt/sa.cpp/buaya.pp", &stack);
+    print_path_to_cwd(&stack); puts("\n");
+
+
     struct DirectoryStack dir_stack; 
     init_dir(&dir_stack);
 
