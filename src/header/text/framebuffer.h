@@ -53,7 +53,7 @@ struct FramebufferState {
  * @param fg  Foreground / Character color
  * @param bg  Background color
  */
-void framebuffer_write(uint8_t row, uint8_t col, char c, uint8_t fg, uint8_t bg);
+void framebuffer_write(int8_t row, int col, char c, uint8_t fg, uint8_t bg);
 
 /**
  * Set cursor to specified location. Row and column starts from 0
@@ -99,5 +99,9 @@ void framebuffer_write_and_move_cursor_until_null(const char* str, uint8_t fg, u
 void kernel_puts(char *str, uint8_t fg, uint8_t bg);
 
 void kernel_get_line(char *buf, uint8_t fg, uint8_t bg);
+
+void increment(struct FramebufferState *framebuffer_state);
+
+void decrement(struct FramebufferState *framebuffer_state);
 
 #endif

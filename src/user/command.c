@@ -459,4 +459,6 @@ void command(char *buf, struct DirectoryStack* dir_stack) {
         puts(buf);
         puts(" not found\n");
     }
+
+    
 }

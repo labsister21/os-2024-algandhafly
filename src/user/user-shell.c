@@ -2,6 +2,7 @@
 #include <command.h>
 #include <system.h>
 #include <directorystack.h>
+#include <string.h>
 #include "header/filesystem/fat32.h"
 
 #define MAX_COMMAND_LENGTH 4000
@@ -20,8 +21,10 @@ int main(void) {
         print_cwd(&dir_stack);
         get_line(buf);
         command(buf, &dir_stack);
+        memset(buf, 0, MAX_COMMAND_LENGTH); // Reset the command buffer
         puts("\n");
     }
+    
 
     return 0;
 }

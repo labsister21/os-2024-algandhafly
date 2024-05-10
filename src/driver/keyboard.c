@@ -28,8 +28,14 @@ const char keyboard_scancode_1_to_ascii_map[256] = {
 struct KeyboardDriverState keyboard_state = {
     .read_extended_mode = false,
     .keyboard_input_on = false,
+    .show_on_screen = false,
     .keyboard_buffer = 0,
     .caps_lock_on = false,
+    .command_state = {
+        .command = {0},
+        .command_length = 0,
+        .cursor_at = 0,
+    }
 };
 
 // Activate keyboard ISR / start listen keyboard & save to buffer
@@ -48,6 +54,70 @@ void get_keyboard_buffer(char *buf){
     keyboard_state.keyboard_buffer = 0;
 }
 
+
+/**
+ * Cursor
+*/
+void cursor_move_left() {
+    if (keyboard_state.command_state.cursor_at == 0) return;
+
+    if (framebuffer_state.cursor_x == 0 && framebuffer_state.cursor_y == 0) return;
+
+    if (framebuffer_state.cursor_x == 0 && framebuffer_state.cursor_y > 0) {
+        framebuffer_state.cursor_y--;
+        framebuffer_state.cursor_x = 79;
+    } else {
+        framebuffer_state.cursor_x--;
+    }
+
+    keyboard_state.command_state.cursor_at--;
+    framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
+}
+
+void cursor_move_right() {
+    if (keyboard_state.command_state.cursor_at == keyboard_state.command_state.command_length) return;
+
+    if (framebuffer_state.cursor_x == 79 && framebuffer_state.cursor_y == 24) return;
+
+    if (framebuffer_state.cursor_x == 79 && framebuffer_state.cursor_y < 24) {
+        framebuffer_state.cursor_y++;
+        framebuffer_state.cursor_x = 0;
+    } else {
+        framebuffer_state.cursor_x++;
+    }
+
+    keyboard_state.command_state.cursor_at++;
+    framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
+}
+
+void remove_at_before_cursor() {
+    if (keyboard_state.command_state.cursor_at == 0) return;
+
+    for (int i = keyboard_state.command_state.cursor_at - 1; i < keyboard_state.command_state.command_length - 1; i++) {
+        keyboard_state.command_state.command[i] = keyboard_state.command_state.command[i + 1];
+    }
+
+    keyboard_state.command_state.command_length--;
+    keyboard_state.command_state.cursor_at--;
+    decrement(&framebuffer_state);
+    framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
+}
+
+void insert_at_cursor() {
+    if (keyboard_state.command_state.command_length == MAX_COMMAND_LENGTH) return;
+
+    for (int i = keyboard_state.command_state.command_length; i > keyboard_state.command_state.cursor_at; i--) {
+        keyboard_state.command_state.command[i] = keyboard_state.command_state.command[i - 1];
+    }
+
+    keyboard_state.command_state.command_length++;
+    keyboard_state.command_state.command[keyboard_state.command_state.cursor_at] = keyboard_state.keyboard_buffer;
+    keyboard_state.command_state.cursor_at++;
+    increment(&framebuffer_state);
+    framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
+}
+
+
 /* -- Keyboard Interrupt Service Routine -- */
 
 /**
@@ -56,6 +126,8 @@ void get_keyboard_buffer(char *buf){
  */
 void keyboard_isr(void){
     uint8_t scan_code = in(KEYBOARD_DATA_PORT);
+
+
 
     // handle shift pressing
     if (scan_code == 0x2A || scan_code == 0x36) {
@@ -81,13 +153,20 @@ void keyboard_isr(void){
         return;
     }
 
+    // Handle left and right arrow
+    if (scan_code == 0x4B) {
+        cursor_move_left();
+        pic_ack(IRQ_KEYBOARD);
+        return;
+    } else if (scan_code == 0x4D) {
+        cursor_move_right();
+        pic_ack(IRQ_KEYBOARD);
+        return;
+    }
+
     if(keyboard_state.keyboard_input_on){
         int key_down_code = scan_code % (0b10000000);
         
-
-
-
-
         if (key_down_code <= 55 && key_down_code >= 30) {
             scan_code = keyboard_state.caps_lock_on ? ((scan_code + 0b10000000) % 0b100000000) : scan_code;
         }
@@ -99,29 +178,59 @@ void keyboard_isr(void){
 
         char c = keyboard_scancode_1_to_ascii_map[scan_code];
 
-        keyboard_state.keyboard_buffer = c;
+        keyboard_state.keyboard_buffer = c;   
+        if (c == '\n') {
+            pic_ack(IRQ_KEYBOARD);
+            return;
+        }
 
+        if (keyboard_state.keyboard_buffer == '\b') {
+            if (keyboard_state.command_state.command_length > 0) {
+                remove_at_before_cursor();
+            } else {
+                pic_ack(IRQ_KEYBOARD);
+                return;
+            }
+        } else if (keyboard_state.command_state.command_length < MAX_COMMAND_LENGTH) {
+            insert_at_cursor();
+        }
 
-        /**
-         * Debugging purpose
-        */
-        // int col = 0;
-        // framebuffer_clear();
-        // while (scan_code > 0) {
-        //     framebuffer_write(20, col++, (scan_code % 10) + '0', 0xF, 0);
-        //     scan_code /= 10;
-        // }
-
-
-        // Handle shift
-        // if(keyboard_state.was_shift && c >= 'a' && c <= 'z') c -= 0x20;
-        // if(scan_code == 0x2A) keyboard_state.was_shift = true;
-        // else if(scan_code == 0x2A + 0b10000000){
-        //   keyboard_state.was_shift = false;
-        //   pic_ack(IRQ_KEYBOARD);
-        //   return;
-        // }   
-        
+        if (keyboard_state.show_on_screen) {
+            update_text(c);
+        }
     }
     pic_ack(IRQ_KEYBOARD);
+}
+
+void update_text(char c) {
+    if (c == '\b') {
+        // Handles backspace
+
+        for (int i = 0; i < keyboard_state.command_state.command_length - keyboard_state.command_state.cursor_at; i++) {
+            framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x + i, keyboard_state.command_state.command[keyboard_state.command_state.cursor_at + i], White, Black);
+        }
+
+        framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x + keyboard_state.command_state.command_length - keyboard_state.command_state.cursor_at, ' ', White, Black);
+    } else if (c) {
+        for (int i = 1; i <= keyboard_state.command_state.command_length - keyboard_state.command_state.cursor_at + 1; i++) {
+            framebuffer_write(framebuffer_state.cursor_y, 
+        framebuffer_state.cursor_x + keyboard_state.command_state.command_length - keyboard_state.command_state.cursor_at - i,
+        keyboard_state.command_state.command[keyboard_state.command_state.command_length - i], White, Black);
+        }
+
+    }
+}
+
+void get_command_buffer(char *buf) {
+    __asm__ volatile("sti");
+    while (keyboard_state.keyboard_buffer != '\n');
+    memcpy(buf, keyboard_state.command_state.command, keyboard_state.command_state.command_length);
+    clear_command_buffer();
+}
+
+void clear_command_buffer() {
+    keyboard_state.command_state.command_length = 0;
+    memset(keyboard_state.command_state.command, 0, MAX_COMMAND_LENGTH);
+    keyboard_state.keyboard_buffer = 0;
+    keyboard_state.command_state.cursor_at = 0;
 }
