@@ -103,6 +103,20 @@ void remove_at_before_cursor() {
     framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
 }
 
+void insert_at_cursor() {
+    if (keyboard_state.command_state.command_length == MAX_COMMAND_LENGTH) return;
+
+    for (int i = keyboard_state.command_state.command_length; i > keyboard_state.command_state.cursor_at; i--) {
+        keyboard_state.command_state.command[i] = keyboard_state.command_state.command[i - 1];
+    }
+
+    keyboard_state.command_state.command_length++;
+    keyboard_state.command_state.command[keyboard_state.command_state.cursor_at] = keyboard_state.keyboard_buffer;
+    keyboard_state.command_state.cursor_at++;
+    increment(&framebuffer_state);
+    framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
+}
+
 
 /* -- Keyboard Interrupt Service Routine -- */
 
@@ -178,9 +192,7 @@ void keyboard_isr(void){
                 return;
             }
         } else if (keyboard_state.command_state.command_length < MAX_COMMAND_LENGTH) {
-            keyboard_state.command_state.command[keyboard_state.command_state.command_length] = c;
-            keyboard_state.command_state.command_length++;
-            keyboard_state.command_state.cursor_at++;
+            insert_at_cursor();
         }
 
         if (keyboard_state.show_on_screen) {
@@ -203,18 +215,13 @@ void update_text(char c) {
         }
 
         framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x + keyboard_state.command_state.command_length - keyboard_state.command_state.cursor_at, ' ', White, Black);
-        framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
     } else if (c) {
-        framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x++, c, White, Black);
-        framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
+        for (int i = 1; i <= keyboard_state.command_state.command_length - keyboard_state.command_state.cursor_at + 1; i++) {
+                    framebuffer_write(framebuffer_state.cursor_y, 
+        framebuffer_state.cursor_x + keyboard_state.command_state.command_length - keyboard_state.command_state.cursor_at - i,
+        keyboard_state.command_state.command[keyboard_state.command_state.command_length - i], White, Black);
+        }
     }
-
-    if (framebuffer_state.cursor_x == 80) {
-        framebuffer_state.cursor_x = 0;
-        framebuffer_state.cursor_y++;
-        framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
-    }
-
 }
 
 void get_command_buffer(char *buf) {
