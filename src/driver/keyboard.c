@@ -164,6 +164,11 @@ void keyboard_isr(void){
         return;
     }
 
+    if (keyboard_scancode_1_to_ascii_map[scan_code] == 0) {
+        pic_ack(IRQ_KEYBOARD);
+        return;
+    }
+
     if(keyboard_state.keyboard_input_on){
         int key_down_code = scan_code % (0b10000000);
         
