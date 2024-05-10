@@ -206,10 +206,6 @@ void update_text(char c) {
     if (c == '\b') {
         // Handles backspace
 
-        // for (int i = keyboard_state.command_state.cursor_at; i < keyboard_state.command_state.command_length; i++) {
-        //     framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x + i - keyboard_state.command_state.cursor_at, keyboard_state.command_state.command[i + 1], White, Black);
-        // }
-
         for (int i = 0; i < keyboard_state.command_state.command_length - keyboard_state.command_state.cursor_at; i++) {
             framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x + i, keyboard_state.command_state.command[keyboard_state.command_state.cursor_at + i], White, Black);
         }
@@ -217,10 +213,11 @@ void update_text(char c) {
         framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x + keyboard_state.command_state.command_length - keyboard_state.command_state.cursor_at, ' ', White, Black);
     } else if (c) {
         for (int i = 1; i <= keyboard_state.command_state.command_length - keyboard_state.command_state.cursor_at + 1; i++) {
-                    framebuffer_write(framebuffer_state.cursor_y, 
+            framebuffer_write(framebuffer_state.cursor_y, 
         framebuffer_state.cursor_x + keyboard_state.command_state.command_length - keyboard_state.command_state.cursor_at - i,
         keyboard_state.command_state.command[keyboard_state.command_state.command_length - i], White, Black);
         }
+
     }
 }
 
