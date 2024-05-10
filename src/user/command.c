@@ -254,10 +254,10 @@ void handle_cat(char* buf, struct DirectoryStack* dir_stack){
             puts("\n");
             puts(fileName);
             puts(" not found");
-            continue;
+            return;
         } else if(error_code == -1) {
             puts("\nUnknown error has occured");
-            continue;
+            return;
         }
 
         puts("\n");
@@ -336,10 +336,10 @@ void handle_cp(char* buf, struct DirectoryStack* dir_stack){
             puts("\n");
             puts(src);
             puts(" not found");
-            continue;
+            return;
         } else if(error_code == -1) {
             puts("\nUnknown error has occured");
-            continue;
+            return;
         }
 
 
@@ -436,6 +436,7 @@ void command(char *buf, struct DirectoryStack* dir_stack) {
     if(memcmp(buf, clear, 4) == 0) {
         clear_screen();
         set_cursor(0, 0);
+        return; // prevent new line
     } else if (memcmp(buf, cd, 2) == 0) {
         handle_cd(buf, dir_stack);
     } else if (memcmp(buf, ls, 2) == 0) {
@@ -455,11 +456,13 @@ void command(char *buf, struct DirectoryStack* dir_stack) {
     } else if (memcmp(buf, help, 4) == 0) {
         help_command();
     } else if(buf[0] == '\0'){
+        puts("\n");
+        return; // prevent new line
     } else {
         puts("\nCommand ");
         puts(buf);
         puts(" not found\n");
     }
-
+    puts("\n");
     
 }

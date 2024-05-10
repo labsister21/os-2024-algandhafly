@@ -22,7 +22,6 @@ int main(void) {
         get_line(buf);
         command(buf, &dir_stack);
         memset(buf, 0, MAX_COMMAND_LENGTH); // Reset the command buffer
-        puts("\n");
     }
     
 
