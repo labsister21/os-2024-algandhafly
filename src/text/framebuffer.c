@@ -27,7 +27,7 @@ void framebuffer_set_cursor(uint8_t r, uint8_t c) {
     out(CURSOR_PORT_DATA, (uint8_t)((pos >> 8) & 0xFF));
 }
 
-void framebuffer_write(int8_t row, int8_t col, char c, uint8_t fg, uint8_t bg) {
+void framebuffer_write(int8_t row, int col, char c, uint8_t fg, uint8_t bg) {
     // Handles newline
     row += round_down_division(col, 80);
     while (col < 0) {
