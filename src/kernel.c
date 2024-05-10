@@ -303,6 +303,7 @@ void kernel_setup(void) {
  * path_to_dir_stack
  * ~ maaf nyampah di kernel.c hehe tp debugger nya ntah kenapa g mau nyala jd yauda gua do it the old fashioned way dan yang penting works
  *  Uncomment salah satu entry di bawah ini dan harusnya ke print ke terminal (kalau valid, kalau ngga berarti error code nya)
+ * Uncomment juga "for(;;)" di paling bawah biar dia ga lanjut boot
  * 
 */
             #define not !
@@ -346,6 +347,10 @@ void kernel_setup(void) {
             // if (not error) print_path_to_cwd(&stack);
             // else put_int(error);
 
+            // error = path_to_dir_stack("/a/b//..c//d/e//p/", &stack);
+            // if (not error) print_path_to_cwd(&stack);
+            // else put_int(error);
+
             // error = path_to_dir_stack("/a/b//c//d/e//p/", &stack);
             // if (not error) print_path_to_cwd(&stack);
             // else put_int(error);
@@ -361,7 +366,7 @@ void kernel_setup(void) {
             // error = path_to_dir_stack("hello/../world/", &stack);
             // if (not error) print_path_to_cwd(&stack);
             // else put_int(error);
-            // for(;;);
+            for(;;);
 
 
 /**
