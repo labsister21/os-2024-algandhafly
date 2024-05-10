@@ -1,7 +1,7 @@
 #ifndef COMMAND_H
 #define COMMAND_H
-#include <cwdlist.h>
+#include <directorystack.h>
 
-void command(char *buf, struct CWDList* cwd_list);
+void command(char *buf, struct DirectoryStack* dir_stack);
 
 #endif

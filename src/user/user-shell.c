@@ -1,18 +1,20 @@
 #include <io.h>
 #include <command.h>
 #include <system.h>
-#include <cwdlist.h>
+#include <directorystack.h>
+#include "header/filesystem/fat32.h"
 
 #define MAX_COMMAND_LENGTH 4000
 
 int main(void) {
-    char buf[MAX_COMMAND_LENGTH];
-    struct CWDList cwd_list; push_dir(&cwd_list, "root\0\0\0\0", 2);
+    struct DirectoryStack dir_stack; 
+    init_dir(&dir_stack);
 
+    char buf[MAX_COMMAND_LENGTH];
     while(true) {
-        print_cwd(&cwd_list);
+        print_cwd(&dir_stack);
         get_line(buf);
-        command(buf, &cwd_list);
+        command(buf, &dir_stack);
         puts("\n");
     }
 

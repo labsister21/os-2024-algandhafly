@@ -29,6 +29,7 @@
         "concepts": "c",
         "type_traits": "c",
         "new": "c",
-        "cwdlist.h": "c"
+        "cwdlist.h": "c",
+        "directorystack.h": "c"
     },
 }
