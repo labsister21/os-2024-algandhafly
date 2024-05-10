@@ -172,7 +172,7 @@ void keyboard_isr(void){
     if(keyboard_state.keyboard_input_on){
         int key_down_code = scan_code % (0b10000000);
         
-        if (key_down_code <= 55 && key_down_code >= 30) {
+        if ((key_down_code <= 25 && key_down_code >= 16) || (key_down_code <= 38 && key_down_code >= 30) || (key_down_code <= 50 && key_down_code >= 44)) {
             scan_code = keyboard_state.caps_lock_on ? ((scan_code + 0b10000000) % 0b100000000) : scan_code;
         }
 
