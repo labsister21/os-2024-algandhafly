@@ -44,7 +44,7 @@ void print_path_to_cwd(struct DirectoryStack* dir_stack) {
     for(uint8_t i = 0; i < dir_stack->length; i++){
         puts_clamped(dir_stack->entry[i].name, 8);
         puts_clamped(dir_stack->entry[i].ext, 3);
-        puts("/");
+        puts("\n");
     }
 }
 
@@ -55,5 +55,6 @@ void init_dir(struct DirectoryStack* dir_stack){
         .ext = "\0\0\0",
         .cluster_low = 2
     };
+    dir_stack->length = 0;
     push_dir(dir_stack, &root_entry);
 }

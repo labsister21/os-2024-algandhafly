@@ -12,11 +12,24 @@ void systemCall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx) {
 }
 
 // populates dir_table
-uint8_t get_dir(char folderName[DIR_NAME_LENGTH], uint16_t parent_cluster_number, struct FAT32DirectoryTable* dir_table) {
+uint8_t get_dir(char folder_name[DIR_NAME_LENGTH], uint16_t parent_cluster_number, struct FAT32DirectoryTable* dir_table) {
     struct FAT32DriverRequest request;
 
     request.parent_cluster_number = parent_cluster_number;
-    memcpy(request.name, folderName, DIR_NAME_LENGTH);
+    memcpy(request.name, folder_name, DIR_NAME_LENGTH);
+    request.buf = dir_table;
+
+    uint8_t error_code;
+    systemCall(1, (uint32_t )&request, (uint32_t )&error_code, 0);
+    return error_code;
+}
+
+uint8_t get_file_dir(char folder_name[DIR_NAME_LENGTH], char ext[DIR_EXT_LENGTH], uint16_t parent_cluster_number, struct FAT32DirectoryTable *dir_table){
+    struct FAT32DriverRequest request;
+
+    request.parent_cluster_number = parent_cluster_number;
+    memcpy(request.name, folder_name, DIR_NAME_LENGTH);
+    memcpy(request.ext, ext, DIR_EXT_LENGTH);
     request.buf = dir_table;
 
     uint8_t error_code;

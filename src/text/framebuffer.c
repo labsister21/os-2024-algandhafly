@@ -125,6 +125,37 @@ void kernel_puts(char *str, uint8_t fg, uint8_t bg)
     framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
 }
 
+void kernel_puts_with_overflow_handling(char *str, uint8_t fg, uint8_t bg)
+{
+    size_t i = 0;
+    while(str[i] != '\0') {
+        if(framebuffer_state.cursor_y == HEIGHT-2) {
+            kernel_puts("\nPress any key to continue...", Yellow, Black);
+            char buf[2000]; buf[0] = '\0';
+            get_command_buffer(buf);
+            framebuffer_clear();
+            framebuffer_state.cursor_x = 0;
+            framebuffer_state.cursor_y = 0;
+        }
+        
+        if(str[i] == '\n') {
+            framebuffer_state.cursor_x = 0;
+            framebuffer_state.cursor_y++;
+            i++;
+            continue;
+        }
+        framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x, str[i], fg, bg);
+        i++;
+        framebuffer_state.cursor_x++;
+        if(framebuffer_state.cursor_x == WIDTH) {
+            framebuffer_state.cursor_x = 0;
+            framebuffer_state.cursor_y++;
+        }
+        
+    }
+    framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
+}
+
 void kernel_get_line(char *buf, uint8_t fg, uint8_t bg) {
     __asm__ volatile("sti");
     
