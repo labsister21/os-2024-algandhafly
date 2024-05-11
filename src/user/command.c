@@ -103,11 +103,11 @@ uint8_t path_to_dir_stack(char* path, struct DirectoryStack* dir_stack){
                 else goto INVALID_EXTENSION;
             }
             else if (current_state == name_state) {
-                if (l <= DIR_NAME_LENGTH) name[l++] = ch;
+                if (l < DIR_NAME_LENGTH) name[l++] = ch;
                 else goto TOO_LONG_FILENAME;
             }
             else if (current_state == extension_state) {
-                if (e <= DIR_EXT_LENGTH) ext[e++] = ch;
+                if (e < DIR_EXT_LENGTH) ext[e++] = ch;
                 else goto TOO_LONG_EXTENSION;
             }
         }
@@ -526,21 +526,21 @@ void handle_find(char* buf){
 
 }
 
-const char clear[5] = "clear";
+const char clear[6] = "clear";
 const char help[5] = "help";
-const char cd[2] = "cd"; // cd	- Mengganti current working directory (termasuk .. untuk naik)
-const char ls[2] = "ls"; // ls	- Menuliskan isi current working directory
-const char mkdir[5] = "mkdir"; // mkdir	- Membuat sebuah folder kosong baru
-const char cat[3] = "cat"; // cat	- Menuliskan sebuah file sebagai text file ke layar (Gunakan format LF newline)
-const char cp[2] = "cp"; // cp	- Mengcopy suatu file (Folder menjadi bonus)
-const char rm[2] = "rm"; // rm	- Menghapus suatu file (Folder menjadi bonus)
-const char mv[2] = "mv"; // mv	- Memindah dan merename lokasi file/folder
-const char find[4] = "find"; // find	- Mencari file/folder dengan nama yang sama diseluruh file system
+const char cd[3] = "cd"; // cd	- Mengganti current working directory (termasuk .. untuk naik)
+const char ls[3] = "ls\0"; // ls	- Menuliskan isi current working directory
+const char mkdir[6] = "mkdir"; // mkdir	- Membuat sebuah folder kosong baru
+const char cat[4] = "cat"; // cat	- Menuliskan sebuah file sebagai text file ke layar (Gunakan format LF newline)
+const char cp[3] = "cp"; // cp	- Mengcopy suatu file (Folder menjadi bonus)
+const char rm[3] = "rm"; // rm	- Menghapus suatu file (Folder menjadi bonus)
+const char mv[3] = "mv"; // mv	- Memindah dan merename lokasi file/folder
+const char find[5] = "find"; // find	- Mencari file/folder dengan nama yang sama diseluruh file system
 
 void command(char *buf, struct DirectoryStack* dir_stack) {
-    while(*buf == ' ') buf++; // Skip spaces
+    while(*buf == ' ') buf ++; // Skip spaces
 
-    if(memcmp(buf, clear, 4) == 0) {
+    if(memcmp(buf, clear, 5) == 0) {
         clear_screen();
         set_cursor(0, 0);
         return; // prevent new line
@@ -548,7 +548,7 @@ void command(char *buf, struct DirectoryStack* dir_stack) {
         handle_cd(buf, dir_stack);
     } else if (memcmp(buf, ls, 2) == 0) {
         handle_ls(dir_stack);
-    } else if (memcmp(buf, mkdir, 4) == 0) {
+    } else if (memcmp(buf, mkdir, 5) == 0) {
         handle_mkdir(buf, dir_stack);
     } else if (memcmp(buf, cat, 3) == 0) {
         handle_cat(buf, dir_stack);
