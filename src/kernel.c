@@ -306,10 +306,10 @@ void kernel_setup(void) {
  * Uncomment juga "for(;;)" di paling bawah biar dia ga lanjut boot
  * 
 */
-            #define not !
-            #include "header/user/io.h"
-            struct DirectoryStack stack;
-            uint8_t error = 0;
+            // #define not !
+            // #include "header/user/io.h"
+            // struct DirectoryStack stack;
+            // uint8_t error = 0;
 
             // error = path_to_dir_stack("./pathkepanjangan.osz/b/c/d/e.ppp", &stack);
             // if (not error) print_path_to_cwd(&stack);
@@ -366,7 +366,7 @@ void kernel_setup(void) {
             // error = path_to_dir_stack("hello/../world/", &stack);
             // if (not error) print_path_to_cwd(&stack);
             // else put_int(error);
-            for(;;);
+            // for(;;);
 
 
 /**

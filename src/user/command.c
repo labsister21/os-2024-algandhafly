@@ -29,7 +29,6 @@ bool is_alpha_numeric(char c) {
 uint8_t path_to_dir_stack(char* path, struct DirectoryStack* dir_stack){
 
     int i;
-    init_dir(dir_stack);
     char* c = path;
     int infinite_loop_guard = 0;
 
@@ -62,7 +61,6 @@ uint8_t path_to_dir_stack(char* path, struct DirectoryStack* dir_stack){
                 for (i = 0; i < DIR_EXT_LENGTH; i++) {
                     entry.ext[i] = (i < e ? ext[i] : NULL_CHAR);
                 }
-                entry.cluster_low = 2; // well this is probably wrong but whatever
                 push_dir(dir_stack, &entry);
             }
             else if (l == 0 and e != 0) { // found extension but no filename
@@ -87,7 +85,6 @@ uint8_t path_to_dir_stack(char* path, struct DirectoryStack* dir_stack){
                 struct FAT32DirectoryEntry entry = {
                     .name = "..\0\0\0\0\0\0",
                     .ext = "\0\0\0",
-                    .cluster_low = 2 // this is probably wrong but whatever for now
                 };
                 push_dir(dir_stack, &entry);
                 current_state = name_state;
@@ -148,6 +145,37 @@ uint8_t path_to_dir_stack(char* path, struct DirectoryStack* dir_stack){
 
 }
 
+// dir_stack_cwd: the cwd passed from the user-shell
+// dir_stack: the dir_stack to be populated
+uint8_t path_to_dir_stack_from_cwd(char* path, struct DirectoryStack* dir_stack_cwd, struct DirectoryStack* dir_stack) {
+    uint8_t error_code = path_to_dir_stack(path, dir_stack);
+    if(error_code != 0) return error_code;
+
+    uint16_t cwd_cluster = current_parent_cluster(dir_stack_cwd);
+    struct FAT32DirectoryTable dir_table;
+
+    
+    for(uint16_t curr_idx = 0; curr_idx < dir_stack->length; curr_idx++) {
+        if(dir_stack->entry[curr_idx].ext[0] == NULL_CHAR)
+            get_dir(dir_stack->entry[curr_idx].name, cwd_cluster, &dir_table);
+        else
+            get_file_dir(dir_stack->entry[curr_idx].name, dir_stack->entry[curr_idx].ext, cwd_cluster, &dir_table);
+
+        bool found = false;
+        for(uint8_t i = 0; i < 64; i++) {
+            if(is_empty(&dir_table.table[i])) continue;
+            if(memcmp(dir_table.table[i].name, dir_stack->entry[curr_idx].name, DIR_NAME_LENGTH) == 0) {
+                memcpy(&dir_stack->entry[curr_idx], &dir_table.table[i], sizeof(struct FAT32DirectoryEntry));
+                cwd_cluster = dir_table.table[i].cluster_low;
+                found = true;
+                break;
+            }
+        }
+        if(!found) return 8; // Case one of them not found
+    }
+    return 0;
+}
+
 uint8_t extract_args(char* line, char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]){
     uint8_t i = 0;
     // Skip first spaces
@@ -199,43 +227,56 @@ void handle_cd(char *cd, struct DirectoryStack* dir_stack) {
     char folderName[DIR_NAME_LENGTH];
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
     extract_args(cd, args);
-    memcpy(folderName, args[1], DIR_NAME_LENGTH);
-    if(folderName[0] == '\0'){
+    if(args[1][0] == '\0'){
         puts("\nPlease provide folder name\n");
         return;
     }
 
-    if(memcmp(folderName, "..", 2) == 0) {
-        if(memcmp(last_dir(dir_stack), "root", 4) == 0) {
-            puts("\n");
-            puts("Already in root directory\n");
-            return;
-        }
-        pop_dir(dir_stack);
-        return;
-    }
+    struct DirectoryStack* input_path;
+    path_to_dir_stack(args[1], input_path);
+
+
+    // uint8_t error_code = path_to_dir_stack_from_cwd(args[1], dir_stack, input_path);
+    // if(error_code != 0) {
+    //     puts("\nInvalid path\n");
+    // }
+
+    // for(uint8_t i = 0; i < input_path->length; i++) {
+    //     push_dir(dir_stack, &input_path->entry[i]);
+    // }
     
-    struct FAT32DirectoryTable dir_table;
-    get_dir(last_dir(dir_stack), prev_parent_cluster(dir_stack), &dir_table);
-    for(uint32_t i = 2; i < 64; i++){
-        if(is_empty(&dir_table.table[i])) continue;
-        if(memcmp(dir_table.table[i].name, folderName, DIR_NAME_LENGTH) == 0){
-            if(is_directory(&dir_table.table[i])) {
-                push_dir(dir_stack, &dir_table.table[i]);
-                return;
-            } else {
-                puts("\n");
-                puts(folderName);
-                puts(" is not a folder.");
-                return;
-            }
-            break;
-        }
-    }
-    puts("\n");
-    puts("Folder ");
-    puts(folderName);
-    puts(" not found");
+
+    // if(memcmp(folderName, "..", 2) == 0) {
+    //     if(memcmp(last_dir(dir_stack), "root", 4) == 0) {
+    //         puts("\n");
+    //         puts("Already in root directory\n");
+    //         return;
+    //     }
+    //     pop_dir(dir_stack);
+    //     return;
+    // }
+    
+    // struct FAT32DirectoryTable dir_table;
+    // get_dir(last_dir(dir_stack), prev_parent_cluster(dir_stack), &dir_table);
+    // for(uint32_t i = 2; i < 64; i++){
+    //     if(is_empty(&dir_table.table[i])) continue;
+    //     if(memcmp(dir_table.table[i].name, folderName, DIR_NAME_LENGTH) == 0){
+    //         if(is_directory(&dir_table.table[i])) {
+    //             push_dir(dir_stack, &dir_table.table[i]);
+    //             return;
+    //         } else {
+    //             puts("\n");
+    //             puts(folderName);
+    //             puts(" is not a folder.");
+    //             return;
+    //         }
+    //         break;
+    //     }
+    // }
+    // puts("\n");
+    // puts("Folder ");
+    // puts(folderName);
+    // puts(" not found");
 }
 
 void handle_ls(struct DirectoryStack* dir_stack) {
