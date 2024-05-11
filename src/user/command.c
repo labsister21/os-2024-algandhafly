@@ -299,8 +299,10 @@ void handle_ls(struct DirectoryStack* dir_stack) {
             puts_color(dir_table.table[i].name, Color_LightCyan, Color_Black);
         } else {
             puts_color(dir_table.table[i].name, Color_LightBlue, Color_Black);
-            puts_color(".", Color_LightBlue, Color_Black);
-            puts_color(dir_table.table[i].ext, Color_LightBlue, Color_Black);
+            if(dir_table.table[i].ext[0] != NULL_CHAR || dir_table.table[i].ext[1] != NULL_CHAR || dir_table.table[i].ext[2] != NULL_CHAR) {
+                puts_color(".", Color_LightBlue, Color_Black);
+                puts_color(dir_table.table[i].ext, Color_LightBlue, Color_Black);
+            }
         }
         puts("\n");
     }
@@ -449,9 +451,10 @@ void handle_rm(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
     error_code = delete_file_or_dir(&entry, parent_cluster_containing_file);
     // Error code: 0 success - 1 not found - 2 folder is not empty - -1 unknown
     if(error_code == 0) {
-        puts("\nDeleted ");
-        puts(entry.name);
-        puts("\n");
+        // used in mv
+        // puts("\nDeleted ");
+        // puts(entry.name);
+        // puts("\n");
     } else if(error_code == 1){
         puts("\nFolder not found\n");
     } else if(error_code == 2){
@@ -541,11 +544,8 @@ void handle_cp(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
 }
 
 void handle_mv(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
-    char src[MAX_ARGS_LENGTH];
-    char dest[MAX_ARGS_LENGTH];
-
-    memcpy(src, args[1], MAX_ARGS_LENGTH);
-    memcpy(dest, args[2], MAX_ARGS_LENGTH);
+    handle_cp(args, dir_stack);
+    handle_rm(args, dir_stack);
 }
 
 
