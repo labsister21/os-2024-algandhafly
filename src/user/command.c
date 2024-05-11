@@ -147,7 +147,7 @@ uint8_t path_to_dir_stack(char* path, struct DirectoryStack* dir_stack){
 
 // dir_stack_cwd: the cwd passed from the user-shell
 // dir_stack: the dir_stack to be populated
-// return 1 means not found
+// return 1: not found, 2: last element not found
 uint8_t path_to_dir_stack_from_cwd(char* path, struct DirectoryStack* dir_stack_cwd, struct DirectoryStack* dir_stack) {
     uint8_t error_code = path_to_dir_stack(path, dir_stack);
     if(error_code != 0) return error_code;
@@ -160,7 +160,7 @@ uint8_t path_to_dir_stack_from_cwd(char* path, struct DirectoryStack* dir_stack_
         get_dir_by_cluster(parent_cluster, &dir_table);
 
         bool found = false;
-        for(uint32_t i = 2; i < 64; i++){
+        for(uint32_t i = 0; i < 64; i++){
             if(is_empty(&dir_table.table[i])) continue;
             if(memcmp(&dir_table.table[i].name, dir_stack->entry[idx].name, DIR_NAME_LENGTH) == 0){
                 parent_cluster = dir_table.table[i].cluster_low;
@@ -168,6 +168,11 @@ uint8_t path_to_dir_stack_from_cwd(char* path, struct DirectoryStack* dir_stack_
                 found = true;
                 break; 
             }
+        }
+
+        // case last element and is a file
+        if(!found && idx == dir_stack->length - 1) {
+            return 2;
         }
         if(!found) return 1;
 
@@ -294,6 +299,8 @@ void handle_ls(struct DirectoryStack* dir_stack) {
             puts_color(dir_table.table[i].name, Color_LightCyan, Color_Black);
         } else {
             puts_color(dir_table.table[i].name, Color_LightBlue, Color_Black);
+            puts_color(".", Color_LightBlue, Color_Black);
+            puts_color(dir_table.table[i].ext, Color_LightBlue, Color_Black);
         }
         puts("\n");
     }
@@ -455,8 +462,8 @@ void handle_rm(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
 }
 
 void handle_cp(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
-    char* src = args[0];
-    char* dest = args[1];
+    char* src = args[1];
+    char* dest = args[2];
 
     if(src[0] == '\0'){
         puts("\nPlease provide source file name\n");
@@ -467,18 +474,38 @@ void handle_cp(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
         return;
     }
 
+    struct DirectoryStack src_path = {.length = 0};
+    uint8_t error_code = path_to_dir_stack_from_cwd(src, dir_stack, &src_path);
+    if(error_code != 0) {
+        puts("\nInvalid source path\n");
+        return;
+    }
+    struct DirectoryStack dest_path = {.length = 0};
+    error_code = path_to_dir_stack_from_cwd(dest, dir_stack, &dest_path);
+    if(error_code == 1) {
+        puts("\nInvalid destination path\n");
+        return;
+    }
+
+    uint16_t parent_cluster_containing_src_file;
+    if(src_path.length == 1)parent_cluster_containing_src_file = current_parent_cluster(dir_stack);
+    else parent_cluster_containing_src_file = peek_second_top(&src_path)->cluster_low;
+
+    uint16_t parent_cluster_containing_dest_file;
+    if(dest_path.length == 1)parent_cluster_containing_dest_file = current_parent_cluster(dir_stack);
+    else parent_cluster_containing_dest_file = peek_second_top(&dest_path)->cluster_low;
+
     struct FAT32DirectoryEntry entry;
-    memcpy(entry.name, src, DIR_NAME_LENGTH);
-    memcpy(entry.ext, "\0\0\0", 3);
+    memcpy(entry.name, peek_top(&src_path)->name, DIR_NAME_LENGTH);
+    memcpy(entry.ext, peek_top(&src_path)->ext, DIR_EXT_LENGTH);
     uint32_t content_size = 2048;
 
 
     // Read src
-    uint8_t error_code;
     while(true) {
         entry.filesize = content_size;
         char content[content_size];
-        error_code = read_file(&entry, current_parent_cluster(dir_stack), content);
+        error_code = read_file(&entry, parent_cluster_containing_src_file, content);
         if(error_code == 1) {
             puts("\n");
             puts(src);
@@ -502,9 +529,10 @@ void handle_cp(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
         // Write dest
         struct FAT32DirectoryEntry copy;
         copy.filesize = entry.filesize;
-        memcpy(copy.name, dest, DIR_NAME_LENGTH); // TODO: from back because src is a path
-        memcpy(copy.ext, "\0\0\0", 3); // TODO: extract extension from file name
-        write_file(&copy, current_parent_cluster(dir_stack), content); // TODO: get the current_parent_cluster based on the path. Right now its the cwd. Just keep reading the directory to find it
+        
+        memcpy(copy.name, peek_top(&dest_path)->name, DIR_NAME_LENGTH);
+        memcpy(copy.ext, peek_top(&dest_path)->ext, DIR_EXT_LENGTH);
+        write_file(&copy, parent_cluster_containing_dest_file, content);
 
         break;
     }

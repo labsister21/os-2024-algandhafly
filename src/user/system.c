@@ -78,8 +78,8 @@ uint8_t read_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster_num
         .parent_cluster_number = parent_cluster_number,
         .buffer_size = entry->filesize,
     };
-    memcpy(request.name, entry->name, 8);
-    memcpy(request.ext, entry->ext, 3);
+    memcpy(request.name, entry->name, DIR_NAME_LENGTH);
+    memcpy(request.ext, entry->ext, DIR_EXT_LENGTH);
     request.buf = buf;
 
     uint8_t error_code;

@@ -130,7 +130,7 @@ void kernel_puts_with_overflow_handling(char *str, uint8_t fg, uint8_t bg)
     size_t i = 0;
     while(str[i] != '\0') {
         if(framebuffer_state.cursor_y == HEIGHT-2) {
-            kernel_puts("\nPress any key to continue...", Yellow, Black);
+            kernel_puts("\nPress enter to continue...", Yellow, Black);
             char buf[2000]; buf[0] = '\0';
             get_command_buffer(buf);
             framebuffer_clear();
