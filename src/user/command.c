@@ -193,7 +193,21 @@ uint8_t extract_args(char* line, char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]){
     uint16_t curr_arg = 0;
 
     uint16_t last_curr_char = 0;
+    bool is_quoted = false;
     while(line[i] != '\0') {
+        if(line[i] == '"') {
+            is_quoted = !is_quoted;
+            i++;
+            continue;
+        }
+        if(is_quoted) {
+            args[curr_arg][curr_char] = line[i];
+            curr_char++;
+            last_curr_char = curr_char;
+            i++;
+            continue;
+        }
+
         if(line[i] != ' '){
             args[curr_arg][curr_char] = line[i];
             curr_char++;
@@ -611,6 +625,46 @@ void handle_find(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]){
 
 }
 
+void handle_echo(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack) {
+    char* file_content = args[1];
+    char* right = args[2];
+    char* dest = args[3];
+
+    if(file_content[0] == '\0'){
+        puts("\nPlease provide content\n");
+        return;
+    }
+    if(right[0] != '>'){
+        puts("\n");
+        puts(file_content);
+        return;
+    }
+    if(dest[0] == '\0'){
+        puts("\nPlease provide destination file path\n");
+        return;
+    }
+
+    struct DirectoryStack dest_path = {.length = 0};
+    uint8_t error_code  = path_to_dir_stack_from_cwd(dest, dir_stack, &dest_path);
+    if(error_code == 1) {
+        puts("\nInvalid destination path\n");
+        return;
+    }
+
+    uint16_t parent_cluster_containing_dest_file;
+    if(dest_path.length == 1)parent_cluster_containing_dest_file = current_parent_cluster(dir_stack);
+    else parent_cluster_containing_dest_file = peek_second_top(&dest_path)->cluster_low;
+
+    struct FAT32DirectoryEntry entry;
+    memcpy(entry.name, peek_top(&dest_path)->name, DIR_NAME_LENGTH);
+    memcpy(entry.ext, peek_top(&dest_path)->ext, DIR_EXT_LENGTH);
+    entry.filesize = strlen(file_content);
+
+    write_file(&entry, parent_cluster_containing_dest_file, file_content);
+    puts("\n");
+    
+}
+
 const char clear[6] = "clear\0";
 const char help[5] = "help\0";
 const char cd[3] = "cd\0"; // cd	- Mengganti current working directory (termasuk .. untuk naik)
@@ -621,6 +675,7 @@ const char cp[3] = "cp\0"; // cp	- Mengcopy suatu file (Folder menjadi bonus)
 const char rm[3] = "rm\0"; // rm	- Menghapus suatu file (Folder menjadi bonus)
 const char mv[3] = "mv\0"; // mv	- Memindah dan merename lokasi file/folder
 const char find[5] = "find\0"; // find	- Mencari file/folder dengan nama yang sama diseluruh file system
+const char echo[5] = "echo\0"; // echo - can be used to write to file
 
 void command(char *buf, struct DirectoryStack* dir_stack) {
     
@@ -647,6 +702,8 @@ void command(char *buf, struct DirectoryStack* dir_stack) {
         handle_mv(args, dir_stack);
     } else if (strcmp(args[0], find) == 0) {
         handle_find(args);
+    } else if (strcmp(args[0], echo) == 0) {
+        handle_echo(args, dir_stack);
     } else if (strcmp(args[0], help) == 0) {
         help_command();
     } else if(buf[0] == '\0'){

@@ -57,3 +57,9 @@ int8_t strcmp(const char *s1, const char *s2) {
 
     return 0;
 }
+
+uint64_t strlen(const char *s) {
+    uint64_t len = 0;
+    while (s[len] != '\0') len++;
+    return len;
+}
