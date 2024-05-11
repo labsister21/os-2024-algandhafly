@@ -15,6 +15,15 @@ uint8_t pop_dir(struct DirectoryStack* dir_stack){
     dir_stack->length--;
     return 0;
 }
+struct FAT32DirectoryEntry* peek_top(struct DirectoryStack* dir_stack){
+    if(dir_stack->length == 0) return 1;
+    return &dir_stack->entry[dir_stack->length-1];
+}
+struct FAT32DirectoryEntry* peek_second_top(struct DirectoryStack* dir_stack){
+    if(dir_stack->length < 2) return 1;
+    return &dir_stack->entry[dir_stack->length-2];
+}
+
 char* last_dir(struct DirectoryStack* dir_stack){
     return dir_stack->entry[dir_stack->length-1].name;
 }
@@ -43,8 +52,22 @@ void print_cwd(struct DirectoryStack* dir_stack) {
 void print_path_to_cwd(struct DirectoryStack* dir_stack) {
     for(uint8_t i = 0; i < dir_stack->length; i++){
         puts_clamped(dir_stack->entry[i].name, 8);
-        puts_clamped(dir_stack->entry[i].ext, 3);
-        puts("\n");
+        if(is_directory(&dir_stack->entry[i])) puts("/");
+        else {
+            puts(".");
+            puts_clamped(dir_stack->entry[i-1].ext, 3);
+        }
+    }
+}
+
+void print_path_to_cwd_reversed(struct DirectoryStack* dir_stack) {
+    for(uint8_t i = dir_stack->length-1; i > 0; i--){
+        puts_clamped(dir_stack->entry[i-1].name, 8);
+        if(is_directory(&dir_stack->entry[i])) puts("/");
+        else {
+            puts(".");
+            puts_clamped(dir_stack->entry[i-1].ext, 3);
+        }
     }
 }
 

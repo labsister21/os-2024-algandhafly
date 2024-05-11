@@ -12,6 +12,7 @@ void systemCall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx) {
 }
 
 // populates dir_table
+// @return Error code: 0 success - 1 not a folder - 2 not found - -1 unknown
 uint8_t get_dir(char folder_name[DIR_NAME_LENGTH], uint16_t parent_cluster_number, struct FAT32DirectoryTable* dir_table) {
     struct FAT32DriverRequest request;
 
@@ -38,16 +39,14 @@ uint8_t get_file_dir(char folder_name[DIR_NAME_LENGTH], char ext[DIR_EXT_LENGTH]
 }
 
 // write folder to storage
+// return Error code: 0 success - 1 file/folder already exist - 2 invalid parent cluster - -1 unknown
 uint8_t make_directory(char folder_name[DIR_NAME_LENGTH], uint16_t parent_cluster_number) {
-    struct FAT32DirectoryTable dir_table;
-    get_dir(folder_name, parent_cluster_number, &dir_table);
-
     struct FAT32DriverRequest request = {
         .parent_cluster_number = parent_cluster_number,
         .buffer_size = 0,
     };
     memcpy(request.name, folder_name, DIR_NAME_LENGTH);
-    memcpy(request.ext, "\0\0\0", 3);
+    memcpy(request.ext, "\0\0\0", DIR_EXT_LENGTH);
     
 
     uint8_t error_code;

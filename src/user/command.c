@@ -154,24 +154,23 @@ uint8_t path_to_dir_stack_from_cwd(char* path, struct DirectoryStack* dir_stack_
     uint16_t cwd_cluster = current_parent_cluster(dir_stack_cwd);
     struct FAT32DirectoryTable dir_table;
 
-    
-    for(uint16_t curr_idx = 0; curr_idx < dir_stack->length; curr_idx++) {
-        if(dir_stack->entry[curr_idx].ext[0] == NULL_CHAR)
-            get_dir(dir_stack->entry[curr_idx].name, cwd_cluster, &dir_table);
-        else
-            get_file_dir(dir_stack->entry[curr_idx].name, dir_stack->entry[curr_idx].ext, cwd_cluster, &dir_table);
+    // Read current directory, dir_table contains all folder in current directory
+    char* curr_dir = peek_top(dir_stack_cwd)->name;
+    char* curr_ext = peek_top(dir_stack_cwd)->ext;
+    get_dir(curr_dir, cwd_cluster, &dir_table);
 
+    for(uint8_t k = 0; k < dir_stack->length; k++) {
         bool found = false;
-        for(uint8_t i = 0; i < 64; i++) {
+        for(uint32_t i = 2; i < 64; i++){
             if(is_empty(&dir_table.table[i])) continue;
-            if(memcmp(dir_table.table[i].name, dir_stack->entry[curr_idx].name, DIR_NAME_LENGTH) == 0) {
-                memcpy(&dir_stack->entry[curr_idx], &dir_table.table[i], sizeof(struct FAT32DirectoryEntry));
+            if(memcmp(&dir_table.table[i].name, curr_dir, DIR_NAME_LENGTH) == 0 && memcmp(&dir_table.table[i].ext, curr_ext, DIR_EXT_LENGTH) == 0){
                 cwd_cluster = dir_table.table[i].cluster_low;
+                memcpy(&dir_stack->entry[k], &dir_table.table[i], sizeof(struct FAT32DirectoryEntry));
                 found = true;
                 break;
             }
         }
-        if(!found) return 8; // Case one of them not found
+        if(!found) return 1;
     }
     return 0;
 }
@@ -237,17 +236,6 @@ void handle_cd(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
     struct DirectoryStack input_path;
     input_path.length = 0;
     if (path_to_dir_stack(args[1], &input_path) != 0) return 1;
-
-
-    // uint8_t error_code = path_to_dir_stack_from_cwd(args[1], dir_stack, &input_path);
-    // if(error_code != 0) {
-    //     puts("\nInvalid path\n");
-    //     return;
-    // }
-
-    // for(uint8_t i = 0; i < input_path.length; i++) {
-    //     push_dir(dir_stack, &(input_path.entry[i]));
-    // }
     
     uint8_t j;
     for (j = 0; j < input_path.length; j++)
@@ -314,28 +302,74 @@ void handle_ls(struct DirectoryStack* dir_stack) {
     }
 }
 
+// if -1 then not found
+uint8_t get_parent_cluster_in_parent_cluster(char folderName[DIR_NAME_LENGTH], uint8_t parent_cluster_to_find){
+    struct FAT32DirectoryTable dir_table;
+    get_dir(folderName, parent_cluster_to_find, &dir_table);
+    for(uint32_t i = 2; i < 64; i++){
+        if(is_empty(&dir_table.table[i])) continue;
+        if(memcmp(&dir_table.table[i].name, folderName, DIR_NAME_LENGTH) == 0){
+            return dir_table.table[i].cluster_low;
+        }
+    }
+    return -1;
+}
+
 void handle_mkdir(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack) {
-    char folderName[DIR_NAME_LENGTH];
-    memcpy(folderName, args[1], DIR_NAME_LENGTH);
-    if(folderName[0] == '\0'){
+    if(args[1][0] == '\0'){
         puts("\nPlease provide folder name\n");
         return;
     }
+    struct DirectoryStack input_path = {.length = 0};
+    uint8_t error_code = path_to_dir_stack(args[1], &input_path);
+    if(error_code != 0) {
+        puts("\nInvalid path\n");
+        return;
+    }
 
-    uint8_t error_code = make_directory(folderName, current_parent_cluster(dir_stack));
-    // Error code: 0 success - 1 file/folder already exist - 2 invalid parent cluster - -1 unknown
-    if(error_code == 0) {
-        puts("\nCreated folder ");
-        puts(folderName);
-        puts("\n");
-    } else if(error_code == 1) {
+    for(uint8_t i = 0; i < input_path.length; i++) {
+        if(memcmp(input_path.entry[i].name, "..", 2) == 0) {
+            puts("\nCreating folder with name isn't allowed '..'\n");
+            return;
+        }
+    }
+
+    uint8_t idx = 0;
+    uint16_t parent_cluster = current_parent_cluster(dir_stack);
+    for(idx = 0; idx < input_path.length; idx++) {
+        uint8_t error_code = make_directory(input_path.entry[idx].name, parent_cluster);
+
+        struct FAT32DirectoryTable dir_table;
+        get_dir(input_path.entry[idx].name, parent_cluster, &dir_table);
+        parent_cluster = dir_table.table[0].cluster_low;
+        get_dir("..\0\0\0\0\0\0", parent_cluster, &dir_table);
+
+
+        for(uint32_t i = 2; i < 64; i++){
+            if(is_empty(&dir_table.table[i])) continue;
+            if(memcmp(&dir_table.table[i].name, input_path.entry[idx].name, DIR_NAME_LENGTH) == 0){
+                parent_cluster = dir_table.table[i].cluster_low;
+                break; 
+            }
+        }
+        if(error_code == 1) continue; // folder already exist so its fine
+
+        if(parent_cluster == -1) {
+            puts_color("\nError: invalid parent cluster", Color_Red, Color_Black);
+            return;
+        }
+        if(error_code != 0) break;
+    }
+    if(error_code == 1) {
         puts("\nFolder ");
-        puts(folderName);
+        puts(input_path.entry[idx].name);
         puts(" already exist");
-    } else if(error_code == 2) {
-        puts_color("\nError: invalid parent cluster", Color_Red, Color_Black);
-    } else {
-        puts_color("Error: unknown", Color_Red, Color_Black);
+
+        // Delete all the folders that have been created
+        for(uint8_t i = 0; i < idx; i++) {
+            delete_file_or_dir(&input_path.entry[i], current_parent_cluster(dir_stack));
+        }
+        return;
     }
 }
 
@@ -409,13 +443,9 @@ void handle_rm(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
     }
 }
 
-void handle_cp(char* buf, struct DirectoryStack* dir_stack){
-    char src[MAX_ARGS_LENGTH];
-    char dest[MAX_ARGS_LENGTH];
-    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
-    extract_args(buf, args);
-    memcpy(src, args[1], MAX_ARGS_LENGTH);
-    memcpy(dest, args[2], MAX_ARGS_LENGTH);
+void handle_cp(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
+    char* src = args[0];
+    char* dest = args[1];
 
     if(src[0] == '\0'){
         puts("\nPlease provide source file name\n");
@@ -489,18 +519,6 @@ void recursive_find(struct FAT32DirectoryTable* dir_table, char file_name[MAX_AR
         
         if(memcmp(dir_table->table[i].name, file_name, DIR_NAME_LENGTH) == 0 /* && memcmp(dir_table.table[i].name, file_name, DIR_EXT_LENGTH) == 0 */ ){
             // traversal back to populate dir_stack 
-            
-        }
-
-        if(is_directory(&dir_table->table[i])) {
-            struct FAT32DirectoryTable children;
-            get_dir(dir_table->table[i].name, cluster_number, &children);
-            recursive_find(&children, file_name, dir_table->table[i].cluster_low, dir_stack);
-        }
-
-
-        // print from root for debugging
-        else {
             uint16_t parent_cluster = cluster_number;
             struct FAT32DirectoryTable children;
             struct DirectoryStack list = {.length = 0};
@@ -512,9 +530,33 @@ void recursive_find(struct FAT32DirectoryTable* dir_table, char file_name[MAX_AR
                 parent_cluster = children.table[1].cluster_low;
                 push_dir(&list, &children.table[0]);
             }
-            print_path_to_cwd(&list);
+            print_path_to_cwd_reversed(&list);
             puts("\n");
         }
+
+        if(is_directory(&dir_table->table[i])) {
+            struct FAT32DirectoryTable children;
+            get_dir(dir_table->table[i].name, cluster_number, &children);
+            recursive_find(&children, file_name, dir_table->table[i].cluster_low, dir_stack);
+        }
+
+
+        // print from root for debugging
+        // else {
+        //     uint16_t parent_cluster = cluster_number;
+        //     struct FAT32DirectoryTable children;
+        //     struct DirectoryStack list = {.length = 0};
+        //     push_dir(&list, &dir_table->table[i]);
+        //     push_dir(&list, &dir_table->table[0]);
+            
+        //     while(parent_cluster != ROOT_CLUSTER_NUMBER){
+        //         get_dir("..\0\0\0\0\0\0", parent_cluster, &children);
+        //         parent_cluster = children.table[1].cluster_low;
+        //         push_dir(&list, &children.table[0]);
+        //     }
+        //     print_path_to_cwd(&list);
+        //     puts("\n");
+        // }
     }
 }
 
@@ -526,7 +568,7 @@ void handle_find(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]){
     struct FAT32DirectoryTable dir_table;
     get_dir("root\0\0\0\0", ROOT_CLUSTER_NUMBER, &dir_table);
     puts("\n");
-    recursive_find(&dir_table, file_name, ROOT_CLUSTER_NUMBER, &dir_stack);
+    recursive_find(&dir_table, file_name, ROOT_CLUSTER_NUMBER, dir_stack);
 
 }
 
