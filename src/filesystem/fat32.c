@@ -56,7 +56,6 @@ void init_directory_table(struct FAT32DirectoryTable *dir_table, char *name, uin
     {
         dir_table->table[i].user_attribute = !UATTR_NOT_EMPTY; // UATTR_EMPTY
     }
-    write_clusters(dir_table->table, parent_dir_cluster, 1);
 
     fat32driver_state.fat_table.cluster_map[parent_dir_cluster] = FAT32_FAT_END_OF_FILE; 
 }
@@ -89,7 +88,8 @@ void create_fat32(void){
     }
 
     // DirectoryTable
-    init_directory_table(&fat32driver_state.dir_table_buf, "root\0\0\0\0", 2);
+    init_directory_table(&fat32driver_state.dir_table_buf, "root\0\0\0\0", ROOT_CLUSTER_NUMBER);
+    write_clusters(fat32driver_state.dir_table_buf.table, ROOT_CLUSTER_NUMBER, 1);
     
     write_clusters(&fat32driver_state.fat_table, 1, 1);
 }
@@ -268,7 +268,9 @@ int8_t write(struct FAT32DriverRequest request){
         write_clusters(&fat32driver_state.fat_table,1,1); 
         
         struct FAT32DirectoryTable new_dir_table;
-        init_directory_table(&new_dir_table, request.name, locations[0]);
+        init_directory_table(&new_dir_table, request.name, request.parent_cluster_number);
+        // it'll be way easier if we use locations[0] instead of request.parent_cluster_number for the 3rd parameters. but the sample.bin is like that so lets just follow it
+        write_clusters(new_dir_table.table, locations[0], 1);
     }
     // Requested only want file
     else{

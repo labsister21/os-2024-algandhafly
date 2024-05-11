@@ -62,10 +62,9 @@ void set_tss_kernel_current_stack(void) {
 }
 
 void syscall(struct InterruptFrame frame) {
-    
+    struct FAT32DriverRequest *request = (struct FAT32DriverRequest*)frame.cpu.general.ebx;
     switch (frame.cpu.general.eax) {
         case 0:
-            struct FAT32DriverRequest *request = (struct FAT32DriverRequest*)frame.cpu.general.ebx;
             *((int8_t*) frame.cpu.general.ecx) = read(
                 *request
             );
@@ -108,7 +107,9 @@ void syscall(struct InterruptFrame frame) {
             framebuffer_state.cursor_x = frame.cpu.general.ecx;
             framebuffer_state.cursor_y = frame.cpu.general.ebx;
             break;
-        case 10:
+        case 10: // had to resort to this because directory[0] == directory[1] == parent cluster
+            // get sibling directory
+            read_clusters(request->buf, request->parent_cluster_number, 1);
             break;
         case 11:
             break;

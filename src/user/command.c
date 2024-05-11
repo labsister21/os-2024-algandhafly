@@ -147,30 +147,30 @@ uint8_t path_to_dir_stack(char* path, struct DirectoryStack* dir_stack){
 
 // dir_stack_cwd: the cwd passed from the user-shell
 // dir_stack: the dir_stack to be populated
+// return 1 means not found
 uint8_t path_to_dir_stack_from_cwd(char* path, struct DirectoryStack* dir_stack_cwd, struct DirectoryStack* dir_stack) {
     uint8_t error_code = path_to_dir_stack(path, dir_stack);
     if(error_code != 0) return error_code;
 
-    uint16_t cwd_cluster = current_parent_cluster(dir_stack_cwd);
-    struct FAT32DirectoryTable dir_table;
+    uint8_t idx = 0;
+    uint16_t parent_cluster = current_parent_cluster(dir_stack_cwd);
+    for(idx = 0; idx < dir_stack->length; idx++) {
 
-    // Read current directory, dir_table contains all folder in current directory
-    char* curr_dir = peek_top(dir_stack_cwd)->name;
-    char* curr_ext = peek_top(dir_stack_cwd)->ext;
-    get_dir(curr_dir, cwd_cluster, &dir_table);
+        struct FAT32DirectoryTable dir_table;
+        get_dir_by_cluster(parent_cluster, &dir_table);
 
-    for(uint8_t k = 0; k < dir_stack->length; k++) {
         bool found = false;
         for(uint32_t i = 2; i < 64; i++){
             if(is_empty(&dir_table.table[i])) continue;
-            if(memcmp(&dir_table.table[i].name, curr_dir, DIR_NAME_LENGTH) == 0 && memcmp(&dir_table.table[i].ext, curr_ext, DIR_EXT_LENGTH) == 0){
-                cwd_cluster = dir_table.table[i].cluster_low;
-                memcpy(&dir_stack->entry[k], &dir_table.table[i], sizeof(struct FAT32DirectoryEntry));
+            if(memcmp(&dir_table.table[i].name, dir_stack->entry[idx].name, DIR_NAME_LENGTH) == 0){
+                parent_cluster = dir_table.table[i].cluster_low;
+                memcpy(&dir_stack->entry[idx], &dir_table.table[i], sizeof(struct FAT32DirectoryEntry));
                 found = true;
-                break;
+                break; 
             }
         }
         if(!found) return 1;
+
     }
     return 0;
 }
@@ -302,18 +302,6 @@ void handle_ls(struct DirectoryStack* dir_stack) {
     }
 }
 
-// if -1 then not found
-uint8_t get_parent_cluster_in_parent_cluster(char folderName[DIR_NAME_LENGTH], uint8_t parent_cluster_to_find){
-    struct FAT32DirectoryTable dir_table;
-    get_dir(folderName, parent_cluster_to_find, &dir_table);
-    for(uint32_t i = 2; i < 64; i++){
-        if(is_empty(&dir_table.table[i])) continue;
-        if(memcmp(&dir_table.table[i].name, folderName, DIR_NAME_LENGTH) == 0){
-            return dir_table.table[i].cluster_low;
-        }
-    }
-    return -1;
-}
 
 void handle_mkdir(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack) {
     if(args[1][0] == '\0'){
@@ -337,14 +325,10 @@ void handle_mkdir(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct Directory
     uint8_t idx = 0;
     uint16_t parent_cluster = current_parent_cluster(dir_stack);
     for(idx = 0; idx < input_path.length; idx++) {
-        uint8_t error_code = make_directory(input_path.entry[idx].name, parent_cluster);
+        uint8_t error_code = make_directory(input_path.entry[idx].name, parent_cluster); 
 
         struct FAT32DirectoryTable dir_table;
-        get_dir(input_path.entry[idx].name, parent_cluster, &dir_table);
-        parent_cluster = dir_table.table[0].cluster_low;
-        get_dir("..\0\0\0\0\0\0", parent_cluster, &dir_table);
-
-
+        get_dir_by_cluster(parent_cluster, &dir_table);
         for(uint32_t i = 2; i < 64; i++){
             if(is_empty(&dir_table.table[i])) continue;
             if(memcmp(&dir_table.table[i].name, input_path.entry[idx].name, DIR_NAME_LENGTH) == 0){
@@ -352,6 +336,7 @@ void handle_mkdir(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct Directory
                 break; 
             }
         }
+
         if(error_code == 1) continue; // folder already exist so its fine
 
         if(parent_cluster == -1) {
@@ -374,27 +359,39 @@ void handle_mkdir(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct Directory
 }
 
 void handle_cat(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
-    char fileName[DIR_NAME_LENGTH];
-    memcpy(fileName, args[1], DIR_NAME_LENGTH);
-    if(fileName[0] == '\0'){
-        puts("\nPlease provide file name\n");
+    if(args[1][0] == '\0'){
+        puts("\nPlease provide folder name\n");
+        return;
+    }
+    struct DirectoryStack input_path = {.length = 0};
+    uint8_t error_code = path_to_dir_stack_from_cwd(args[1], dir_stack, &input_path);
+    if(error_code != 0) {
+        puts("\nInvalid path\n");
         return;
     }
 
+    char* file_name = peek_top(&input_path)->name;
+    char* ext = peek_top(&input_path)->ext;
+    uint16_t parent_cluster_containing_file;
+    if(input_path.length == 1)parent_cluster_containing_file = current_parent_cluster(dir_stack);
+    else parent_cluster_containing_file = peek_second_top(&input_path)->cluster_low;
+
+
     struct FAT32DirectoryEntry entry;
-    memcpy(entry.name, fileName, DIR_NAME_LENGTH); // kano
-    memcpy(entry.ext, "\0\0\0", 3);
+    memcpy(entry.name, file_name, DIR_NAME_LENGTH); // kano
+    memcpy(entry.ext, ext, DIR_EXT_LENGTH);
     uint32_t content_size = 2048;
 
-    uint8_t error_code;
+    error_code;
     while(true) {
         entry.filesize = content_size;
         char content[content_size];
         // Error code: 0 success - 1 not a file - 2 not enough buffer - 3 not found - -1 unknown
-        error_code = read_file(&entry, current_parent_cluster(dir_stack), content);
+        error_code = read_file(&entry, parent_cluster_containing_file, content);
         if(error_code == 1) {
             puts("\n");
-            puts(fileName);
+            puts(file_name);
+            puts(ext);
             puts(" is not a file");
             return;
         } else if(error_code == 2) {
@@ -402,7 +399,8 @@ void handle_cat(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySt
             continue;
         } else if(error_code == 3) {
             puts("\n");
-            puts(fileName);
+            puts(file_name);
+            puts(ext);
             puts(" not found");
             return;
         } else if(error_code == -1) {
@@ -418,17 +416,30 @@ void handle_cat(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySt
 }
 
 void handle_rm(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
-    char fileName[DIR_NAME_LENGTH];
-    memcpy(fileName, args[1], DIR_NAME_LENGTH);
+    if(args[1][0] == '\0'){
+        puts("\nPlease provide folder name\n");
+        return;
+    }
+    struct DirectoryStack input_path = {.length = 0};
+    uint8_t error_code = path_to_dir_stack_from_cwd(args[1], dir_stack, &input_path);
+    if(error_code != 0) {
+        puts("\nInvalid path\n");
+        return;
+    }
+    char* file_name = peek_top(&input_path)->name;
+    char* ext = peek_top(&input_path)->ext;
+    uint16_t parent_cluster_containing_file;
+    if(input_path.length == 1)parent_cluster_containing_file = current_parent_cluster(dir_stack);
+    else parent_cluster_containing_file = peek_second_top(&input_path)->cluster_low;
 
     struct FAT32DirectoryEntry entry = {
         .filesize = 0xFFFF,
     };
 
-    memcpy(entry.name, fileName, DIR_NAME_LENGTH);
-    memcpy(entry.ext, "\0\0\0", 3);
+    memcpy(entry.name, file_name, DIR_NAME_LENGTH);
+    memcpy(entry.ext, ext, DIR_EXT_LENGTH);
 
-    uint8_t error_code = delete_file_or_dir(&entry, current_parent_cluster(dir_stack));
+    error_code = delete_file_or_dir(&entry, parent_cluster_containing_file);
     // Error code: 0 success - 1 not found - 2 folder is not empty - -1 unknown
     if(error_code == 0) {
         puts("\nDeleted ");
@@ -520,16 +531,16 @@ void recursive_find(struct FAT32DirectoryTable* dir_table, char file_name[MAX_AR
         if(memcmp(dir_table->table[i].name, file_name, DIR_NAME_LENGTH) == 0 /* && memcmp(dir_table.table[i].name, file_name, DIR_EXT_LENGTH) == 0 */ ){
             // traversal back to populate dir_stack 
             uint16_t parent_cluster = cluster_number;
-            struct FAT32DirectoryTable children;
+            struct FAT32DirectoryTable parents;
             struct DirectoryStack list = {.length = 0};
             push_dir(&list, &dir_table->table[i]);
-            push_dir(&list, &dir_table->table[0]);
             
             while(parent_cluster != ROOT_CLUSTER_NUMBER){
-                get_dir("..\0\0\0\0\0\0", parent_cluster, &children);
-                parent_cluster = children.table[1].cluster_low;
-                push_dir(&list, &children.table[0]);
+                get_dir_by_cluster(parent_cluster, &parents);
+                parent_cluster = parents.table[1].cluster_low;
+                push_dir(&list, &parents.table[0]);
             }
+            push_dir(&list, &dir_table->table[0]);
             print_path_to_cwd_reversed(&list);
             puts("\n");
         }

@@ -15,6 +15,7 @@ extern struct FAT32DriverState user_fat32_state;
 void systemCall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx);
 
 uint8_t get_dir(char folder_name[DIR_NAME_LENGTH], uint16_t parent_cluster_number, struct FAT32DirectoryTable *dir_table);
+void get_dir_by_cluster(uint16_t current_cluster_number, struct FAT32DirectoryTable* dir_table);
 uint8_t get_file_dir(char folder_name[DIR_NAME_LENGTH], char ext[DIR_EXT_LENGTH], uint16_t parent_cluster_number, struct FAT32DirectoryTable *dir_table);
 
 
