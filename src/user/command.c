@@ -177,14 +177,18 @@ uint8_t path_to_dir_stack_from_cwd(char* path, struct DirectoryStack* dir_stack_
 }
 
 uint8_t extract_args(char* line, char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]){
-    uint8_t i = 0;
+    memset(args, 0, MAX_COMMAND_ARGS * MAX_ARGS_LENGTH);
+
+    // pointers
+    uint16_t i = 0;
+
     // Skip first spaces
     while(line[i] == ' ') i++;
 
-    uint8_t curr_char = 0;
-    uint8_t curr_arg = 0;
+    uint16_t curr_char = 0;
+    uint16_t curr_arg = 0;
 
-    uint8_t last_curr_char = 0;
+    uint16_t last_curr_char = 0;
     while(line[i] != '\0') {
         if(line[i] != ' '){
             args[curr_arg][curr_char] = line[i];
@@ -200,7 +204,7 @@ uint8_t extract_args(char* line, char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]){
     }
 
     // Clean input
-    uint8_t j = last_curr_char;
+    uint16_t j = last_curr_char;
     while(j < MAX_ARGS_LENGTH) {
         args[curr_arg][j] = '\0';
         j++;
@@ -223,10 +227,8 @@ void help_command() {
     puts("help  : Show this help\n\n");
 }
 
-void handle_cd(char *cd, struct DirectoryStack* dir_stack) {
+void handle_cd(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack) {
     char folderName[DIR_NAME_LENGTH];
-    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
-    extract_args(cd, args);
     if(args[1][0] == '\0'){
         puts("\nPlease provide folder name\n");
         return;
@@ -301,10 +303,8 @@ void handle_ls(struct DirectoryStack* dir_stack) {
     }
 }
 
-void handle_mkdir(char *buf, struct DirectoryStack* dir_stack) {
+void handle_mkdir(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack) {
     char folderName[DIR_NAME_LENGTH];
-    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
-    extract_args(buf, args);
     memcpy(folderName, args[1], DIR_NAME_LENGTH);
     if(folderName[0] == '\0'){
         puts("\nPlease provide folder name\n");
@@ -328,10 +328,8 @@ void handle_mkdir(char *buf, struct DirectoryStack* dir_stack) {
     }
 }
 
-void handle_cat(char* buf, struct DirectoryStack* dir_stack){
+void handle_cat(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
     char fileName[DIR_NAME_LENGTH];
-    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
-    extract_args(buf, args);
     memcpy(fileName, args[1], DIR_NAME_LENGTH);
     if(fileName[0] == '\0'){
         puts("\nPlease provide file name\n");
@@ -374,10 +372,8 @@ void handle_cat(char* buf, struct DirectoryStack* dir_stack){
 
 }
 
-void handle_rm(char* buf, struct DirectoryStack* dir_stack){
+void handle_rm(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
     char fileName[DIR_NAME_LENGTH];
-    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
-    extract_args(buf, args);
     memcpy(fileName, args[1], DIR_NAME_LENGTH);
 
     struct FAT32DirectoryEntry entry = {
@@ -464,11 +460,10 @@ void handle_cp(char* buf, struct DirectoryStack* dir_stack){
 
 }
 
-void handle_mv(char* buf, struct DirectoryStack* dir_stack){
+void handle_mv(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
     char src[MAX_ARGS_LENGTH];
     char dest[MAX_ARGS_LENGTH];
-    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
-    extract_args(buf, args);
+
     memcpy(src, args[1], MAX_ARGS_LENGTH);
     memcpy(dest, args[2], MAX_ARGS_LENGTH);
 }
@@ -512,10 +507,8 @@ void recursive_find(struct FAT32DirectoryTable* dir_table, char file_name[MAX_AR
     }
 }
 
-void handle_find(char* buf){
+void handle_find(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]){
     char file_name[MAX_ARGS_LENGTH]; // TODO: validate if this is not a path
-    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
-    extract_args(buf, args);
     memcpy(file_name, args[1], MAX_ARGS_LENGTH);
     
     struct DirectoryStack dir_stack[100];
@@ -526,41 +519,43 @@ void handle_find(char* buf){
 
 }
 
-const char clear[5] = "clear";
-const char help[5] = "help";
-const char cd[2] = "cd"; // cd	- Mengganti current working directory (termasuk .. untuk naik)
-const char ls[2] = "ls"; // ls	- Menuliskan isi current working directory
-const char mkdir[5] = "mkdir"; // mkdir	- Membuat sebuah folder kosong baru
-const char cat[3] = "cat"; // cat	- Menuliskan sebuah file sebagai text file ke layar (Gunakan format LF newline)
-const char cp[2] = "cp"; // cp	- Mengcopy suatu file (Folder menjadi bonus)
-const char rm[2] = "rm"; // rm	- Menghapus suatu file (Folder menjadi bonus)
-const char mv[2] = "mv"; // mv	- Memindah dan merename lokasi file/folder
-const char find[4] = "find"; // find	- Mencari file/folder dengan nama yang sama diseluruh file system
+const char clear[6] = "clear\0";
+const char help[5] = "help\0";
+const char cd[3] = "cd\0"; // cd	- Mengganti current working directory (termasuk .. untuk naik)
+const char ls[3] = "ls\0"; // ls	- Menuliskan isi current working directory
+const char mkdir[6] = "mkdir\0"; // mkdir	- Membuat sebuah folder kosong baru
+const char cat[4] = "cat\0"; // cat	- Menuliskan sebuah file sebagai text file ke layar (Gunakan format LF newline)
+const char cp[3] = "cp\0"; // cp	- Mengcopy suatu file (Folder menjadi bonus)
+const char rm[3] = "rm\0"; // rm	- Menghapus suatu file (Folder menjadi bonus)
+const char mv[3] = "mv\0"; // mv	- Memindah dan merename lokasi file/folder
+const char find[5] = "find\0"; // find	- Mencari file/folder dengan nama yang sama diseluruh file system
 
 void command(char *buf, struct DirectoryStack* dir_stack) {
-    while(*buf == ' ') buf++; // Skip spaces
+    
+    char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
+    extract_args(buf, args);
 
-    if(memcmp(buf, clear, 4) == 0) {
+    if(strcmp(args[0], clear) == 0) {
         clear_screen();
         set_cursor(0, 0);
         return; // prevent new line
-    } else if (memcmp(buf, cd, 2) == 0) {
-        handle_cd(buf, dir_stack);
-    } else if (memcmp(buf, ls, 2) == 0) {
+    } else if (strcmp(args[0], cd) == 0) {
+        handle_cd(args, dir_stack);
+    } else if (strcmp(args[0], ls) == 0) {
         handle_ls(dir_stack);
-    } else if (memcmp(buf, mkdir, 4) == 0) {
-        handle_mkdir(buf, dir_stack);
-    } else if (memcmp(buf, cat, 3) == 0) {
-        handle_cat(buf, dir_stack);
-    } else if (memcmp(buf, cp, 2) == 0) {
-        handle_cp(buf, dir_stack);
-    } else if (memcmp(buf, rm, 2) == 0) {
-        handle_rm(buf, dir_stack);
-    } else if (memcmp(buf, mv, 2) == 0) {
-        handle_mv(buf, dir_stack);
-    } else if (memcmp(buf, find, 4) == 0) {
-        handle_find(buf);
-    } else if (memcmp(buf, help, 4) == 0) {
+    } else if (strcmp(args[0], mkdir) == 0) {
+        handle_mkdir(args, dir_stack);
+    } else if (strcmp(args[0], cat) == 0) {
+        handle_cat(args, dir_stack);
+    } else if (strcmp(args[0], cp) == 0) {
+        handle_cp(args, dir_stack);
+    } else if (strcmp(args[0], rm) == 0) {
+        handle_rm(args, dir_stack);
+    } else if (strcmp(args[0], mv) == 0) {
+        handle_mv(args, dir_stack);
+    } else if (strcmp(args[0], find) == 0) {
+        handle_find(args);
+    } else if (strcmp(args[0], help) == 0) {
         help_command();
     } else if(buf[0] == '\0'){
         puts("\n");

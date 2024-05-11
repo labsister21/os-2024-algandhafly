@@ -43,3 +43,17 @@ void *memmove(void *dest, const void *src, size_t n) {
 
     return dest;
 }
+
+int8_t strcmp(const char *s1, const char *s2) {
+    // Compare two strings, where s1 and s2 are null-terminated strings
+
+    uint8_t ptr = 0;
+    while (s1[ptr] != '\0' || s2[ptr] != '\0') {
+        if (s1[ptr] != s2[ptr])
+            return s1[ptr] - s2[ptr];
+        ptr++;
+    }
+
+
+    return 0;
+}
