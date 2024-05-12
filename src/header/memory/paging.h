@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "header/process/process.h"
 
 // Note: MB often referring to MiB in context of memory management
 #define SYSTEM_MEMORY_MB     128
@@ -51,7 +52,7 @@ struct PageDirectoryEntryFlags {
 /**
  * Page Directory Entry, for page size 4 MB.
  *
- * @param flags            Contain 8-bit page directory entry flags
+ * @param flags           Contain 8-bit page directory entry flags
  * @param global_page     Is this page translation global & cannot be flushed?
  * @param reserved_1      Ignored bits (Bits 11:9 ignored). Can be arbitrarily used
  * @param pat             If PAT is supported, then PAT along with PCD and PWT shall indicate the memory caching type. Otherwise, it is reserved and must be set to 0.  
@@ -130,6 +131,8 @@ void flush_single_tlb(void *virtual_addr);
 
 
 /* --- Memory Management --- */
+
+
 /**
  * Check whether a certain amount of physical memory is available
  * 
@@ -155,5 +158,49 @@ bool paging_allocate_user_page_frame(struct PageDirectory *page_dir, void *virtu
  * @return              Will return true if success, false otherwise
  */
 bool paging_free_user_page_frame(struct PageDirectory *page_dir, void *virtual_addr);
+
+/* --- Process-related Memory Management --- */
+#define PAGING_DIRECTORY_TABLE_MAX_COUNT 32
+
+__attribute__((aligned(0x1000))) static struct PageDirectory page_directory_list[PAGING_DIRECTORY_TABLE_MAX_COUNT] = {0};
+
+static struct {
+    bool page_directory_used[PAGING_DIRECTORY_TABLE_MAX_COUNT];
+} page_directory_manager = {
+    .page_directory_used = {false},
+};
+
+
+/**
+ * Create new page directory prefilled with 1 page directory entry for kernel higher half mapping
+ * 
+ * @return Pointer to page directory virtual address. Return NULL if allocation failed
+ */
+struct PageDirectory* paging_create_new_page_directory(void);
+
+/**
+ * Free page directory and delete all page directory entry
+ * 
+ * @param page_dir Pointer to page directory virtual address
+ * @return         True if free operation success 
+ */
+bool paging_free_page_directory(struct PageDirectory *page_dir);
+
+/**
+ * Get currently active page directory virtual address from CR3 register
+ * 
+ * @note   Assuming page directories lives in kernel memory
+ * @return Page directory virtual address currently active (CR3)
+ */
+struct PageDirectory* paging_get_current_page_directory_addr(void);
+
+/**
+ * Change active page directory (indirectly trigger TLB flush for all non-global entry)
+ * 
+ * @note                        Assuming page directories lives in kernel memory
+ * @param page_dir_virtual_addr Page directory virtual address to switch into
+ */
+void paging_use_page_directory(struct PageDirectory *page_dir_virtual_addr);
+
 
 #endif

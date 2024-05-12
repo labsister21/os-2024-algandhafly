@@ -138,11 +138,6 @@ uint8_t path_to_dir_stack(char* path, struct DirectoryStack* dir_stack){
 
     INFINITE_LOOP: 
     return 7;
-
-    /**
-     * TODO: validate path?
-    */
-
 }
 
 // dir_stack_cwd: the cwd passed from the user-shell
