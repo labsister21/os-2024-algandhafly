@@ -111,11 +111,13 @@ struct PageDirectory* paging_create_new_page_directory(void) {
      * - Return the page directory address
      */
     
+    // Iterate page_directory_list[] & get unused page directory
     uint16_t i;
-
     for (i = 0; i < PAGING_DIRECTORY_TABLE_MAX_COUNT; i++) {
         if (!page_directory_manager.page_directory_used[i]) break;
     }
+
+    // Mark selected page directory as used
     page_directory_manager.page_directory_used[i] = 1;
 
     if (i == PAGING_DIRECTORY_TABLE_MAX_COUNT) return NULL;
@@ -138,6 +140,7 @@ struct PageDirectory* paging_create_new_page_directory(void) {
                 },
             }
         };
+
         page_directory_list[i] = paging_kernel_page_directory;
         return &page_directory_list[i];
 }
@@ -149,7 +152,17 @@ bool paging_free_page_directory(struct PageDirectory *page_dir) {
      * - If matches, mark the page directory as unusued and clear all page directory entry
      * - Return true
      */
-    return false;
+
+    
+    uint8_t i;
+    for (i = 0; i < PAGING_DIRECTORY_TABLE_MAX_COUNT; i++) {
+        if (&page_directory_list[i] == page_dir) {
+            page_directory_manager.page_directory_used[i] = false;
+            memset(page_dir->table, 0, sizeof(page_dir->table));
+        } 
+    }
+
+    return true;
 }
 
 struct PageDirectory* paging_get_current_page_directory_addr(void) {
