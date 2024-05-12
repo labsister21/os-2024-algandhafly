@@ -149,6 +149,11 @@ bool paging_free_page_directory(struct PageDirectory *page_dir) {
      * - If matches, mark the page directory as unusued and clear all page directory entry
      * - Return true
      */
+    for(int i=0; i < PAGE_FRAME_MAX_COUNT;i++) {
+        if(&page_directory_list[i] == page_dir){
+            
+        }
+    }
     return false;
 }
 

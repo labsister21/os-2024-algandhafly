@@ -45,8 +45,31 @@
 #define PROCESS_CREATE_FAIL_NOT_ENOUGH_MEMORY    3
 #define PROCESS_CREATE_FAIL_FS_READ_FAILURE      4
 
+/**
+ * Contain information needed for task to be able to get interrupted and resumed later
+ *
+ * @param cpu                         All CPU register state
+ * @param eip                         CPU instruction counter to resume execution
+ * @param eflags                      Flag register to load before resuming the execution
+ * @param page_directory_virtual_addr CPU register CR3, containing pointer to active page directory
+ */
 
+struct context {
+  unsigned int eip;
+  unsigned int esp;
+  unsigned int ebx;
+  unsigned int ecx;
+  unsigned int edx;
+  unsigned int esi;
+  unsigned int edi;
+  unsigned int ebp;
+  struct PageDirectoryEntryFlags eflags;
+  struct PageDirectory* page_directory_virtual_addr;
+};  
 
+typedef enum PROCESS_STATE {
+    UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE
+} PROCESS_STATE;
 
 
 /**
