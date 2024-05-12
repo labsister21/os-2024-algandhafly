@@ -13,6 +13,7 @@
 #include "header/kernel-entrypoint.h"
 #include "header/memory/paging.h"
 #include "header/user/directorystack.h"
+#include "header/process/process.h"
 
 
 char frame[WIDTH][HEIGHT];

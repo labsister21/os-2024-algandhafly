@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include "header/process/process.h"
 
 // Note: MB often referring to MiB in context of memory management
 #define SYSTEM_MEMORY_MB     128

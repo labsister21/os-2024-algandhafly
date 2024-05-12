@@ -8,6 +8,7 @@
 #include "header/interrupt/interrupt.h"
 #include "header/memory/paging.h"
 #include "header/filesystem/fat32.h"
+#include "header/user/directorystack.h"
 
 #define PROCESS_NAME_LENGTH_MAX          32
 #define PROCESS_PAGE_FRAME_COUNT_MAX     8
@@ -54,7 +55,7 @@
  * @param page_directory_virtual_addr CPU register CR3, containing pointer to active page directory
  */
 
-struct context {
+struct Context {
   unsigned int eip;
   unsigned int esp;
   unsigned int ebx;
@@ -71,6 +72,38 @@ typedef enum PROCESS_STATE {
     UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE
 } PROCESS_STATE;
 
+/**
+ * Structure data containing information about a process
+ *
+ * @param metadata Process metadata, contain various information about process
+ * @param context  Process context used for context saving & switching
+ * @param memory   Memory used for the process
+ */
+
+
+struct ProcessControlBlock {
+    struct {
+        char* mem;
+        uint16_t sz;
+        char* kstack;
+        enum PROCESS_STATE state;
+        int pid;
+        struct ProcessControlBlock *parent;
+        void *chan;
+        int killed;
+        struct DirectoryStack *cwd;
+        struct Context context;
+    } metadata;
+
+    struct {
+        void     *virtual_addr_used[PROCESS_PAGE_FRAME_COUNT_MAX];
+        uint32_t page_frame_used_count;
+    } memory;  
+};
+
+typedef struct ProcessControlBlock PCB;
+
+static PCB _process_list[PROCESS_COUNT_MAX];
 
 /**
  * Get currently running process PCB pointer
