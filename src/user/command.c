@@ -694,6 +694,11 @@ void handle_clock(){
     activate_clock_screen();
 }
 
+void handle_exit(){
+    puts("\nExiting...\n");
+    exit_user_shell();
+}
+
 
 
 const char clear[6] = "clear\0";
@@ -708,11 +713,12 @@ const char mv[3] = "mv\0"; // mv	- Memindah dan merename lokasi file/folder
 const char find[5] = "find\0"; // find	- Mencari file/folder dengan nama yang sama diseluruh file system
 const char echo[5] = "echo\0"; // echo - can be used to write to file
 
-
 const char exec[5] = "exec\0";
 const char ps[3] = "ps\0";
 const char kill[5] = "kill\0";
 const char clock[6] = "clock\0";
+
+const char exit[5] = "exit\0";
 
 void command(char *buf, struct DirectoryStack* dir_stack) {
     
@@ -749,6 +755,8 @@ void command(char *buf, struct DirectoryStack* dir_stack) {
         handle_kill(args, dir_stack);
     } else if (strcmp(args[0], clock) == 0) {
         handle_clock();
+    } else if (strcmp(args[0], exit) == 0) {
+        handle_exit();
     } else if (strcmp(args[0], help) == 0) {
         help_command();
     } else if(buf[0] == '\0'){

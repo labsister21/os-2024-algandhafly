@@ -56,4 +56,7 @@ time_t get_current_time();
 
 void activate_clock_screen();
 
+void exit_user_shell();
+
+
 #endif

@@ -169,3 +169,7 @@ time_t get_current_time(){
 void activate_clock_screen(){
     systemCall(15, 0, 0, 0);
 }
+
+void exit_user_shell(){
+    systemCall(16, 0, 0, 0);
+}

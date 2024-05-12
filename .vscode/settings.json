@@ -32,6 +32,7 @@
         "cwdlist.h": "c",
         "directorystack.h": "c",
         "clock.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "scheduler.h": "c"
     },
 }

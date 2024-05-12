@@ -399,8 +399,8 @@ void kernel_setup(void) {
     keyboard_state_activate();
 
     // Create & execute process 0
-    process_create_user_process(request);
-    paging_use_page_directory(process_state_manager._process_list[0].metadata.context.page_directory_virtual_addr);
+    // process_create_user_process(request);
+    // paging_use_page_directory(process_state_manager._process_list[0].metadata.context.page_directory_virtual_addr);
     kernel_execute_user_program((void*) 0x0);
 
     while (true);
