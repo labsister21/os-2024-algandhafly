@@ -14,6 +14,6 @@ struct time_t {
 typedef struct time_t time_t;
 
 
-void read_rtc(time_t *time);
+void get_indonesian_time(time_t *time);
 
 #endif

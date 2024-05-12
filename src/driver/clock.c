@@ -27,6 +27,15 @@ unsigned char get_RTC_register(int reg) {
     out(cmos_address, reg);
     return in(cmos_data);
 }
+
+void get_indonesian_time(time_t *time) {
+    read_rtc(time);
+    time->hour += INDONESIAN_HOUR_OFFSET;
+    if(time->hour >= 24) {
+        time->hour -= 24;
+        time->day++;
+    }
+}
  
 void read_rtc(time_t *time) {
     unsigned char century;
@@ -99,7 +108,6 @@ void read_rtc(time_t *time) {
         if(year < CURRENT_YEAR) year += 100;
     }
 
-    hour += INDONESIAN_HOUR_OFFSET;
 
     time->year = year;
     time->month = month;

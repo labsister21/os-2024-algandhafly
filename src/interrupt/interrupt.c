@@ -123,7 +123,7 @@ void syscall(struct InterruptFrame frame) {
             break;
         case 14: // activate clock
                 // activate_clock();
-                read_rtc((time_t*)frame.cpu.general.ebx);
+                get_indonesian_time((time_t*)frame.cpu.general.ebx);
             break;
         case 15: // get current time
                 *((uint64_t*)frame.cpu.general.ebx) = get_current_time();

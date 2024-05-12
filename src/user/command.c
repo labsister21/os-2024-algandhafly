@@ -693,11 +693,11 @@ void handle_clock(){
     puts("\nClock running...\n");
     time_t time = now();
 
-    put_int(time.year);
+    put_int(time.day);
     puts("/");
     put_int(time.month);
     puts("/");
-    put_int(time.hour);
+    put_int(time.year);
     puts("\n");
     put_int(time.hour);
     puts(":");
