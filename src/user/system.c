@@ -165,3 +165,7 @@ time_t get_current_time(){
     systemCall(14, (uint32_t )&current_time, 0, 0);
     return current_time;
 }
+
+void activate_clock_screen(){
+    systemCall(15, 0, 0, 0);
+}

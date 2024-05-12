@@ -54,5 +54,6 @@ uint8_t kill_process(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster_
 // clock
 time_t get_current_time();
 
+void activate_clock_screen();
 
 #endif

@@ -116,3 +116,39 @@ void read_rtc(time_t *time) {
     time->minute = minute;
     time->second = second;
 }
+
+
+void activate_clock(){
+
+    time_t current_time;
+    get_indonesian_time(&current_time);
+
+    update_clock_in_screen(&current_time);
+}
+
+void update_clock_in_screen(time_t *time){
+    // 00:00:00
+    // 76543210
+    write_int_offset_one_if_less_than_9(HEIGHT-1, WIDTH-8, time->hour, White, Black);
+    framebuffer_write(HEIGHT-1, WIDTH-6, ':', White, Black);
+    write_int_offset_one_if_less_than_9(HEIGHT-1, WIDTH-5, time->minute, White, Black);
+    framebuffer_write(HEIGHT-1, WIDTH-3, ':', White, Black);
+    write_int_offset_one_if_less_than_9(HEIGHT-1, WIDTH-2, time->second, White, Black);
+
+    // 00/00/0000
+    // 9876543210
+    write_int_offset_one_if_less_than_9(HEIGHT-2, WIDTH-10, time->day, White, Black);
+    framebuffer_write(HEIGHT-2, WIDTH-8, '/', White, Black);
+    write_int_offset_one_if_less_than_9(HEIGHT-2, WIDTH-7, time->month, White, Black);
+    framebuffer_write(HEIGHT-2, WIDTH-5, '/', White, Black);
+    write_int_offset_one_if_less_than_9(HEIGHT-2, WIDTH-4, time->year, White, Black);
+}
+
+void write_int_offset_one_if_less_than_9(uint8_t row, uint8_t col, int num, uint8_t fg, uint8_t bg){
+    if(num < 10){
+        framebuffer_write(row, col, '0', fg, bg);
+        framebuffer_write_int(row, col+1, num, fg, bg);
+    } else {
+        framebuffer_write_int(row, col, num, fg, bg);
+    }
+}

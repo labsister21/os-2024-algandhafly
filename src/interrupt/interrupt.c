@@ -121,12 +121,11 @@ void syscall(struct InterruptFrame frame) {
         case 13: // kill
 
             break;
-        case 14: // activate clock
-                // activate_clock();
+        case 14: // get current time
                 get_indonesian_time((time_t*)frame.cpu.general.ebx);
             break;
-        case 15: // get current time
-                *((uint64_t*)frame.cpu.general.ebx) = get_current_time();
+        case 15: // activate clock
+                activate_clock();
             break;
     }
 }

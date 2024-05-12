@@ -691,19 +691,7 @@ void handle_kill(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryS
 }
 void handle_clock(){
     puts("\nClock running...\n");
-    time_t time = now();
-
-    put_int(time.day);
-    puts("/");
-    put_int(time.month);
-    puts("/");
-    put_int(time.year);
-    puts("\n");
-    put_int(time.hour);
-    puts(":");
-    put_int(time.minute);
-    puts(":");
-    put_int(time.second);
+    activate_clock_screen();
 }
 
 
