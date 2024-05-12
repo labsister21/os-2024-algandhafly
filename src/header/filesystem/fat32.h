@@ -143,8 +143,6 @@ struct FAT32DriverRequest {
 
 
 
-
-
 /* -- Driver Interfaces -- */
 
 /**

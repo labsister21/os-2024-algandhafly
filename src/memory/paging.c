@@ -48,8 +48,7 @@ void flush_single_tlb(void *virtual_addr) {
 
 /* --- Memory Management --- */
 bool paging_allocate_check(uint32_t amount) {
-    uint32_t BYTES = page_manager_state.free_page_frame_count * PAGE_FRAME_SIZE;
-    return BYTES >= amount;
+    return amount <= page_manager_state.free_page_frame_count;
 }
 
 
@@ -140,7 +139,7 @@ struct PageDirectory* paging_create_new_page_directory(void) {
                 },
             }
         };
-
+        
         page_directory_list[i] = paging_kernel_page_directory;
         return &page_directory_list[i];
 }

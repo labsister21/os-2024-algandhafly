@@ -103,7 +103,12 @@ struct ProcessControlBlock {
 
 typedef struct ProcessControlBlock PCB;
 
-static PCB _process_list[PROCESS_COUNT_MAX];
+static struct {
+  
+  PCB _process_list[PROCESS_COUNT_MAX];
+  uint8_t active_process_count;
+
+} process_state_manager;
 
 /**
  * Get currently running process PCB pointer
