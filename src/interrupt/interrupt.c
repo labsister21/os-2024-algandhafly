@@ -6,6 +6,7 @@
 #include "header/filesystem/fat32.h"
 #include "header/text/framebuffer.h"
 #include "header/stdlib/string.h"
+#include "header/driver/clock.h"
 
 struct TSSEntry _interrupt_tss_entry = {
     .ss0  = GDT_KERNEL_DATA_SEGMENT_SELECTOR,
@@ -107,11 +108,25 @@ void syscall(struct InterruptFrame frame) {
             framebuffer_state.cursor_x = frame.cpu.general.ecx;
             framebuffer_state.cursor_y = frame.cpu.general.ebx;
             break;
-        case 10: // had to resort to this because directory[0] == directory[1] == parent cluster
+        case 10: // had to resort to this because directory[0] == directory[1] == parent cluster. the problem is you can only jump 2 levels up or 2 levels down. cant do 1
             // get sibling directory
             read_clusters(request->buf, request->parent_cluster_number, 1);
             break;
-        case 11:
+        case 11: // exec
+
+            break;
+        case 12: // ps
+
+            break;
+        case 13: // kill
+
+            break;
+        case 14: // activate clock
+                // activate_clock();
+                read_rtc((time_t*)frame.cpu.general.ebx);
+            break;
+        case 15: // get current time
+                *((uint64_t*)frame.cpu.general.ebx) = get_current_time();
             break;
     }
 }

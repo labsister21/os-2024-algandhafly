@@ -30,6 +30,8 @@
         "type_traits": "c",
         "new": "c",
         "cwdlist.h": "c",
-        "directorystack.h": "c"
+        "directorystack.h": "c",
+        "clock.h": "c",
+        "time.h": "c"
     },
 }

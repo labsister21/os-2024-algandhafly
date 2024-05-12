@@ -1,5 +1,6 @@
 #include <system.h>
 #include <string.h>
+#include "header/driver/clock.h"
 
 void systemCall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx) {
     __asm__ volatile("mov %0, %%ebx" : /* <Empty> */ : "r"(ebx));
@@ -94,8 +95,8 @@ uint8_t delete_file_or_dir(struct FAT32DirectoryEntry *entry, uint16_t parent_cl
         .parent_cluster_number = parent_cluster,
         .buffer_size = 0,
     };
-    memcpy(request.name, entry->name, 8);
-    memcpy(request.ext, entry->ext, 3);
+    memcpy(request.name, entry->name, DIR_NAME_LENGTH);
+    memcpy(request.ext, entry->ext, DIR_EXT_LENGTH);
 
     uint8_t error_code;
     systemCall(3, (uint32_t )&request, (uint32_t )&error_code, 0);
@@ -108,10 +109,59 @@ uint8_t write_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster, c
         .buffer_size = entry->filesize,
         .buf = buf
     };
-    memcpy(request.name, entry->name, 8);
-    memcpy(request.ext, entry->ext, 3);
+    memcpy(request.name, entry->name, DIR_NAME_LENGTH);
+    memcpy(request.ext, entry->ext, DIR_EXT_LENGTH);
 
     uint8_t error_code;
     systemCall(2, (uint32_t )&request, (uint32_t )&error_code, 0);
     return error_code;
+}
+
+
+// exec
+uint8_t execute_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster){
+    struct FAT32DriverRequest request = {
+        .parent_cluster_number = parent_cluster,
+        .buffer_size = entry->filesize,
+    };
+    memcpy(request.name, entry->name, DIR_NAME_LENGTH);
+    memcpy(request.ext, entry->ext, DIR_EXT_LENGTH);
+
+    uint8_t error_code;
+    systemCall(11, (uint32_t )&request, (uint32_t )&error_code, 0);
+    return error_code;
+}
+
+// ps
+uint8_t get_process_list(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster){
+    struct FAT32DriverRequest request = {
+        .parent_cluster_number = parent_cluster,
+        .buffer_size = entry->filesize,
+    };
+    memcpy(request.name, entry->name, DIR_NAME_LENGTH);
+    memcpy(request.ext, entry->ext, DIR_EXT_LENGTH);
+
+    uint8_t error_code;
+    systemCall(12, (uint32_t )&request, (uint32_t )&error_code, 0);
+    return error_code;
+}
+
+// kill
+uint8_t kill_process(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster){
+    struct FAT32DriverRequest request = {
+        .parent_cluster_number = parent_cluster,
+        .buffer_size = entry->filesize,
+    };
+    memcpy(request.name, entry->name, DIR_NAME_LENGTH);
+    memcpy(request.ext, entry->ext, DIR_EXT_LENGTH);
+
+    uint8_t error_code;
+    systemCall(13, (uint32_t )&request, (uint32_t )&error_code, 0);
+    return error_code;
+}
+
+time_t get_current_time(){
+    time_t current_time;
+    systemCall(14, (uint32_t )&current_time, 0, 0);
+    return current_time;
 }

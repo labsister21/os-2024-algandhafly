@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "header/filesystem/fat32.h"
+#include "header/driver/clock.h"
 
 #define MAX_DIR_LENGTH 256
 #define DIR_NAME_LENGTH 8
@@ -26,7 +27,7 @@ bool is_empty(struct FAT32DirectoryEntry *entry);
 bool is_directory(struct FAT32DirectoryEntry *entry);
 bool is_file(struct FAT32DirectoryEntry *entry);
 
-uint8_t read_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster_number, char *buf);
+uint8_t read_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster, char *buf);
 uint8_t delete_file_or_dir(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster);
 uint8_t write_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster, char* buf);
 
@@ -39,5 +40,19 @@ uint8_t write_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster, c
 // 5: Kernel Puts
 // 6: Kernel Gets
 // 7: Keyboard State Activate
+
+
+// exec
+uint8_t execute_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster_number);
+
+// ps
+uint8_t get_process_list(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster_number);
+
+// kill
+uint8_t kill_process(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster_number);
+
+// clock
+time_t get_current_time();
+
 
 #endif

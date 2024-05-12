@@ -3,6 +3,7 @@
 #include <system.h>
 #include <io.h>
 #include <string.h>
+#include <time.h>
 #include "header/filesystem/fat32.h"
 
 #define MAX_COMMAND_ARGS 20
@@ -660,6 +661,53 @@ void handle_echo(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryS
     
 }
 
+
+void handle_exec(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
+    char* path = args[1];
+    struct DirectoryStack file_path;
+    uint8_t error_code = path_to_dir_stack_from_cwd(path, dir_stack, &file_path);
+    if(error_code == 1) {
+        puts("\nInvalid path\n"); return;
+    }
+    if(error_code == 2) {
+        puts("\nFile don't exist\n"); return;
+    }
+
+    if(is_directory(peek_top(&file_path))) {
+        puts("\n"); puts(path); puts(" is not a file\n"); return;
+    }
+
+    uint16_t parent_cluster_containing_file;
+    if(file_path.length == 1)parent_cluster_containing_file = current_parent_cluster(dir_stack);
+    else parent_cluster_containing_file = peek_second_top(&file_path)->cluster_low;
+}
+
+
+void handle_ps(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
+    // get_process_list();
+}
+void handle_kill(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
+    // kill_process()
+}
+void handle_clock(){
+    puts("\nClock running...\n");
+    time_t time = now();
+
+    put_int(time.year);
+    puts("/");
+    put_int(time.month);
+    puts("/");
+    put_int(time.hour);
+    puts("\n");
+    put_int(time.hour);
+    puts(":");
+    put_int(time.minute);
+    puts(":");
+    put_int(time.second);
+}
+
+
+
 const char clear[6] = "clear\0";
 const char help[5] = "help\0";
 const char cd[3] = "cd\0"; // cd	- Mengganti current working directory (termasuk .. untuk naik)
@@ -671,6 +719,12 @@ const char rm[3] = "rm\0"; // rm	- Menghapus suatu file (Folder menjadi bonus)
 const char mv[3] = "mv\0"; // mv	- Memindah dan merename lokasi file/folder
 const char find[5] = "find\0"; // find	- Mencari file/folder dengan nama yang sama diseluruh file system
 const char echo[5] = "echo\0"; // echo - can be used to write to file
+
+
+const char exec[5] = "exec\0";
+const char ps[3] = "ps\0";
+const char kill[5] = "kill\0";
+const char clock[6] = "clock\0";
 
 void command(char *buf, struct DirectoryStack* dir_stack) {
     
@@ -699,6 +753,14 @@ void command(char *buf, struct DirectoryStack* dir_stack) {
         handle_find(args);
     } else if (strcmp(args[0], echo) == 0) {
         handle_echo(args, dir_stack);
+    } else if (strcmp(args[0], exec) == 0) {
+        handle_exec(args, dir_stack);
+    } else if (strcmp(args[0], ps) == 0) {
+        handle_ps(args, dir_stack);
+    } else if (strcmp(args[0], kill) == 0) {
+        handle_kill(args, dir_stack);
+    } else if (strcmp(args[0], clock) == 0) {
+        handle_clock();
     } else if (strcmp(args[0], help) == 0) {
         help_command();
     } else if(buf[0] == '\0'){
