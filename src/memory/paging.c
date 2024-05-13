@@ -61,6 +61,21 @@ bool paging_allocate_check(uint32_t amount) {
 
 void* paging_allocate_user_page_frame(struct PageDirectory *page_dir) {
     
+    // page_dir->table[0].flags.present_bit = 1;
+    // page_dir->table[1].flags.present_bit = 1;
+    // page_dir->table[2].flags.present_bit = 1;
+    // page_dir->table[3].flags.present_bit = 1;
+    // page_dir->table[4].flags.present_bit = 1;
+    // page_dir->table[5].flags.present_bit = 1;
+    // page_dir->table[6].flags.present_bit = 1;
+    // page_dir->table[7].flags.present_bit = 1;
+    // page_dir->table[8].flags.present_bit = 1;
+    // page_dir->table[9].flags.present_bit = 1;
+    // page_dir->table[10].flags.present_bit = 1;
+    // page_dir->table[11].flags.present_bit = 1;
+    // page_dir->table[12].flags.present_bit = 1;
+    // page_dir->table[13].flags.present_bit = 1;
+
     uint32_t page_index = 0;
     while (page_dir->table[page_index].flags.present_bit ISNT 0) {
         page_index++;

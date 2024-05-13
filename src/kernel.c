@@ -383,6 +383,8 @@ void kernel_setup(void) {
 
     // Allocate first 4 MiB virtual memory
     let_there_be_a_new_process(request, &God_PageDir);
+    PCB* pcb = process_get_current_running_pcb_pointer();
+    request.buf = pcb->memory.virtual_addr_used[0];
     uint8_t error_code = read(request);
 
     if (error_code != 0) {
@@ -398,7 +400,6 @@ void kernel_setup(void) {
     keyboard_state_activate();
 
     // Create & execute process 0
-    PCB* pcb = process_get_current_running_pcb_pointer();
     kernel_execute_user_program((void*) pcb->memory.virtual_addr_used[0]);
 
     while (true);
