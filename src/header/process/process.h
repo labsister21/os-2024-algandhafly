@@ -14,38 +14,6 @@
 #define PROCESS_PAGE_FRAME_COUNT_MAX     8
 #define PROCESS_COUNT_MAX                16
 
-#define KERNEL_RESERVED_PAGE_FRAME_COUNT 4
-#define KERNEL_VIRTUAL_ADDRESS_BASE      0xC0000000
-
-#define CPU_EFLAGS_BASE_FLAG               0x2
-#define CPU_EFLAGS_FLAG_CARRY              0x1
-#define CPU_EFLAGS_FLAG_PARITY             0x4
-#define CPU_EFLAGS_FLAG_AUX_CARRY          0x10
-#define CPU_EFLAGS_FLAG_ZERO               0x40
-#define CPU_EFLAGS_FLAG_SIGN               0x80
-#define CPU_EFLAGS_FLAG_TRAP               0x100
-#define CPU_EFLAGS_FLAG_INTERRUPT_ENABLE   0x200
-#define CPU_EFLAGS_FLAG_DIRECTION          0x400
-#define CPU_EFLAGS_FLAG_OVERFLOW           0x800
-#define CPU_EFLAGS_FLAG_IO_PRIVILEGE       0x3000
-#define CPU_EFLAGS_FLAG_NESTED_TASK        0x4000
-#define CPU_EFLAGS_FLAG_MODE               0x8000
-#define CPU_EFLAGS_FLAG_RESUME             0x10000
-#define CPU_EFLAGS_FLAG_VIRTUAL_8086       0x20000
-#define CPU_EFLAGS_FLAG_ALIGNMENT_CHECK    0x40000
-#define CPU_EFLAGS_FLAG_VINTERRUPT_FLAG    0x80000
-#define CPU_EFLAGS_FLAG_VINTERRUPT_PENDING 0x100000
-#define CPU_EFLAGS_FLAG_CPUID_INSTRUCTION  0x200000
-#define CPU_EFLAGS_FLAG_AES_SCHEDULE_LOAD  0x40000000
-#define CPU_EFLAGS_FLAG_ALTER_INSTRUCTION  0x80000000
-
-// Return code constant for process_create_user_process()
-#define PROCESS_CREATE_SUCCESS                   0
-#define PROCESS_CREATE_FAIL_MAX_PROCESS_EXCEEDED 1
-#define PROCESS_CREATE_FAIL_INVALID_ENTRYPOINT   2
-#define PROCESS_CREATE_FAIL_NOT_ENOUGH_MEMORY    3
-#define PROCESS_CREATE_FAIL_FS_READ_FAILURE      4
-
 /**
  * Contain information needed for task to be able to get interrupted and resumed later
  *
@@ -64,8 +32,6 @@ struct Context {
   unsigned int esi;
   unsigned int edi;
   unsigned int ebp;
-  struct PageDirectoryEntryFlags eflags;
-  struct PageDirectory* page_directory_virtual_addr;
 };  
 
 typedef enum PROCESS_STATE {
@@ -83,16 +49,16 @@ typedef enum PROCESS_STATE {
 
 struct ProcessControlBlock {
     struct {
-        char* mem;
-        uint16_t sz;
-        char* kstack;
+        // char* mem;
+        // uint16_t sz;
+        // char* kstack;
         enum PROCESS_STATE state;
-        int pid;
-        struct ProcessControlBlock *parent;
-        void *chan;
-        int killed;
-        struct DirectoryStack *cwd;
-        struct Context context;
+        // int pid;
+        // struct ProcessControlBlock *parent;
+        // void *chan;
+        // int killed;
+        // struct DirectoryStack *cwd;
+        // struct Context context;
     } metadata;
 
     struct {
@@ -125,7 +91,7 @@ struct ProcessControlBlock* process_get_current_running_pcb_pointer(void);
  * @param request Appropriate read request for the executable
  * @return        Process creation return code
  */
-int32_t process_create_user_process(struct FAT32DriverRequest request);
+int32_t let_there_be_a_new_process(struct FAT32DriverRequest request, struct PageDirectory* page_dir);
 
 /**
  * Destroy process then release page directory and process control block

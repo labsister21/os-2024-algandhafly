@@ -16,8 +16,9 @@
 
 // Operating system page directory, using page size PAGE_FRAME_SIZE (4 MiB)
 extern struct PageDirectory _paging_kernel_page_directory;
+extern int PD_empty_slots;
 
-
+#define God_PageDir _paging_kernel_page_directory
 
 
 /**
@@ -147,7 +148,7 @@ bool paging_allocate_check(uint32_t amount);
  * @param virtual_addr Virtual address to be allocated
  * @return             Physical address of allocated frame
  */
-bool paging_allocate_user_page_frame(struct PageDirectory *page_dir, void *virtual_addr);
+void* paging_allocate_user_page_frame(struct PageDirectory *page_dir);
 
 /**
  * Deallocate single user page frame in page directory

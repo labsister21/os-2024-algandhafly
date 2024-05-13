@@ -293,11 +293,6 @@ void kernel_setup(void) {
     gdt_install_tss();
     set_tss_register();
 
-    // Allocate first 4 MiB virtual memory
-    paging_allocate_user_page_frame(&_paging_kernel_page_directory, (uint8_t*) 0);
-
-
-
 /**
  * 
  * TESTING ALDY
@@ -385,7 +380,11 @@ void kernel_setup(void) {
         .parent_cluster_number = ROOT_CLUSTER_NUMBER,
         .buffer_size           = 0x100000,
     };
+
+    // Allocate first 4 MiB virtual memory
+    let_there_be_a_new_process(request, &God_PageDir);
     uint8_t error_code = read(request);
+
     if (error_code != 0) {
         framebuffer_write_length(0, 0, "Error Code:", 11, White, Black);
         framebuffer_write_int(0, 13, error_code, White, Black);
@@ -399,9 +398,8 @@ void kernel_setup(void) {
     keyboard_state_activate();
 
     // Create & execute process 0
-    // process_create_user_process(request);
-    // paging_use_page_directory(process_state_manager._process_list[0].metadata.context.page_directory_virtual_addr);
-    kernel_execute_user_program((void*) 0x0);
+    PCB* pcb = process_get_current_running_pcb_pointer();
+    kernel_execute_user_program((void*) pcb->memory.virtual_addr_used[0]);
 
     while (true);
 }
