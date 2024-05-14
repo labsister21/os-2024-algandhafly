@@ -16,11 +16,11 @@ uint8_t pop_dir(struct DirectoryStack* dir_stack){
     return 0;
 }
 struct FAT32DirectoryEntry* peek_top(struct DirectoryStack* dir_stack){
-    if(dir_stack->length == 0) return 1;
+    if(dir_stack->length == 0) return 0;
     return &dir_stack->entry[dir_stack->length-1];
 }
 struct FAT32DirectoryEntry* peek_second_top(struct DirectoryStack* dir_stack){
-    if(dir_stack->length < 2) return 1;
+    if(dir_stack->length < 2) return 0;
     return &dir_stack->entry[dir_stack->length-2];
 }
 

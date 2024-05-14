@@ -241,11 +241,11 @@ void help_command() {
     puts("help  : Show this help\n\n");
 }
 
-void handle_cd(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack) {
+int handle_cd(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack) {
     char folderName[DIR_NAME_LENGTH];
     if(args[1][0] == '\0'){
         puts("\nPlease provide folder name\n");
-        return;
+        return 0;
     }
 
     struct DirectoryStack input_path;
@@ -259,7 +259,7 @@ void handle_cd(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
             if(memcmp(last_dir(dir_stack), "root", 4) == 0) {
                 puts("\n");
                 puts("Error: cannot pop root directory\n");
-                return;
+                return 0;
             } else {
                 pop_dir(dir_stack);
             }
@@ -278,7 +278,7 @@ void handle_cd(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
                         puts("\n");
                         puts(input_path.entry[j].name);
                         puts(" is not a folder.");
-                        return;
+                        return 0;
                     }
                     found = 1;
                     break;
@@ -290,7 +290,7 @@ void handle_cd(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
                 puts("Folder ");
                 puts(input_path.entry[j].name);
                 puts(" not found");
-                return;
+                return 0;
         }
     }
 }

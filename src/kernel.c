@@ -25,7 +25,77 @@ void handleEnterKey(int *row, int *col) {
 }
 
 void kernel_setup(void) {
-    // === Milestone 0 ===
+
+    load_gdt(&_gdt_gdtr);
+    pic_remap();
+    initialize_idt();
+    activate_keyboard_interrupt();
+    framebuffer_clear();
+    framebuffer_set_cursor(0, 0);
+    initialize_filesystem_fat32();
+    gdt_install_tss();
+    set_tss_register();
+
+
+    // Write shell into memory
+    struct FAT32DriverRequest request = {
+        .buf                   = (uint8_t*) 0,
+        .name                  = "shell",
+        .ext                   = "\0\0\0",
+        .parent_cluster_number = ROOT_CLUSTER_NUMBER,
+        .buffer_size           = 0x100000,
+    };
+
+    // Set TSS $esp pointer and jump into shell 
+    set_tss_kernel_current_stack();
+
+    // Make the keyboard always on
+    keyboard_state_activate();
+
+    // Create & execute process 0
+    int error_code = let_there_be_a_new_process(request);
+    if (error_code != 0) {
+        kernel_puts("We sad", 15, 0);
+        while (true);
+    }
+
+    PCB* process = process_get_current_running_pcb_pointer();
+    paging_use_page_directory(process->context.page_dir);
+
+    // alternate way
+    // paging_allocate_user_page_frame(&_paging_kernel_page_directory, 0);
+    // paging_allocate_user_page_frame(&_paging_kernel_page_directory, 1);
+    // read(request);
+
+    error_code = read(request);
+    if (error_code != 0) {
+        kernel_puts("L\n", 15, 0);
+    }
+    kernel_execute_user_program((void*) 0);
+
+    while (true);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * 
+ * comment + kernel_setup pada milestone sebelomnya
+ * 
+*/
+
+ // === Milestone 0 ===
     // load_gdt(&_gdt_gdtr);
 
     // === Milestone 1.1 ===
@@ -85,10 +155,10 @@ void kernel_setup(void) {
 
 
     // === Milestone 1.4 ===
-    load_gdt(&_gdt_gdtr);
-    pic_remap();
-    activate_keyboard_interrupt();
-    initialize_idt();
+    // load_gdt(&_gdt_gdtr);
+    // pic_remap();
+    // activate_keyboard_interrupt();
+    // initialize_idt();
 
 
     // framebuffer_clear();
@@ -238,9 +308,6 @@ void kernel_setup(void) {
     // }
     // return;
 
-
-
-
     // [Test delete]
     // read_clusters(&fat32driver_state.fat_table, 1, 1); // Or call initialize_filesystem_fat32
     
@@ -282,126 +349,3 @@ void kernel_setup(void) {
     //     framebuffer_write_length(1, 0, "fat32driver_state.dir_table_buf.table:", 38, White, Black);
     //     framebuffer_write_length(2, 0, fat32driver_state.dir_table_buf.table, CLUSTER_MAP_SIZE*CLUSTER_BLOCK_COUNT, White, Black);
     // }
-
-    load_gdt(&_gdt_gdtr);
-    pic_remap();
-    initialize_idt();
-    activate_keyboard_interrupt();
-    framebuffer_clear();
-    framebuffer_set_cursor(0, 0);
-    initialize_filesystem_fat32();
-    gdt_install_tss();
-    set_tss_register();
-
-/**
- * 
- * TESTING ALDY
- * path_to_dir_stack
- * ~ maaf nyampah di kernel.c hehe tp debugger nya ntah kenapa g mau nyala jd yauda gua do it the old fashioned way dan yang penting works
- *  Uncomment salah satu entry di bawah ini dan harusnya ke print ke terminal (kalau valid, kalau ngga berarti error code nya)
- * Uncomment juga "for(;;)" di paling bawah biar dia ga lanjut boot
- * 
-*/
-            // #define not !
-            // #include "header/user/io.h"
-            // struct DirectoryStack stack;
-            // uint8_t error = 0;
-
-            // error = path_to_dir_stack("./pathkepanjangan.osz/b/c/d/e.ppp", &stack);
-            // if (not error) print_path_to_cwd(&stack);
-            // else put_int(error);
-
-            // error = path_to_dir_stack(".nop/nopath", &stack);
-            // if(not error)print_path_to_cwd(&stack);
-            // else put_int(error);
-
-            // error = path_to_dir_stack("lmaolmao.extpanjang/b/c/d/e", &stack);
-            // if(not error)print_path_to_cwd(&stack);
-            // else put_int(error);
-
-            // error = path_to_dir_stack("contoh/path/$alah/", &stack);
-            // if(not error)print_path_to_cwd(&stack);
-            // else put_int(error);
-
-            // error = path_to_dir_stack("contoh/ext/salah.pn-/", &stack);
-            // if(not error)print_path_to_cwd(&stack);
-            // else put_int(error);
-
-            // error = path_to_dir_stack("noext./b/c/d/e", &stack);
-            // if(not error)print_path_to_cwd(&stack);
-            // else put_int(error);
-
-            // error = path_to_dir_stack("../", &stack);
-            // if (not error) print_path_to_cwd(&stack);
-            // else put_int(error);
-
-            // error = path_to_dir_stack("ayam/be/cicak.txt/sa.cpp/buaya.pp", &stack);
-            // if (not error) print_path_to_cwd(&stack);
-            // else put_int(error);
-
-            // error = path_to_dir_stack("./ayam/be/cica_k.txt/sa.cpp/buaya.pp", &stack);
-            // if (not error) print_path_to_cwd(&stack);
-            // else put_int(error);
-
-            // error = path_to_dir_stack("/a/b//..c//d/e//p/", &stack);
-            // if (not error) print_path_to_cwd(&stack);
-            // else put_int(error);
-
-            // error = path_to_dir_stack("/a/b//c//d/e//p/", &stack);
-            // if (not error) print_path_to_cwd(&stack);
-            // else put_int(error);
-
-            // error = path_to_dir_stack("/", &stack);
-            // if (not error) print_path_to_cwd(&stack);
-            // else put_int(error);
-
-            // error = path_to_dir_stack("Jennifer/Lawrence/Movies.png", &stack);
-            // if (not error) print_path_to_cwd(&stack);
-            // else put_int(error);
-
-            // error = path_to_dir_stack("hello/../world/", &stack);
-            // if (not error) print_path_to_cwd(&stack);
-            // else put_int(error);
-            // for(;;);
-
-
-/**
- * 
- * END OF TESTING ALDY
- * 
-*/
-
-
-    // Write shell into memory
-    struct FAT32DriverRequest request = {
-        .buf                   = (uint8_t*) 0,
-        .name                  = "shell",
-        .ext                   = "\0\0\0",
-        .parent_cluster_number = ROOT_CLUSTER_NUMBER,
-        .buffer_size           = 0x100000,
-    };
-
-    // Allocate first 4 MiB virtual memory
-    let_there_be_a_new_process(request, &God_PageDir);
-    PCB* pcb = process_get_current_running_pcb_pointer();
-    request.buf = pcb->memory.virtual_addr_used[0];
-
-    uint8_t error_code = read(request);
-
-    if (error_code != 0) {
-        framebuffer_write_length(0, 0, "Error Code:", 11, White, Black);
-        framebuffer_write_int(0, 13, error_code, White, Black);
-        framebuffer_write_length(1, 0, "Error: Shell not found", 22, White, Black);
-    }
-
-    // Set TSS $esp pointer and jump into shell 
-    set_tss_kernel_current_stack();
-
-    // Make the keyboard always on
-    keyboard_state_activate();
-
-    // Create & execute process 0
-    kernel_execute_user_program((void*) 0);
-
-    while (true);
-}

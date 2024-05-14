@@ -64,7 +64,7 @@ kernel: $(OUTPUT_FOLDER)/$(OBJ_KERNEL) $(OBJS)
 	@echo Linking object files...
 	# Filter out the specific file
 	$(eval FILTERED_OBJS := $(filter-out $(wildcard $(OUTPUT_FOLDER)/user/*.o), $(OBJS)))
-	$(LIN) $(LFLAGS) -o $(OUTPUT_FOLDER)/kernel $(OUTPUT_FOLDER)/$(OBJ_KERNEL) $(FILTERED_OBJS)
+	@$(LIN) $(LFLAGS) -o $(OUTPUT_FOLDER)/kernel $(OUTPUT_FOLDER)/$(OBJ_KERNEL) $(FILTERED_OBJS)
 	@rm -f *.o
 	@echo Linking object files finished!
 

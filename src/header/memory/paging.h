@@ -99,32 +99,12 @@ struct PageManagerState {
 } __attribute__((packed));
 
 
-
-
-
-/**
- * Edit page directory with respective parameter
- * 
- * @param page_dir      Page directory to update
- * @param physical_addr Physical address to map
- * @param virtual_addr  Virtual address to map
- * @param flags         Page entry flags
- */
-void update_page_directory_entry(
-    struct PageDirectory *page_dir,
-    void *physical_addr, 
-    void *virtual_addr, 
-    struct PageDirectoryEntryFlags flags
-);
-
 /**
  * Invalidate page that contain virtual address in parameter
  * 
  * @param virtual_addr Virtual address to flush
  */
 void flush_single_tlb(void *virtual_addr);
-
-
 
 
 
@@ -146,7 +126,7 @@ bool paging_allocate_check(uint32_t amount);
  * @param virtual_addr Virtual address to be allocated
  * @return             Physical address of allocated frame
  */
-void* paging_allocate_user_page_frame(struct PageDirectory *page_dir);
+bool paging_allocate_user_page_frame(struct PageDirectory *page_dir, void* virtual_addr);
 
 /**
  * Deallocate single user page frame in page directory
