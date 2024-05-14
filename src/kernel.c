@@ -14,6 +14,7 @@
 #include "header/memory/paging.h"
 #include "header/user/directorystack.h"
 #include "header/process/process.h"
+#include "header/scheduler/scheduler.h"
 
 
 char frame[WIDTH][HEIGHT];
@@ -35,7 +36,10 @@ void kernel_setup(void) {
     initialize_filesystem_fat32();
     gdt_install_tss();
     set_tss_register();
+    set_tss_kernel_current_stack();
+    keyboard_state_activate();
 
+    // Initialize shell as process 0 and switch to the virtual memory space (page_dir) of this process
 
     // setup fat32 request for shell
     struct FAT32DriverRequest request = {
@@ -46,14 +50,8 @@ void kernel_setup(void) {
         .buffer_size           = 0x100000,
     };
 
-    // Set TSS $esp pointer and jump into shell 
-    set_tss_kernel_current_stack();
-
-    // Make the keyboard always on
-    keyboard_state_activate();
-
-    // Initialize process 0 and switch to the virtual memory space (page_dir) of this process
-    PCB* process = process_get_current_running_pcb_pointer();
+    let_there_be_a_new_process(request);
+    PCB* process = get_current_running_process();
     paging_use_page_directory(process->context.page_dir);
 
     // read shell into memory and run it

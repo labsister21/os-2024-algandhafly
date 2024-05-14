@@ -15,7 +15,7 @@
 #define PROCESS_COUNT_MAX                16
 
 typedef enum PROCESS_STATE {
-    UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE
+    UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE, KILLED
 } PROCESS_STATE;
 
 
@@ -38,6 +38,9 @@ struct Context {
      *    3.) pointer ke instruksi terakhir
      *    4.) pointer ke page dir yang dipake process ini (udh ada)
      */ 
+    struct CPURegister cpu;
+    struct {
+    } eflags;
     PD* page_dir;
 };
 
@@ -55,7 +58,7 @@ struct ProcessControlBlock {
     struct Context context;
 
     struct {
-        int id;
+        int pid;
         PROCESS_STATE state;
         // add more if needed
     } metadata;
@@ -69,11 +72,7 @@ struct ProcessControlBlock {
 
 typedef struct ProcessControlBlock PCB;
 
-static struct {
-    PCB _process_list[PROCESS_COUNT_MAX];
-    uint8_t active_process_count;
-} process_state_manager;
-
+static PCB* _process_list[PROCESS_COUNT_MAX] = {0};
 /**
  * Get currently running process PCB pointer
  *
@@ -97,6 +96,7 @@ int32_t let_there_be_a_new_process(struct FAT32DriverRequest request);
  * @param pid Process ID to delete
  * @return    True if process destruction success
  */
-bool process_destroy(uint32_t pid);
+bool process_omae_wa_mou_shindeiru(uint32_t pid);
+// nani???
 
 #endif

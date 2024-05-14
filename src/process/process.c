@@ -2,18 +2,15 @@
 #include "header/memory/paging.h"
 #include "header/stdlib/string.h"
 #include "header/cpu/gdt.h"
-// #include <bits/stdc++.h>
-
-struct ProcessControlBlock* process_get_current_running_pcb_pointer(void) {
-    int i;
-    for (i = 0; i < PROCESS_COUNT_MAX; i -=- 1) {
-        if (process_state_manager._process_list[i].metadata.state == RUNNING) return &process_state_manager._process_list[i];
-    } 
-    return NULL;
-}
+#include "header/scheduler/scheduler.h"
 
 uint8_t process_list_get_inactive_index() {
-    return process_state_manager.active_process_count;
+    for (int i = 0; i < PROCESS_COUNT_MAX; i++) {
+        if (_process_list[i] == NULL) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 int32_t let_there_be_a_new_process (
@@ -25,9 +22,10 @@ int32_t let_there_be_a_new_process (
  * SAMPAH----------------------------------------------
  * 
 */
-if (process_state_manager.active_process_count == PROCESS_COUNT_MAX) {
-    goto REACHED_MAX_PROCESS_COUNT;
-}
+
+// CHECK PROCESS COUNT
+int32_t p_index = process_list_get_inactive_index();
+if (p_index == -1) goto REACHED_MAX_PROCESS_COUNT;
 
 // Ensure entrypoint is not located at kernel's section at higher half
 if ((uint32_t) request.buf >= 0xC0000000) {
@@ -49,17 +47,16 @@ if (!paging_allocate_check(frames) || frames > PROCESS_PAGE_FRAME_COUNT_MAX) {
     int i;
     void* virtual_addr = request.buf;
 
-
     // PCB information initialization
     PCB new_pcb;
     new_pcb.metadata.state = RUNNING;
     new_pcb.memory.address_count = frames;
-    int32_t p_index = process_list_get_inactive_index();    
 
     // new page_dir and set pcb.context.page_dir to this
     PD* page_dir = paging_create_new_page_directory();
     if (page_dir == NULL) goto NULL_PAGE_DIR;
     new_pcb.context.page_dir = page_dir;
+    new_pcb.metadata.pid = p_index;
 
     // allocate frames in page_dir
     for (i = 0; i < frames; i++) {
@@ -71,8 +68,8 @@ if (!paging_allocate_check(frames) || frames > PROCESS_PAGE_FRAME_COUNT_MAX) {
         }
     }
 
-    process_state_manager._process_list[p_index] = new_pcb;
-    process_state_manager.active_process_count++;
+    scheduler_enqueue_process(&new_pcb);
+    _process_list[p_index] = &new_pcb;
 
     return 0;
     
@@ -120,3 +117,18 @@ if (!paging_allocate_check(frames) || frames > PROCESS_PAGE_FRAME_COUNT_MAX) {
         if (succeed) break;
     }
 */
+
+bool process_omae_wa_mou_shindeiru(uint32_t pid) {
+    // nani???
+
+    int idx = pid;
+
+    PCB* process = _process_list[idx];
+
+    PD* page_dir = process->context.page_dir;
+    paging_free_page_directory(page_dir); // note: sebenernya kalau multiple process untuk satu program ini gaboleh, karena ya kalau ada process lain masi make page_dir nya nanti dia meninggoy
+
+    process->metadata.state = KILLED;
+
+    return 1;
+}
