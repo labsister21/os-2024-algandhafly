@@ -16,10 +16,8 @@
 
 // Operating system page directory, using page size PAGE_FRAME_SIZE (4 MiB)
 extern struct PageDirectory _paging_kernel_page_directory;
-extern int PD_empty_slots;
-
 #define God_PageDir _paging_kernel_page_directory
-
+typedef struct PageDirectory PD;
 
 /**
  * Page Directory Entry Flags, only first 8 bit
@@ -166,7 +164,7 @@ __attribute__((aligned(0x1000))) static struct PageDirectory page_directory_list
 
 static struct {
     bool page_directory_used[PAGING_DIRECTORY_TABLE_MAX_COUNT];
-} page_directory_manager = {
+} _pagedir_manager = {
     .page_directory_used = {false},
 };
 

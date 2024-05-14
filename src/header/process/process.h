@@ -24,15 +24,15 @@
  */
 
 struct Context {
-  unsigned int eip;
-  unsigned int esp;
-  unsigned int ebx;
-  unsigned int ecx;
-  unsigned int edx;
-  unsigned int esi;
-  unsigned int edi;
-  unsigned int ebp;
-};  
+    unsigned int eip;
+    unsigned int esp;
+    unsigned int ebx;
+    unsigned int ecx;
+    unsigned int edx;
+    unsigned int esi;
+    unsigned int edi;
+    unsigned int ebp;
+};
 
 typedef enum PROCESS_STATE {
     UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE
@@ -49,36 +49,26 @@ typedef enum PROCESS_STATE {
 
 struct ProcessControlBlock {
     struct {
-        // char* mem;
-        // uint16_t sz;
-        // char* kstack;
         enum PROCESS_STATE state;
-        // int pid;
-        // struct ProcessControlBlock *parent;
-        // void *chan;
-        // int killed;
-        // struct DirectoryStack *cwd;
-        // struct Context context;
+        PD* page_dir;
     } metadata;
 
     struct {
         void     *virtual_addr_used[PROCESS_PAGE_FRAME_COUNT_MAX];
         uint32_t page_frame_used_count;
-    } memory;  
+    } memory;
 };
 
 typedef struct ProcessControlBlock PCB;
 
 static struct {
-  
-  PCB _process_list[PROCESS_COUNT_MAX];
-  uint8_t active_process_count;
-
+    PCB _process_list[PROCESS_COUNT_MAX];
+    uint8_t active_process_count;
 } process_state_manager;
 
 /**
  * Get currently running process PCB pointer
- * 
+ *
  * @return Will return NULL if there's no running process
  */
 struct ProcessControlBlock* process_get_current_running_pcb_pointer(void);
@@ -86,7 +76,7 @@ struct ProcessControlBlock* process_get_current_running_pcb_pointer(void);
 /**
  * Create new user process and setup the virtual address space.
  * All available return code is defined with macro "PROCESS_CREATE_*"
- * 
+ *
  * @note          This procedure assumes no reentrancy in ISR
  * @param request Appropriate read request for the executable
  * @return        Process creation return code
@@ -95,7 +85,7 @@ int32_t let_there_be_a_new_process(struct FAT32DriverRequest request, struct Pag
 
 /**
  * Destroy process then release page directory and process control block
- * 
+ *
  * @param pid Process ID to delete
  * @return    True if process destruction success
  */
