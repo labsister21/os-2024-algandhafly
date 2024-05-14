@@ -37,7 +37,7 @@ void kernel_setup(void) {
     set_tss_register();
 
 
-    // Write shell into memory
+    // setup fat32 request for shell
     struct FAT32DriverRequest request = {
         .buf                   = (uint8_t*) 0,
         .name                  = "shell",
@@ -52,25 +52,12 @@ void kernel_setup(void) {
     // Make the keyboard always on
     keyboard_state_activate();
 
-    // Create & execute process 0
-    int error_code = let_there_be_a_new_process(request);
-    if (error_code != 0) {
-        kernel_puts("We sad", 15, 0);
-        while (true);
-    }
-
+    // Initialize process 0 and switch to the virtual memory space (page_dir) of this process
     PCB* process = process_get_current_running_pcb_pointer();
     paging_use_page_directory(process->context.page_dir);
 
-    // alternate way
-    // paging_allocate_user_page_frame(&_paging_kernel_page_directory, 0);
-    // paging_allocate_user_page_frame(&_paging_kernel_page_directory, 1);
-    // read(request);
-
-    error_code = read(request);
-    if (error_code != 0) {
-        kernel_puts("L\n", 15, 0);
-    }
+    // read shell into memory and run it
+    if (read(request) != 0) kernel_puts("L\n", 15, 0);
     kernel_execute_user_program((void*) 0);
 
     while (true);
