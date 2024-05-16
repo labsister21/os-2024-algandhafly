@@ -24,7 +24,7 @@ SAMPLE_DISK_NAME = sample-image
 COPY_SUFFIX = -copy
 
 # @qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso -no-reboot -d cpu_reset,int
-lock1: clean disk insert-shell all
+all: kernel disk insert-shell insert-clock
 	@qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso
 
 run: 
@@ -50,7 +50,7 @@ OBJS = $(patsubst $(SOURCE_FOLDER)/%,$(OUTPUT_FOLDER)/%,$(SRC:.c=.o)) $(patsubst
 
 $(OUTPUT_FOLDER)/%.o: $(SOURCE_FOLDER)/%.c
 	mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -fno-pie -c -o $@ $<
 
 $(OUTPUT_FOLDER)/%.o: $(SOURCE_FOLDER)/%.s
 	mkdir -p $(@D)
@@ -63,8 +63,8 @@ $(OUTPUT_FOLDER)/%.o: %.s
 kernel: $(OUTPUT_FOLDER)/$(OBJ_KERNEL) $(OBJS)
 	@echo Linking object files...
 	# Filter out the specific file
-	$(eval FILTERED_OBJS := $(filter-out $(wildcard $(OUTPUT_FOLDER)/user/*.o), $(OBJS)))
-	@$(LIN) $(LFLAGS) -o $(OUTPUT_FOLDER)/kernel $(OUTPUT_FOLDER)/$(OBJ_KERNEL) $(FILTERED_OBJS)
+	$(eval FILTERED_OBJS := $(filter-out $(wildcard $(OUTPUT_FOLDER)/user/*.o) $(wildcard $(OUTPUT_FOLDER)/user-shell/*.o), $(OBJS)))
+	$(LIN) $(LFLAGS) -o $(OUTPUT_FOLDER)/kernel $(OUTPUT_FOLDER)/$(OBJ_KERNEL) $(FILTERED_OBJS)
 	@rm -f *.o
 	@echo Linking object files finished!
 
@@ -126,6 +126,7 @@ insert-shell: inserter user-shell $(OUTPUT_FOLDER)/$(DISK_NAME).bin
 	@echo Inserting shell into root directory...
 	@cd $(OUTPUT_FOLDER); ./inserter shell 2 $(DISK_NAME).bin
 	@echo Inserting shell into root directory finished!
+	@echo
 
 
 
@@ -138,3 +139,35 @@ copysampledisk:
 
 clean:
 	rm -rf $(wildcard $(OUTPUT_FOLDER)/*.iso) $(filter-out $(wildcard $(OUTPUT_FOLDER)/*.bin), $(wildcard $(OUTPUT_FOLDER)/*))
+
+
+
+
+
+# USER_CLOCK
+USER_CLOCK_MAIN = user-clock
+USER_CLOCK_MAIN_SRC = $(USER_CLOCK_MAIN).c
+USER_CLOCK_MAIN_OBJ = $(USER_CLOCK_MAIN_SRC:.c=.o)
+
+
+user-clock:
+	@$(ASM) $(AFLAGS) $(SOURCE_FOLDER)/user-clock/crt0.s -o crt0.o
+	$(CC) $(CFLAGS) -fno-pie -c -o $(OUTPUT_FOLDER)/user-clock/${USER_CLOCK_MAIN_OBJ} $(SOURCE_FOLDER)/user-clock/${USER_CLOCK_MAIN_SRC}
+
+	@$(LIN) -T $(SOURCE_FOLDER)/user-clock/user-linker.ld -melf_i386 --oformat=binary \
+		crt0.o $(OUTPUT_FOLDER)/user-clock/${USER_CLOCK_MAIN_OBJ} -o $(OUTPUT_FOLDER)/clock
+
+	@echo Linking object clock object files and generate flat binary...
+
+	@$(LIN) -T $(SOURCE_FOLDER)/user-clock/user-linker.ld -melf_i386 --oformat=elf32-i386 \
+		crt0.o $(OUTPUT_FOLDER)/user-clock/${USER_CLOCK_MAIN_OBJ} -o $(OUTPUT_FOLDER)/clock_elf
+	@echo Linking object clock object files and generate ELF32 for debugging...
+
+	@size --target=binary $(OUTPUT_FOLDER)/clock
+	@rm -f *.o
+
+insert-clock: inserter user-clock $(OUTPUT_FOLDER)/$(DISK_NAME).bin
+	@echo Inserting clock into root directory...
+	@cd $(OUTPUT_FOLDER); ./inserter clock 2 $(DISK_NAME).bin
+	@echo Inserting clock into root directory finished!
+	@echo
