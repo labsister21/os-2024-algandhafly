@@ -15,7 +15,7 @@
 #define PROCESS_COUNT_MAX                16
 
 typedef enum PROCESS_STATE {
-    UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE, KILLED
+    UNUSED, RUNNING
 } PROCESS_STATE;
 
 
@@ -72,7 +72,7 @@ struct ProcessControlBlock {
 typedef struct ProcessControlBlock PCB;
 
 
-extern PCB* _process_list[32];
+extern PCB _process_list[32];
 
 /**
  * Get currently running process PCB pointer

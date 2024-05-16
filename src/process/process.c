@@ -4,12 +4,17 @@
 #include "header/cpu/gdt.h"
 #include "header/scheduler/scheduler.h"
 
-PCB* _process_list[32] = {0};
-PCB new_pcb;
+PCB _process_list[32] = {0};
+
+void init() {
+    for (int i = 0; i < 32; i++) {
+        _process_list[i].metadata.state = UNUSED;
+    } 
+};
 
 uint8_t process_list_get_inactive_index() {
     for (int i = 0; i < PROCESS_COUNT_MAX; i++) {
-        if (_process_list[i] == NULL) {
+        if (_process_list[i].metadata.state == UNUSED) {
             return i;
         }
     }
@@ -55,8 +60,8 @@ if (!paging_allocate_check(frames) || frames > PROCESS_PAGE_FRAME_COUNT_MAX) {
     void* virtual_addr = request.buf;
 
     // PCB information initialization
-    new_pcb.metadata.state = RUNNING;
-    new_pcb.memory.address_count = frames;
+    _process_list[p_index].metadata.state = RUNNING;
+    _process_list[p_index].memory.address_count = frames;
 
     // allocate frames in page_dir
     for (i = 0; i < frames; i++) {
@@ -64,7 +69,7 @@ if (!paging_allocate_check(frames) || frames > PROCESS_PAGE_FRAME_COUNT_MAX) {
             goto CANT_FIT_MEMORY; // kalo nyampe ke sini, ganti request.buf
         }
         else {
-            new_pcb.memory.addresses[i] = virtual_addr + (i << 22);
+            _process_list[p_index].memory.addresses[i] = virtual_addr + (i << 22);
         }
     }
 
@@ -72,10 +77,9 @@ if (!paging_allocate_check(frames) || frames > PROCESS_PAGE_FRAME_COUNT_MAX) {
     read(request);
     paging_use_page_directory(old_page_dir);
 
-    new_pcb.context.page_dir = page_dir;
-    new_pcb.metadata.pid = p_index;
-    scheduler_enqueue_process(&new_pcb);
-    _process_list[p_index] = &new_pcb;
+    _process_list[p_index].context.page_dir = page_dir;
+    _process_list[p_index].metadata.pid = p_index;
+    scheduler_enqueue_process(&_process_list[p_index]);
 
     return 0;
     
@@ -129,13 +133,11 @@ bool process_omae_wa_mou_shindeiru(uint32_t pid) {
 
     int idx = pid;
 
-    PCB* process = _process_list[idx];
-    _process_list[idx] = NULL;
+    PCB* process = &_process_list[idx];
+    _process_list[idx].metadata.state = UNUSED;
 
     PD* page_dir = process->context.page_dir;
     paging_free_page_directory(page_dir); // note: sebenernya kalau multiple process untuk satu program ini gaboleh, karena ya kalau ada process lain masi make page_dir nya nanti dia meninggoy
-
-    process->metadata.state = KILLED;
 
     return 1;
 }

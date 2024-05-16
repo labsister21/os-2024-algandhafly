@@ -39,7 +39,7 @@ PCB* get_current_running_process() {
     {
         struct SchedulerQueueNode* ret = SchedulerQueue.first;
         if (ret == NULL) return NULL;
-        else if (ret->pcb->metadata.state == KILLED) scheduler_dequeue_process();
+        else if (ret->pcb->metadata.state == UNUSED) scheduler_dequeue_process();
         else return ret->pcb;
     }
 }
