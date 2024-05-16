@@ -11,9 +11,10 @@ void systemCall__clock(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx) {
     __asm__ volatile("int $0x30");
 }
 
-void sleep__clock(uint8_t ms){
-    uint64_t wait_time = 1e6 * ms;
-    for(uint8_t i = 0; i < wait_time; i++){}
+// Approximation. Not reliable
+void sleep__clock(uint64_t ms){
+    uint64_t wait_time = 1e5 * ms;
+    for(uint64_t i = 0; i < wait_time; i++){}
 }
 
 int main(void) {
