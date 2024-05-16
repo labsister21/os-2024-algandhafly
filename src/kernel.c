@@ -38,7 +38,7 @@ void kernel_setup(void) {
     set_tss_register();
     set_tss_kernel_current_stack();
     keyboard_state_activate();
-    scheduler_init();
+    initialize_process_list();
 
     // Initialize shell as process 0 and switch to the virtual memory space (page_dir) of this process
 
@@ -55,9 +55,8 @@ void kernel_setup(void) {
 
     let_there_be_a_new_process(request);
     paging_use_page_directory(get_current_running_process()->context.page_dir);
-
     kernel_execute_user_program((void*) 0);
-
+    
     while (true);
 }
 

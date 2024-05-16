@@ -28,7 +28,6 @@ typedef enum PROCESS_STATE {
  * @param page_directory_virtual_addr CPU register CR3, containing pointer to active page directory
  */
 
-
 struct Context {
     /**
      * TODO: 
@@ -38,6 +37,7 @@ struct Context {
      *    3.) pointer ke instruksi terakhir
      *    4.) pointer ke page dir yang dipake process ini (udh ada)
      */ 
+    uint32_t eip;
     struct CPURegister cpu;
     uint32_t eflags;
     PD* page_dir;
@@ -72,7 +72,9 @@ struct ProcessControlBlock {
 typedef struct ProcessControlBlock PCB;
 
 
-extern PCB _process_list[32];
+extern PCB _process_list[PROCESS_COUNT_MAX];
+
+void initialize_process_list();
 
 /**
  * Get currently running process PCB pointer

@@ -137,6 +137,7 @@ void main_interrupt_handler(struct InterruptFrame frame) {
     switch (frame.int_number) {
         case PIC1_OFFSET + IRQ_KEYBOARD:
             keyboard_isr();
+            pic_ack(IRQ_KEYBOARD);
             break;
         case PIC1_OFFSET + IRQ_TIMER:
             activate_clock();

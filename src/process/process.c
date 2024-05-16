@@ -4,10 +4,10 @@
 #include "header/cpu/gdt.h"
 #include "header/scheduler/scheduler.h"
 
-PCB _process_list[32] = {0};
+PCB _process_list[PROCESS_COUNT_MAX] = {0};
 
-void init() {
-    for (int i = 0; i < 32; i++) {
+void initialize_process_list() {
+    for (int i = 0; i < PROCESS_COUNT_MAX; i++) {
         _process_list[i].metadata.state = UNUSED;
     } 
 };
@@ -79,7 +79,6 @@ if (!paging_allocate_check(frames) || frames > PROCESS_PAGE_FRAME_COUNT_MAX) {
 
     _process_list[p_index].context.page_dir = page_dir;
     _process_list[p_index].metadata.pid = p_index;
-    scheduler_enqueue_process(&_process_list[p_index]);
 
     return 0;
     
@@ -137,7 +136,6 @@ bool process_omae_wa_mou_shindeiru(uint32_t pid) {
     _process_list[idx].metadata.state = UNUSED;
 
     PD* page_dir = process->context.page_dir;
-    paging_free_page_directory(page_dir); // note: sebenernya kalau multiple process untuk satu program ini gaboleh, karena ya kalau ada process lain masi make page_dir nya nanti dia meninggoy
-
+    paging_free_page_directory(page_dir);
     return 1;
 }
