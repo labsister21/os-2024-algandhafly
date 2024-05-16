@@ -39,8 +39,7 @@ struct Context {
      *    4.) pointer ke page dir yang dipake process ini (udh ada)
      */ 
     struct CPURegister cpu;
-    struct {
-    } eflags;
+    uint32_t eflags;
     PD* page_dir;
 };
 
@@ -72,7 +71,9 @@ struct ProcessControlBlock {
 
 typedef struct ProcessControlBlock PCB;
 
-static PCB* _process_list[PROCESS_COUNT_MAX] = {0};
+
+extern PCB* _process_list[32];
+
 /**
  * Get currently running process PCB pointer
  *

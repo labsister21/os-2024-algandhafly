@@ -179,4 +179,6 @@ struct TSSEntry {
 // Set kernel stack in TSS
 void set_tss_kernel_current_stack(void);
 
+void activate_timer_interrupt(void);
+
 #endif

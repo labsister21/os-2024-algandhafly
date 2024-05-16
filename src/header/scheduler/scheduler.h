@@ -21,10 +21,11 @@ struct SchedulerQueueNode {
     struct SchedulerQueueNode* next;
 };
 
-static struct {
+struct Scheduler_Queue {
     struct SchedulerQueueNode* first;
     struct SchedulerQueueNode* last;
-} SchedulerQueue;
+};
+extern struct SchedulerQueue;
 
 /**
  * Enqueue, dequeue, and get_first

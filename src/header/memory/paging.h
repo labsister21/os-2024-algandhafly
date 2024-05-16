@@ -83,7 +83,7 @@ typedef struct PageDirectoryEntry PDE;
  * 
  * @param table Fixed-width array of PtoryEntry with size PAGE_ENTRY_COUNT
  */
-struct PageDirectory {
+volatile struct PageDirectory {
     PDE table[PAGE_ENTRY_COUNT];
 } __attribute__((packed, aligned(0x1000)));
 
@@ -139,15 +139,6 @@ bool paging_free_user_page_frame(struct PageDirectory *page_dir, void *virtual_a
 
 /* --- Process-related Memory Management --- */
 #define PAGING_DIRECTORY_TABLE_MAX_COUNT 32
-
-__attribute__((aligned(0x1000))) static struct PageDirectory page_directory_list[PAGING_DIRECTORY_TABLE_MAX_COUNT] = {0};
-
-static struct {
-    bool page_directory_used[PAGING_DIRECTORY_TABLE_MAX_COUNT];
-} _pagedir_manager = {
-    .page_directory_used = {false},
-};
-
 
 /**
  * Create new page directory prefilled with 1 page directory entry for kernel higher half mapping

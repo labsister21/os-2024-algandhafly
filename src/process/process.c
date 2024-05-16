@@ -4,6 +4,9 @@
 #include "header/cpu/gdt.h"
 #include "header/scheduler/scheduler.h"
 
+PCB* _process_list[32] = {0};
+PCB new_pcb;
+
 uint8_t process_list_get_inactive_index() {
     for (int i = 0; i < PROCESS_COUNT_MAX; i++) {
         if (_process_list[i] == NULL) {
@@ -44,19 +47,16 @@ if (!paging_allocate_check(frames) || frames > PROCESS_PAGE_FRAME_COUNT_MAX) {
  * 
 */
 
+    PD* old_page_dir = paging_get_current_page_directory_addr();
+    PD* page_dir = paging_create_new_page_directory();
+    if (page_dir == NULL) goto NULL_PAGE_DIR;
+
     int i;
     void* virtual_addr = request.buf;
 
     // PCB information initialization
-    PCB new_pcb;
     new_pcb.metadata.state = RUNNING;
     new_pcb.memory.address_count = frames;
-
-    // new page_dir and set pcb.context.page_dir to this
-    PD* page_dir = paging_create_new_page_directory();
-    if (page_dir == NULL) goto NULL_PAGE_DIR;
-    new_pcb.context.page_dir = page_dir;
-    new_pcb.metadata.pid = p_index;
 
     // allocate frames in page_dir
     for (i = 0; i < frames; i++) {
@@ -68,6 +68,12 @@ if (!paging_allocate_check(frames) || frames > PROCESS_PAGE_FRAME_COUNT_MAX) {
         }
     }
 
+    paging_use_page_directory(page_dir);
+    read(request);
+    paging_use_page_directory(old_page_dir);
+
+    new_pcb.context.page_dir = page_dir;
+    new_pcb.metadata.pid = p_index;
     scheduler_enqueue_process(&new_pcb);
     _process_list[p_index] = &new_pcb;
 
@@ -124,6 +130,7 @@ bool process_omae_wa_mou_shindeiru(uint32_t pid) {
     int idx = pid;
 
     PCB* process = _process_list[idx];
+    _process_list[idx] = NULL;
 
     PD* page_dir = process->context.page_dir;
     paging_free_page_directory(page_dir); // note: sebenernya kalau multiple process untuk satu program ini gaboleh, karena ya kalau ada process lain masi make page_dir nya nanti dia meninggoy

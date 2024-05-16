@@ -40,6 +40,15 @@ static struct PageManagerState page_manager_state = {
     .free_page_frame_count = PAGE_FRAME_MAX_COUNT - 1
 };
 
+__attribute__((aligned(0x1000))) static struct PageDirectory page_directory_list[PAGING_DIRECTORY_TABLE_MAX_COUNT] = {0};
+
+static struct {
+    bool page_directory_used[PAGING_DIRECTORY_TABLE_MAX_COUNT];
+} _pagedir_manager = {
+    .page_directory_used = {false},
+};
+
+
 void flush_single_tlb(void *virtual_addr) {
     asm volatile("invlpg (%0)" : /* <Empty> */ : "b"(virtual_addr): "memory");
 }
