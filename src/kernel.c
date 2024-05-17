@@ -52,6 +52,7 @@ void kernel_setup(void) {
     let_there_be_a_new_process(request);
     paging_use_page_directory(get_current_running_process()->context.page_dir);
     activate_timer_interrupt();
+    __asm__ volatile("sti");
     kernel_execute_user_program((void*) 0);
     
 

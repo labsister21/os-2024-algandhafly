@@ -102,9 +102,8 @@ void syscall(struct InterruptFrame frame) {
             kernel_puts_with_overflow_handling((char*)frame.cpu.general.ebx, frame.cpu.general.ecx, frame.cpu.general.edx);
             break;
         case 6:
-            keyboard_state.show_on_screen = true;
+            // __asm__ volatile("sti");
             get_command_buffer((char*)frame.cpu.general.ebx);
-            keyboard_state.show_on_screen = false;
             break;
         case 7: 
             activate_keyboard_interrupt();
@@ -167,7 +166,9 @@ void main_interrupt_handler(struct InterruptFrame frame) {
             pic_ack(IRQ_KEYBOARD);
             break;
         case PIC1_OFFSET + IRQ_TIMER:
+            activate_clock();
             scheduler_switch_to_next_process(frame);
+            // pic_ack(IRQ_TIMER);
             break;
         case 0x30:
             syscall(frame);

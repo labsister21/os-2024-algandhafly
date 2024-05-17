@@ -112,8 +112,12 @@ void insert_at_cursor() {
 
     keyboard_state.command_state.command_length++;
     keyboard_state.command_state.command[keyboard_state.command_state.cursor_at] = keyboard_state.keyboard_buffer;
-    keyboard_state.command_state.cursor_at++;
+
+    if (keyboard_state.keyboard_buffer == '\n') {
+        return;
+    }
     increment(&framebuffer_state);
+    keyboard_state.command_state.cursor_at++;
     framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
 }
 
@@ -126,7 +130,7 @@ void insert_at_cursor() {
  */
 void keyboard_isr(void){
     uint8_t scan_code = in(KEYBOARD_DATA_PORT);
-
+    framebuffer_write_int(24, 0, scan_code, White, Black);
 
 
     // handle shift pressing
@@ -155,11 +159,11 @@ void keyboard_isr(void){
 
     // Handle left and right arrow
     if (scan_code == 0x4B) {
-        cursor_move_left();
+        // cursor_move_left();
         pic_ack(IRQ_KEYBOARD);
         return;
     } else if (scan_code == 0x4D) {
-        cursor_move_right();
+        // cursor_move_right();
         pic_ack(IRQ_KEYBOARD);
         return;
     }
@@ -185,6 +189,8 @@ void keyboard_isr(void){
 
         keyboard_state.keyboard_buffer = c;   
         if (c == '\n') {
+            insert_at_cursor();
+            // framebuffer_write_and_move_cursor_until_null(keyboard_state.command_state.command, White, Black);
             pic_ack(IRQ_KEYBOARD);
             return;
         }
@@ -200,9 +206,7 @@ void keyboard_isr(void){
             insert_at_cursor();
         }
 
-        if (keyboard_state.show_on_screen) {
-            update_text(c);
-        }
+        update_text(c);
     }
     pic_ack(IRQ_KEYBOARD);
 }
@@ -227,15 +231,17 @@ void update_text(char c) {
 }
 
 void get_command_buffer(char *buf) {
-    __asm__ volatile("sti");
-    while (keyboard_state.keyboard_buffer != '\n');
     memcpy(buf, keyboard_state.command_state.command, keyboard_state.command_state.command_length);
     clear_command_buffer();
 }
 
 void clear_command_buffer() {
     keyboard_state.command_state.command_length = 0;
-    memset(keyboard_state.command_state.command, 0, MAX_COMMAND_LENGTH);
+    for (int i = 0; i < MAX_COMMAND_LENGTH; i++) {
+        keyboard_state.command_state.command[i] = '\0';
+    }
+    kernel_puts(keyboard_state.command_state.command, White, Black);
+
     keyboard_state.keyboard_buffer = 0;
     keyboard_state.command_state.cursor_at = 0;
 }

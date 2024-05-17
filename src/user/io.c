@@ -71,7 +71,33 @@ void gets(char *buf) {
 }
 
 void get_line(char *buf) {
-    systemCall(6, (uint32_t) buf, Color_White, Color_Black);
+    memset(buf, 0, 4000);
+    uint16_t t = 0;
+
+
+    char temp[100];
+    memset(temp, 0, sizeof(temp));
+
+
+    while (true) {
+        systemCall(6, (uint32_t) temp, Color_White, Color_Black);
+        if (temp[0] == '\0') {
+            continue;
+        }
+
+        int i;
+        for (i = 0; i < 100 && temp[i] != '\0'; i++) {
+            buf[t++] = temp[i];
+        }
+
+        temp[0] = '\0';
+        for (int i = 0; i < 4000 && buf[i] != '\0'; i++) {
+            if (buf[i] == '\n') {
+                buf[i] = '\0';                
+                return;
+            }
+        }
+    }
 }
 void get_line_color(char *buf, uint8_t fg, uint8_t bg) {
     systemCall(6, (uint32_t) buf, fg, bg);

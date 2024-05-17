@@ -14,7 +14,7 @@
 #define KEYBOARD_DATA_PORT     0x60
 #define EXTENDED_SCANCODE_BYTE 0xE0
 
-#define MAX_COMMAND_LENGTH 2000
+#define MAX_COMMAND_LENGTH 100
 /**
  * keyboard_scancode_1_to_ascii_map[256], Convert scancode values that correspond to ASCII printables
  * How to use this array: ascii_char = k[scancode]
