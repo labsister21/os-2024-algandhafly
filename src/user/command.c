@@ -5,6 +5,8 @@
 #include <string.h>
 #include <time.h>
 #include "header/filesystem/fat32.h"
+#include "header/process/process.h"
+
 
 #define MAX_COMMAND_ARGS 20
 #define MAX_ARGS_LENGTH 200
@@ -15,7 +17,6 @@
 #define DOT '.'
 #define FWSLASH '/'
 #define NULL_CHAR '\0'
-#define state uint8_t;
 
 bool is_alpha_numeric(char c) {
     bool is_number = ( c >= 48 and c <= 57 );
@@ -683,10 +684,10 @@ void handle_exec(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryS
 
 
 void handle_ps(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
-    // get_process_list();
+    systemCall(12, 0, 0, 0);
 }
-void handle_kill(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
-    // kill_process()
+void handle_kill(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack) {
+    systemCall(13, 0, args[1], 0);
 }
 void handle_clock(){
     puts("\nClock running...\n");

@@ -146,19 +146,6 @@ uint8_t get_process_list(struct FAT32DirectoryEntry *entry, uint16_t parent_clus
     return error_code;
 }
 
-// kill
-uint8_t kill_process(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster){
-    struct FAT32DriverRequest request = {
-        .parent_cluster_number = parent_cluster,
-        .buffer_size = entry->filesize,
-    };
-    memcpy(request.name, entry->name, DIR_NAME_LENGTH);
-    memcpy(request.ext, entry->ext, DIR_EXT_LENGTH);
-
-    uint8_t error_code;
-    systemCall(13, (uint32_t )&request, (uint32_t )&error_code, 0);
-    return error_code;
-}
 
 time_t get_current_time(){
     time_t current_time;

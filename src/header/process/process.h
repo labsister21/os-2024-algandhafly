@@ -52,6 +52,8 @@ struct ProcessControlBlock {
     struct {
         int pid;
         PROCESS_STATE state;
+        char name[8];
+        char ext[3];
         // add more if needed
     } metadata;
 

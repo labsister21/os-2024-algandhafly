@@ -9,6 +9,15 @@
 #include "header/driver/clock.h"
 #include "header/scheduler/scheduler.h"
 
+int str_to_int(char* str) {
+    int num = 0; 
+    for (int i = 0; str[i] != '\0'; i++) { 
+        num = num * 10 + (str[i] - 48); 
+    } 
+    return num; 
+}
+
+
 struct TSSEntry _interrupt_tss_entry = {
     .ss0  = GDT_KERNEL_DATA_SEGMENT_SELECTOR,
 };
@@ -117,10 +126,24 @@ void syscall(struct InterruptFrame frame) {
 
             break;
         case 12: // ps
-
+            kernel_puts("\n", 15, 0);
+            for (int i = 0; i < PROCESS_COUNT_MAX; i++) {
+                if (!_process_list[i].metadata.state == RUNNING) continue;
+                char x[2];
+                x[0] = '0' + i;
+                x[1] = '\0';
+                kernel_puts(x, 15, 0);
+                kernel_puts(" ", 15, 0);
+                kernel_puts(_process_list[i].metadata.name, 15, 0); //process name
+                
+                if (_process_list[i].metadata.ext[0] == '\0') continue;
+                kernel_puts(".", 15, 0);
+                kernel_puts(_process_list[i].metadata.ext, 15, 0);
+            }
             break;
         case 13: // kill
-
+            int pid = str_to_int(frame.cpu.general.ecx);
+            process_omae_wa_mou_shindeiru(pid);
             break;
         case 14: // get current time
                 get_indonesian_time((time_t*)frame.cpu.general.ebx);

@@ -85,6 +85,9 @@ if (!paging_allocate_check(frames) || frames > PROCESS_PAGE_FRAME_COUNT_MAX) {
     _process_list[p_index].context.page_dir = page_dir;
     _process_list[p_index].metadata.pid = p_index;
 
+    memcpy(_process_list[p_index].metadata.name, request.name, 8);
+    memcpy(_process_list[p_index].metadata.ext, request.ext, 3);
+
     return 0;
     
     REACHED_MAX_PROCESS_COUNT:
@@ -136,11 +139,13 @@ bool process_omae_wa_mou_shindeiru(uint32_t pid) {
     // nani???
 
     int idx = pid;
-
-    PCB* process = &_process_list[idx];
-    _process_list[idx].metadata.state = UNUSED;
-
-    PD* page_dir = process->context.page_dir;
-    paging_free_page_directory(page_dir);
-    return 1;
+    
+    if (_process_list[idx].metadata.state == UNUSED) return 1;
+    
+    else ;
+        PCB* process = &_process_list[idx];
+        _process_list[idx].metadata.state = UNUSED;
+        PD* page_dir = process->context.page_dir;
+        paging_free_page_directory(page_dir);
+        return 1;
 }
