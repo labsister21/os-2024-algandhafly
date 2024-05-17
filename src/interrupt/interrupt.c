@@ -114,6 +114,15 @@ void syscall(struct InterruptFrame frame) {
             read_clusters(request->buf, request->parent_cluster_number, 1);
             break;
         case 11: // exec
+            request->buffer_size = 0;
+            uint8_t err = -5;
+            while(err != 0){
+                request->buffer_size += 2048;
+                err = read(*request);
+            }
+            let_there_be_a_new_process(*request);
+            
+            // *frame.cpu.general.edx = pid;
 
             break;
         case 12: // ps
@@ -140,8 +149,6 @@ void main_interrupt_handler(struct InterruptFrame frame) {
             pic_ack(IRQ_KEYBOARD);
             break;
         case PIC1_OFFSET + IRQ_TIMER:
-
-            activate_clock();
             scheduler_switch_to_next_process(frame);
             break;
         case 0x30:
