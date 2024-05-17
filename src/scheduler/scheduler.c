@@ -7,7 +7,7 @@ PCB* get_current_running_process() {
     return &_process_list[a_certain_magical_index];
 }
 
-void scheduler_switch_to_next_process(struct InterruptFrame frame) {
+__attribute__((noreturn)) void scheduler_switch_to_next_process(struct InterruptFrame frame) {
 
     struct Context context;
 

@@ -17,7 +17,7 @@ PCB* get_current_running_process();
 extern void fly_to_the_sky(struct Context context);
 
 // __attribute__((noreturn));
-void scheduler_switch_to_next_process(struct InterruptFrame frame);
+__attribute__((noreturn)) void scheduler_switch_to_next_process(struct InterruptFrame frame);
 
 void scheduler_init();
 

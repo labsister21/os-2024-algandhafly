@@ -120,7 +120,7 @@ struct PageDirectory* paging_create_new_page_directory(void) {
     page_directory_list[i].table[0x300].flags.page_size_4mb = 1;
     page_directory_list[i].table[0x300].lower_address = 0;
 
-    return &page_directory_list->table[i];
+    return &page_directory_list[i];
 }
 
 bool paging_free_page_directory(struct PageDirectory *page_dir) {

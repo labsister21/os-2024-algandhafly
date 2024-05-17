@@ -680,6 +680,12 @@ void handle_exec(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryS
     uint16_t parent_cluster_containing_file;
     if(file_path.length == 1)parent_cluster_containing_file = current_parent_cluster(dir_stack);
     else parent_cluster_containing_file = peek_second_top(&file_path)->cluster_low;
+
+    struct FAT32DirectoryEntry entry;
+    memcpy(entry.name, peek_top(&file_path)->name, DIR_NAME_LENGTH);
+    memcpy(entry.ext, peek_top(&file_path)->ext, DIR_EXT_LENGTH);
+
+    execute_file(&entry, parent_cluster_containing_file);
 }
 
 

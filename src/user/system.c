@@ -122,13 +122,14 @@ uint8_t write_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster, c
 uint8_t execute_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster){
     struct FAT32DriverRequest request = {
         .parent_cluster_number = parent_cluster,
-        .buffer_size = entry->filesize,
     };
     memcpy(request.name, entry->name, DIR_NAME_LENGTH);
     memcpy(request.ext, entry->ext, DIR_EXT_LENGTH);
 
     uint8_t error_code;
-    systemCall(11, (uint32_t )&request, (uint32_t )&error_code, 0);
+    uint16_t pid;
+    systemCall(11, (uint32_t )&request, (uint32_t )&error_code, &pid);
+    
     return error_code;
 }
 
