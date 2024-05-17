@@ -3,6 +3,10 @@
 
 int a_certain_magical_index = 0;
 
+void pickaxe() {
+    pic_ack(IRQ_TIMER);
+}
+
 PCB* get_current_running_process() {
     return &_process_list[a_certain_magical_index];
 }
@@ -29,7 +33,5 @@ __attribute__((noreturn)) void scheduler_switch_to_next_process(struct Interrupt
 
     context = new_pcb->context;
     
-    pic_ack(IRQ_TIMER);
     fly_to_the_sky(context);
-
 }

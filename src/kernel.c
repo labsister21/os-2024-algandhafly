@@ -50,8 +50,8 @@ void kernel_setup(void) {
     };
 
     let_there_be_a_new_process(request);
-    activate_timer_interrupt();
     paging_use_page_directory(get_current_running_process()->context.page_dir);
+    activate_timer_interrupt();
     kernel_execute_user_program((void*) 0);
     
 

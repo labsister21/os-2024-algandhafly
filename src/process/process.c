@@ -85,8 +85,17 @@ if (!paging_allocate_check(frames) || frames > PROCESS_PAGE_FRAME_COUNT_MAX) {
     _process_list[p_index].context.page_dir = page_dir;
     _process_list[p_index].metadata.pid = p_index;
 
+    _process_list[p_index].context.cpu.segment.ds = 0x23;
+    _process_list[p_index].context.cpu.segment.es = 0x23;
+    _process_list[p_index].context.cpu.segment.fs = 0x23;
+    _process_list[p_index].context.cpu.segment.gs = 0x23;
+
     memcpy(_process_list[p_index].metadata.name, request.name, 8);
     memcpy(_process_list[p_index].metadata.ext, request.ext, 3);
+
+    _process_list[p_index].context.cpu.stack.esp = _process_list[p_index].memory.address_count * (1 << 22) - 4;
+
+    _process_list[p_index].context.cs = 0x18 | 0x3;
 
     return 0;
     

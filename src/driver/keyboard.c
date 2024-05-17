@@ -228,9 +228,7 @@ void update_text(char c) {
 
 void get_command_buffer(char *buf) {
     __asm__ volatile("sti");
-    while (keyboard_state.keyboard_buffer != '\n') {
-        __asm__ volatile("sti");
-    }
+    while (keyboard_state.keyboard_buffer != '\n');
     memcpy(buf, keyboard_state.command_state.command, keyboard_state.command_state.command_length);
     clear_command_buffer();
 }

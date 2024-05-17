@@ -101,7 +101,7 @@ void syscall(struct InterruptFrame frame) {
         case 5:
             kernel_puts_with_overflow_handling((char*)frame.cpu.general.ebx, frame.cpu.general.ecx, frame.cpu.general.edx);
             break;
-        case 6: 
+        case 6:
             keyboard_state.show_on_screen = true;
             get_command_buffer((char*)frame.cpu.general.ebx);
             keyboard_state.show_on_screen = false;
@@ -123,16 +123,8 @@ void syscall(struct InterruptFrame frame) {
             read_clusters(request->buf, request->parent_cluster_number, 1);
             break;
         case 11: // exec
-            request->buffer_size = 0;
-            uint8_t err = -5;
-            while(err != 0){
-                request->buffer_size += 2048;
-                err = read(*request);
-            }
+            request->buffer_size = (1 << 22);
             let_there_be_a_new_process(*request);
-            
-            // *frame.cpu.general.edx = pid;
-
             break;
         case 12: // ps
             kernel_puts("\n", 15, 0);
@@ -184,7 +176,7 @@ void main_interrupt_handler(struct InterruptFrame frame) {
 
 // Timer interrupt
 #define PIT_MAX_FREQUENCY   1193182
-#define PIT_TIMER_FREQUENCY 1
+#define PIT_TIMER_FREQUENCY 1000
 #define PIT_TIMER_COUNTER   (PIT_MAX_FREQUENCY / PIT_TIMER_FREQUENCY)
 
 #define PIT_COMMAND_REGISTER_PIO          0x43

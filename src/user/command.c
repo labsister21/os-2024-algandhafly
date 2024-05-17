@@ -691,6 +691,7 @@ void handle_exec(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryS
 
 void handle_ps(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
     systemCall(12, 0, 0, 0);
+    puts("\n");
 }
 void handle_kill(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack) {
     systemCall(13, 0, args[1], 0);
