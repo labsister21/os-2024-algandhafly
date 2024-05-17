@@ -16,7 +16,6 @@
 #define FWSLASH '/'
 #define NULL_CHAR '\0'
 #define state uint8_t;
-#define _GLOBAL_OFFSET_TABLE_ 727;
 
 bool is_alpha_numeric(char c) {
     bool is_number = ( c >= 48 and c <= 57 );

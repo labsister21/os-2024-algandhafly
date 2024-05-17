@@ -77,10 +77,10 @@ if (!paging_allocate_check(frames) || frames > PROCESS_PAGE_FRAME_COUNT_MAX) {
     read(request);
     paging_use_page_directory(old_page_dir);
 
-    // uint32_t CPU_EFLAGS_BASE_FLAG = 0x2;
-    // uint32_t CPU_EFLAGS_FLAG_INTERRUPT_ENABLE = 0x200;
+    uint32_t CPU_EFLAGS_BASE_FLAG = 0x2;
+    uint32_t CPU_EFLAGS_FLAG_INTERRUPT_ENABLE = 0x200;
 
-    // _process_list[p_index].context.eflags |= CPU_EFLAGS_BASE_FLAG | CPU_EFLAGS_FLAG_INTERRUPT_ENABLE;
+    _process_list[p_index].context.eflags |= CPU_EFLAGS_BASE_FLAG | CPU_EFLAGS_FLAG_INTERRUPT_ENABLE;
 
     _process_list[p_index].context.page_dir = page_dir;
     _process_list[p_index].metadata.pid = p_index;
