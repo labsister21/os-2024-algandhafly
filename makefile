@@ -24,7 +24,7 @@ SAMPLE_DISK_NAME = sample-image
 COPY_SUFFIX = -copy
 
 # @qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso -no-reboot -d cpu_reset,int
-all: clean kernel disk insert-shell insert-clock
+all: clean kernel disk insert-shell insert-clock insert-custom
 	@qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso
 
 run: 
@@ -63,7 +63,7 @@ $(OUTPUT_FOLDER)/%.o: %.s
 kernel: $(OUTPUT_FOLDER)/$(OBJ_KERNEL) $(OBJS)
 	@echo Linking object files...
 	# Filter out the specific file
-	$(eval FILTERED_OBJS := $(filter-out $(wildcard $(OUTPUT_FOLDER)/user/*.o) $(wildcard $(OUTPUT_FOLDER)/user-shell/*.o), $(OBJS)))
+	$(eval FILTERED_OBJS := $(filter-out $(wildcard $(OUTPUT_FOLDER)/user/*.o) $(wildcard $(OUTPUT_FOLDER)/user-shell/*.o) $(wildcard $(OUTPUT_FOLDER)/user-clock/*.o) $(wildcard $(OUTPUT_FOLDER)/user-custom/*.o), $(OBJS)))
 	$(LIN) $(LFLAGS) -o $(OUTPUT_FOLDER)/kernel $(OUTPUT_FOLDER)/$(OBJ_KERNEL) $(FILTERED_OBJS)
 	@rm -f *.o
 	@echo Linking object files finished!
@@ -170,4 +170,37 @@ insert-clock: inserter user-clock $(OUTPUT_FOLDER)/$(DISK_NAME).bin
 	@echo Inserting clock into root directory...
 	@cd $(OUTPUT_FOLDER); ./inserter clock 2 $(DISK_NAME).bin
 	@echo Inserting clock into root directory finished!
+	@echo
+
+
+
+
+
+
+# USER_CUSTOM
+USER_CUSTOM_MAIN = user-custom
+USER_CUSTOM_MAIN_SRC = $(USER_CUSTOM_MAIN).c
+USER_CUSTOM_MAIN_OBJ = $(USER_CUSTOM_MAIN_SRC:.c=.o)
+
+
+user-custom:
+	@$(ASM) $(AFLAGS) $(SOURCE_FOLDER)/user-custom/crt0.s -o crt0.o
+	$(CC) $(CFLAGS) -fno-pie -c -o $(OUTPUT_FOLDER)/user-custom/${USER_CUSTOM_MAIN_OBJ} $(SOURCE_FOLDER)/user-custom/${USER_CUSTOM_MAIN_SRC}
+
+	@$(LIN) -T $(SOURCE_FOLDER)/user-custom/user-linker.ld -melf_i386 --oformat=binary \
+		crt0.o $(OUTPUT_FOLDER)/user-custom/${USER_CUSTOM_MAIN_OBJ} -o $(OUTPUT_FOLDER)/custom
+
+	@echo Linking object custom object files and generate flat binary...
+
+	@$(LIN) -T $(SOURCE_FOLDER)/user-custom/user-linker.ld -melf_i386 --oformat=elf32-i386 \
+		crt0.o $(OUTPUT_FOLDER)/user-custom/${USER_CUSTOM_MAIN_OBJ} -o $(OUTPUT_FOLDER)/custom_elf
+	@echo Linking object custom object files and generate ELF32 for debugging...
+
+	@size --target=binary $(OUTPUT_FOLDER)/custom
+	@rm -f *.o
+
+insert-custom: inserter user-custom $(OUTPUT_FOLDER)/$(DISK_NAME).bin
+	@echo Inserting custom into root directory...
+	@cd $(OUTPUT_FOLDER); ./inserter custom 2 $(DISK_NAME).bin
+	@echo Inserting custom into root directory finished!
 	@echo

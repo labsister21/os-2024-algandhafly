@@ -154,6 +154,9 @@ void syscall(struct InterruptFrame frame) {
             break;
         case 16: // stop user shell child process
             break;
+        case 17:
+            framebuffer_write(frame.cpu.general.ebx, frame.cpu.general.ecx, ' ', 0,frame.cpu.general.edx);
+            break;
     }
 }
 
