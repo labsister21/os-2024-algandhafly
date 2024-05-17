@@ -140,6 +140,7 @@ void main_interrupt_handler(struct InterruptFrame frame) {
             pic_ack(IRQ_KEYBOARD);
             break;
         case PIC1_OFFSET + IRQ_TIMER:
+
             activate_clock();
             scheduler_switch_to_next_process(frame);
             break;
@@ -153,7 +154,7 @@ void main_interrupt_handler(struct InterruptFrame frame) {
 
 // Timer interrupt
 #define PIT_MAX_FREQUENCY   1193182
-#define PIT_TIMER_FREQUENCY 1000
+#define PIT_TIMER_FREQUENCY 1
 #define PIT_TIMER_COUNTER   (PIT_MAX_FREQUENCY / PIT_TIMER_FREQUENCY)
 
 #define PIT_COMMAND_REGISTER_PIO          0x43
@@ -175,4 +176,5 @@ void activate_timer_interrupt(void) {
 
     // Activate the interrupt
     out(PIC1_DATA, in(PIC1_DATA) & ~(1 << IRQ_TIMER));
+   
 }
