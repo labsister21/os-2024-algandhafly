@@ -1,18 +1,29 @@
 global fly_to_the_sky ;
-; Load struct Context (CPU GP-register) then jump
+; Load struct Context (CPU GP-register) then jump to the sky
 ; Function Signature: void process_context_switch(struct Context ctx);
 
 fly_to_the_sky:
     ; Using iret (return instruction for interrupt) technique for privilege change
     lea  ecx, [esp+0x04] ; Save the base address for struct Context ctx
-    
-    push eax ; Stack segment selector (GDT_USER_DATA_SELECTOR), user privilege
-    mov  eax, ecx
-    add  eax, 0x400000 - 4
-    push eax ; User space stack pointer (esp), move it into last 4 MiB
-    pushf    ; eflags register state, when jump inside user program
-    mov  eax, 0x18 | 0x3
-    push eax ; Code segment selector (GDT_USER_CODE_SELECTOR), user privilege
-    mov  eax, ecx
-    push eax ; eip register to jump back
+    mov  edi, [ecx + 4]
+    mov  esi, [ecx + 8]
+    mov  ebp, [ecx + 12]
+    mov  esp, [ecx + 16]
+    mov  ebx, [ecx + 20]
+    mov  edx, [ecx + 24]
+
+    mov  ax, [ecx + 36]
+    mov  gs, ax
+    mov  ax, [ecx + 38]
+    mov  fs, ax
+    mov  ax, [ecx + 40]
+    mov  es, ax
+    mov  ax, [ecx + 42]
+    mov  ds, ax
+    mov  eax, [ecx + 32]
+
+    push dword [ecx + 52]
+    push dword [ecx + 56]
+    push dword [ecx]
+    mov  ecx, [ecx + 28]
     iret

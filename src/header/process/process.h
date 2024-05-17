@@ -29,17 +29,10 @@ typedef enum PROCESS_STATE {
  */
 
 struct Context {
-    /**
-     * TODO: 
-     * - benerin isi Context, minimal dia harus punya: 
-     *    1.) isi dari register ketika process di-stop
-     *    2.) eflags i.e. flag register yang nyala/mati pas process ini di-stop
-     *    3.) pointer ke instruksi terakhir
-     *    4.) pointer ke page dir yang dipake process ini (udh ada)
-     */ 
     uint32_t eip;
     struct CPURegister cpu;
     uint32_t eflags;
+    uint32_t cs;
     PD* page_dir;
 };
 

@@ -40,10 +40,6 @@ void kernel_setup(void) {
     keyboard_state_activate();
     initialize_process_list();
 
-    // Initialize shell as process 0 and switch to the virtual memory space (page_dir) of this process
-
-    activate_timer_interrupt();
-    // scheduler_switch_to_next_process();
     // setup fat32 request for shell
     struct FAT32DriverRequest request = {
         .buf                   = (uint8_t*) 0,
@@ -54,8 +50,12 @@ void kernel_setup(void) {
     };
 
     let_there_be_a_new_process(request);
-    paging_use_page_directory(get_current_running_process()->context.page_dir);
-    kernel_execute_user_program((void*) 0);
+    activate_timer_interrupt();
+    scheduler_switch_to_next_process(*(struct InterruptFrame*)0);
+    
+    // paging_use_page_directory(get_current_running_process()->context.page_dir);
+    // kernel_execute_user_program((void*) 0);
+
     
     while (true);
 }
