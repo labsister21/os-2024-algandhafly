@@ -88,6 +88,7 @@ void syscall(struct InterruptFrame frame) {
             *((int8_t*) frame.cpu.general.ecx) = delete(
                 *(struct FAT32DriverRequest*) frame.cpu.general.ebx
             );
+            break;
         case 4: // had to resort to this because directory[0] == directory[1] == parent cluster. the problem is you can only jump 2 levels up or 2 levels down. cant do 1
             // get sibling directory
             read_clusters(request->buf, request->parent_cluster_number, 1);
@@ -177,7 +178,7 @@ void main_interrupt_handler(struct InterruptFrame frame) {
 
 // Timer interrupt
 #define PIT_MAX_FREQUENCY   1193182
-#define PIT_TIMER_FREQUENCY 1000
+#define PIT_TIMER_FREQUENCY 10
 #define PIT_TIMER_COUNTER   (PIT_MAX_FREQUENCY / PIT_TIMER_FREQUENCY)
 
 #define PIT_COMMAND_REGISTER_PIO          0x43
