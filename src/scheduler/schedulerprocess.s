@@ -18,11 +18,11 @@ fly_to_the_sky:
 
     mov  ax, [ecx + 36]
     mov  gs, ax
-    mov  ax, [ecx + 38]
-    mov  fs, ax
     mov  ax, [ecx + 40]
+    mov  fs, ax
+    mov  ax, [ecx + 44]
     mov  es, ax
-    mov  ax, [ecx + 42]
+    mov  ax, [ecx + 48]
     mov  ds, ax
     
     push 0x23               ; ss
@@ -33,7 +33,5 @@ fly_to_the_sky:
 
     mov  eax, [ecx + 32]
     mov  ecx, [ecx + 28]
-
-    call pickaxe
 
     iret

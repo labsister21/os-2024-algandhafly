@@ -166,9 +166,7 @@ void main_interrupt_handler(struct InterruptFrame frame) {
             pic_ack(IRQ_KEYBOARD);
             break;
         case PIC1_OFFSET + IRQ_TIMER:
-            activate_clock();
             scheduler_switch_to_next_process(frame);
-            // pic_ack(IRQ_TIMER);
             break;
         case 0x30:
             syscall(frame);

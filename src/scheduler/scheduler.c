@@ -11,6 +11,18 @@ PCB* get_current_running_process() {
     return &_process_list[a_certain_magical_index];
 }
 
+void scheduler_jump_to_first() {
+    struct Context context;
+
+    PCB* old_pcb = get_current_running_process();
+    
+    paging_use_page_directory(old_pcb->context.page_dir);
+
+    context = old_pcb->context;
+    // pickaxe();
+    fly_to_the_sky(context);
+}
+
 __attribute__((noreturn)) void scheduler_switch_to_next_process(struct InterruptFrame frame) {
 
     struct Context context;
@@ -32,6 +44,6 @@ __attribute__((noreturn)) void scheduler_switch_to_next_process(struct Interrupt
     old_pcb->context.cpu = frame.cpu;
 
     context = new_pcb->context;
-    
+    pickaxe();
     fly_to_the_sky(context);
 }

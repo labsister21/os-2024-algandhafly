@@ -728,7 +728,6 @@ const char clock[6] = "clock\0";
 const char exit[5] = "exit\0";
 
 void command(char *buf, struct DirectoryStack* dir_stack) {
-    
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
     extract_args(buf, args);
 
