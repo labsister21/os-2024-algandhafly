@@ -63,8 +63,8 @@ void print_path_to_cwd(struct DirectoryStack* dir_stack) {
 void print_path_to_cwd_reversed(struct DirectoryStack* dir_stack) {
     for(uint8_t i = dir_stack->length-1; i > 0; i--){
         puts_clamped(dir_stack->entry[i-1].name, DIR_NAME_LENGTH);
-        if(is_directory(&dir_stack->entry[i])) puts("/");
-        else {
+        if(is_directory(&dir_stack->entry[i-1])) puts("/");
+        else if(!(dir_stack->entry[i-1].ext[0] == '\0' && dir_stack->entry[i-1].ext[1] == '\0' && dir_stack->entry[i-1].ext[2] == '\0')){
             puts(".");
             puts_clamped(dir_stack->entry[i-1].ext, DIR_EXT_LENGTH);
         }

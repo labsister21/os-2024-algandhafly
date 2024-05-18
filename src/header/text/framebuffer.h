@@ -106,4 +106,6 @@ void increment(struct FramebufferState *framebuffer_state);
 
 void decrement(struct FramebufferState *framebuffer_state);
 
+void clear_bottom_screen();
+
 #endif

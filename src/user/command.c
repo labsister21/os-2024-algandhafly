@@ -158,7 +158,7 @@ uint8_t path_to_dir_stack_from_cwd(char* path, struct DirectoryStack* dir_stack_
         bool found = false;
         for(uint32_t i = 0; i < 64; i++){
             if(is_empty(&dir_table.table[i])) continue;
-            if(memcmp(&dir_table.table[i].name, dir_stack->entry[idx].name, DIR_NAME_LENGTH) == 0){
+            if(memcmp(&dir_table.table[i].name, dir_stack->entry[idx].name, DIR_NAME_LENGTH) == 0 && memcmp(&dir_table.table[i].ext, dir_stack->entry[idx].ext, DIR_EXT_LENGTH) == 0){
                 parent_cluster = dir_table.table[i].cluster_low;
                 memcpy(&dir_stack->entry[idx], &dir_table.table[i], sizeof(struct FAT32DirectoryEntry));
                 found = true;
@@ -230,15 +230,48 @@ uint8_t extract_args(char* line, char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]){
 void help_command() {
     puts("\n\n");
     puts("clear : Clear the screen\n");
+    puts("        Usage: clear\n");
+
     puts("cd    : Change the current working directory\n");
+    puts("        Usage: cd <path>\n");
+    
     puts("ls    : List the contents of the current working directory\n");
+    puts("        Usage: ls\n");
+
     puts("mkdir : Create a new empty folder\n");
+    puts("        Usage: mkdir <path>\n");
+
     puts("cat   : Write a file as a text file to the screen (Use LF newline format)\n");
+    puts("        Usage: cat <path>\n");
+    
     puts("cp    : Copy a file (Folder is a bonus)\n");
+    puts("        Usage: cp <source path> <destination path>\n");
+    
     puts("rm    : Delete a file (Folder is a bonus)\n");
+    puts("        Usage: rm <path>\n");
+    
     puts("mv    : Move and rename the location of a file/folder\n");
+    puts("        Usage: mv <source path> <destination path>\n");
+    
     puts("find  : Search for files/folders with the same name throughout the file system\n");
-    puts("help  : Show this help\n\n");
+    puts("        Usage: find <file name/folder name>\n");
+    
+    puts("echo  : Write to a file\n");
+    puts("        Usage: echo \"<content>\" > <path>\n");
+    
+    puts("exec  : Execute a file\n");
+    puts("        Usage: exec <path>\n");
+    
+    puts("ps    : List all running processes\n");
+    puts("        Usage: ps\n");
+    
+    puts("kill  : Kill a process\n");
+    puts("        Usage: kill <pid>\n");
+    
+    puts("help  : Show this help\n");
+    puts("        Usage: help\n");
+    
+    puts("\n");
 }
 
 int handle_cd(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack) {
@@ -452,7 +485,7 @@ void handle_rm(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
     else parent_cluster_containing_file = peek_second_top(&input_path)->cluster_low;
 
     struct FAT32DirectoryEntry entry = {
-        .filesize = 0xFFFF,
+        .filesize = 0,
     };
 
     memcpy(entry.name, file_name, DIR_NAME_LENGTH);
@@ -741,7 +774,6 @@ const char echo[5] = "echo\0"; // echo - can be used to write to file
 const char exec[5] = "exec\0";
 const char ps[3] = "ps\0";
 const char kill[5] = "kill\0";
-const char clock[6] = "clock\0";
 
 void command(char *buf, struct DirectoryStack* dir_stack) {
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
