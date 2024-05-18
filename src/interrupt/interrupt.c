@@ -140,6 +140,7 @@ void syscall(struct InterruptFrame frame) {
             break;
         case 13: // kill
             process_omae_wa_mou_shindeiru(frame.cpu.general.ebx);
+            clear_bottom_screen();
             break;
         case 14: // get current time
             get_indonesian_time((time_t*)frame.cpu.general.ebx);

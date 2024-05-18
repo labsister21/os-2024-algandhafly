@@ -224,3 +224,11 @@ void decrement(struct FramebufferState *framebuffer_state) {
         framebuffer_state->cursor_x--;
     }
 }
+
+
+void clear_bottom_screen() {
+    for(uint8_t j = 0; j < 80; j++) {
+        framebuffer_write(23, j, ' ', White, Black);
+        framebuffer_write(24, j, ' ', White, Black);
+    }
+}
