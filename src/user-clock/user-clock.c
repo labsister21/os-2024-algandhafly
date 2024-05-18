@@ -24,5 +24,5 @@ int main(void) {
         systemCall__clock(15, 0, 0, 0);
     }
 
-    return 0;
+    return 123;
 }

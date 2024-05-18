@@ -1,6 +1,7 @@
 #include <io.h>
 #include <system.h>
 #include <stddef.h>
+#include <string.h>
 
 void puts(char *str) {
     systemCall(5, (uint32_t) str, Color_White, Color_Black);
@@ -101,10 +102,6 @@ void get_line(char *buf) {
 }
 void get_line_color(char *buf, uint8_t fg, uint8_t bg) {
     systemCall(6, (uint32_t) buf, fg, bg);
-}
-
-void set_active_keyboard(bool active) {
-    systemCall(7, active, 0, 0);
 }
 
 void clear_screen() {

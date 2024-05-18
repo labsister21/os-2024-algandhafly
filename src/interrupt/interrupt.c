@@ -9,13 +9,7 @@
 #include "header/driver/clock.h"
 #include "header/scheduler/scheduler.h"
 
-int str_to_int(char* str) {
-    int num = 0; 
-    for (int i = 0; str[i] != '\0'; i++) { 
-        num = num * 10 + (str[i] - 48); 
-    } 
-    return num; 
-}
+
 
 
 struct TSSEntry _interrupt_tss_entry = {
@@ -94,20 +88,15 @@ void syscall(struct InterruptFrame frame) {
             *((int8_t*) frame.cpu.general.ecx) = delete(
                 *(struct FAT32DriverRequest*) frame.cpu.general.ebx
             );
-            break;
-        case 4:
-            get_keyboard_buffer((char*)frame.cpu.general.ebx);
+        case 4: // had to resort to this because directory[0] == directory[1] == parent cluster. the problem is you can only jump 2 levels up or 2 levels down. cant do 1
+            // get sibling directory
+            read_clusters(request->buf, request->parent_cluster_number, 1);
             break;
         case 5:
             kernel_puts_with_overflow_handling((char*)frame.cpu.general.ebx, frame.cpu.general.ecx, frame.cpu.general.edx);
             break;
         case 6:
-            // __asm__ volatile("sti");
             get_command_buffer((char*)frame.cpu.general.ebx);
-            break;
-        case 7: 
-            activate_keyboard_interrupt();
-            keyboard_state_activate();
             break;
         case 8:
             framebuffer_clear();
@@ -117,13 +106,17 @@ void syscall(struct InterruptFrame frame) {
             framebuffer_state.cursor_x = frame.cpu.general.ecx;
             framebuffer_state.cursor_y = frame.cpu.general.ebx;
             break;
-        case 10: // had to resort to this because directory[0] == directory[1] == parent cluster. the problem is you can only jump 2 levels up or 2 levels down. cant do 1
-            // get sibling directory
-            read_clusters(request->buf, request->parent_cluster_number, 1);
-            break;
         case 11: // exec
-            request->buffer_size = (1 << 22);
+            request->buffer_size = 0;
+            uint8_t error_code = read(*request);
+            // code: 0 success - 1 not a file - 2 not enough buffer - 3 not found - -1 unknown
+            if (error_code == 1 || error_code == 3) {
+                *((int8_t*) frame.cpu.general.ecx) = error_code;
+                break;
+            }
+
             let_there_be_a_new_process(*request);
+            *((int8_t*) frame.cpu.general.ecx) = 0;
             break;
         case 12: // ps
             kernel_puts("\n", 15, 0);
@@ -136,24 +129,30 @@ void syscall(struct InterruptFrame frame) {
                 kernel_puts(" ", 15, 0);
                 kernel_puts(_process_list[i].metadata.name, 15, 0); //process name
                 
-                if (_process_list[i].metadata.ext[0] == '\0') continue;
+                if (_process_list[i].metadata.ext[0] == '\0') {
+                    kernel_puts("\n", 15, 0);
+                    continue;
+                }
                 kernel_puts(".", 15, 0);
                 kernel_puts(_process_list[i].metadata.ext, 15, 0);
+                kernel_puts("\n", 15, 0);
             }
             break;
         case 13: // kill
-            int pid = str_to_int(frame.cpu.general.ecx);
-            process_omae_wa_mou_shindeiru(pid);
+            process_omae_wa_mou_shindeiru(frame.cpu.general.ebx);
             break;
         case 14: // get current time
-                get_indonesian_time((time_t*)frame.cpu.general.ebx);
+            get_indonesian_time((time_t*)frame.cpu.general.ebx);
             break;
         case 15: // activate clock
-                activate_clock();
+            refresh_screen_clock();
             break;
         case 16: // stop user shell child process
             break;
-        case 17:
+        case 17: // Exit handler
+            uint8_t return_code = frame.cpu.general.ebx;
+            break;
+        case 18:
             framebuffer_write(frame.cpu.general.ebx, frame.cpu.general.ecx, ' ', 0,frame.cpu.general.edx);
             break;
     }

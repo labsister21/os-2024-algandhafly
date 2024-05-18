@@ -2,8 +2,6 @@ global fly_to_the_sky ;
 ; Load struct Context (CPU GP-register) then jump to the sky
 ; Function Signature: void process_context_switch(struct Context ctx);
 
-extern pickaxe ;
-
 fly_to_the_sky:
     ; Using iret (return instruction for interrupt) technique for privilege change
     lea  ecx, [esp+0x04] ; Save the base address for struct Context ctx

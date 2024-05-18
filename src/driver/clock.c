@@ -1,5 +1,6 @@
 #include "header/driver/clock.h"
 #include "header/text/framebuffer.h"
+#include "header/cpu/portio.h"
 
 #define CURRENT_YEAR        2024                            // Change this each year!
  
@@ -28,14 +29,6 @@ unsigned char get_RTC_register(int reg) {
     return in(cmos_data);
 }
 
-void get_indonesian_time(time_t *time) {
-    read_rtc(time);
-    time->hour += INDONESIAN_HOUR_OFFSET;
-    if(time->hour >= 24) {
-        time->hour -= 24;
-        time->day++;
-    }
-}
  
 void read_rtc(time_t *time) {
     unsigned char century;
@@ -118,12 +111,24 @@ void read_rtc(time_t *time) {
 }
 
 
-void activate_clock(){
+void get_indonesian_time(time_t *time) {
+    read_rtc(time);
+    time->hour += INDONESIAN_HOUR_OFFSET;
+    if(time->hour >= 24) {
+        time->hour -= 24;
+        time->day++;
+    }
+}
 
-    time_t current_time;
-    get_indonesian_time(&current_time);
 
-    update_clock_in_screen(&current_time);
+
+void write_int_offset_one_if_less_than_9(uint8_t row, uint8_t col, int num, uint8_t fg, uint8_t bg){
+    if(num < 10){
+        framebuffer_write(row, col, '0', fg, bg);
+        framebuffer_write_int(row, col+1, num, fg, bg);
+    } else {
+        framebuffer_write_int(row, col, num, fg, bg);
+    }
 }
 
 void update_clock_in_screen(time_t *time){
@@ -144,11 +149,11 @@ void update_clock_in_screen(time_t *time){
     write_int_offset_one_if_less_than_9(HEIGHT-2, WIDTH-4, time->year, White, Black);
 }
 
-void write_int_offset_one_if_less_than_9(uint8_t row, uint8_t col, int num, uint8_t fg, uint8_t bg){
-    if(num < 10){
-        framebuffer_write(row, col, '0', fg, bg);
-        framebuffer_write_int(row, col+1, num, fg, bg);
-    } else {
-        framebuffer_write_int(row, col, num, fg, bg);
-    }
+
+void refresh_screen_clock(){
+
+    time_t current_time;
+    get_indonesian_time(&current_time);
+
+    update_clock_in_screen(&current_time);
 }

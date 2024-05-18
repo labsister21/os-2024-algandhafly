@@ -20,10 +20,12 @@ void sleep__custom(uint64_t ms){
 int main(void) {
     
     uint8_t color = 0;
+    uint8_t i = 0;
     while(true){
-        sleep__custom(200);
-        systemCall__custom(17, 0, 79, color++);
-        if(color == 16) color = 0;
+        sleep__custom(50);
+        systemCall__custom(18, 24, i++, color++);
+        color %= 17;
+        i %= 5;
     }
 
     return 0;

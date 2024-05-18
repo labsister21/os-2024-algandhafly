@@ -31,7 +31,7 @@ void get_dir_by_cluster(uint16_t current_cluster_number, struct FAT32DirectoryTa
     struct FAT32DriverRequest request;
     request.parent_cluster_number = current_cluster_number;
     request.buf = dir_table;
-    systemCall(10, (uint32_t )&request, 0, 0);
+    systemCall(4, (uint32_t )&request, 0, 0);
 }
 
 uint8_t get_file_dir(char folder_name[DIR_NAME_LENGTH], char ext[DIR_EXT_LENGTH], uint16_t parent_cluster_number, struct FAT32DirectoryTable *dir_table){
@@ -128,7 +128,7 @@ uint8_t execute_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster)
 
     uint8_t error_code;
     uint16_t pid;
-    systemCall(11, (uint32_t )&request, (uint32_t )&error_code, &pid);
+    systemCall(11, (uint32_t)&request, (uint32_t)&error_code, (uint32_t)&pid);
     
     return error_code;
 }
@@ -154,10 +154,3 @@ time_t get_current_time(){
     return current_time;
 }
 
-void activate_clock_screen(){
-    systemCall(15, 0, 0, 0);
-}
-
-void exit_user_shell(){
-    systemCall(16, 0, 0, 0);
-}

@@ -16,6 +16,6 @@ typedef struct time_t time_t;
 
 void get_indonesian_time(time_t *time);
 
-void activate_clock();
+void refresh_screen_clock();
 
 #endif

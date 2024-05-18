@@ -74,7 +74,14 @@ if (!paging_allocate_check(frames) || frames > PROCESS_PAGE_FRAME_COUNT_MAX) {
     }
 
     paging_use_page_directory(page_dir);
-    read(request);
+    
+    request.buffer_size = 2048;
+    uint8_t error_code = read(request);
+    while(error_code != 0) {
+        request.buffer_size += 2048;
+        error_code = read(request);
+    }
+    
     paging_use_page_directory(old_page_dir);
 
     uint32_t CPU_EFLAGS_BASE_FLAG = 0x2;

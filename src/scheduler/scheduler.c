@@ -3,15 +3,12 @@
 
 int a_certain_magical_index = 0;
 
-void pickaxe() {
-    pic_ack(IRQ_TIMER);
-}
 
 PCB* get_current_running_process() {
     return &_process_list[a_certain_magical_index];
 }
 
-void scheduler_jump_to_first() {
+void scheduler_init() {
     struct Context context;
 
     PCB* old_pcb = get_current_running_process();
@@ -19,7 +16,6 @@ void scheduler_jump_to_first() {
     paging_use_page_directory(old_pcb->context.page_dir);
 
     context = old_pcb->context;
-    // pickaxe();
     fly_to_the_sky(context);
 }
 
@@ -44,6 +40,6 @@ __attribute__((noreturn)) void scheduler_switch_to_next_process(struct Interrupt
     old_pcb->context.cpu = frame.cpu;
 
     context = new_pcb->context;
-    pickaxe();
+    pic_ack(IRQ_TIMER);
     fly_to_the_sky(context);
 }

@@ -685,25 +685,43 @@ void handle_exec(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryS
     memcpy(entry.name, peek_top(&file_path)->name, DIR_NAME_LENGTH);
     memcpy(entry.ext, peek_top(&file_path)->ext, DIR_EXT_LENGTH);
 
-    execute_file(&entry, parent_cluster_containing_file);
+    error_code = execute_file(&entry, parent_cluster_containing_file);
+    if(error_code == 1) {
+        puts("\nNot a file");
+    }
+    if(error_code == 3) {
+        puts("\nNot found");
+    }
 }
 
 
 void handle_ps(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
     systemCall(12, 0, 0, 0);
-    puts("\n");
-}
-void handle_kill(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack) {
-    systemCall(13, 0, args[1], 0);
-}
-void handle_clock(){
-    puts("\nClock running...\n");
-    activate_clock_screen();
 }
 
-void handle_exit(){
-    puts("\nExiting...\n");
-    exit_user_shell();
+// negative not allowed
+// 0 success, 1 not a number, 2 negative number
+uint8_t str_to_positive_int(char* str, uint64_t* num) {
+    if(str[0] == '-') return 2;
+    *num = 0; 
+    for (int i = 0; str[i] != '\0'; i++) { 
+        if(str[i] < 48 or str[i] > 57) return 1; // not a number
+        *num = *num * 10 + (str[i] - 48); 
+    } 
+    return 0; 
+}
+void handle_kill(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack) {
+    uint8_t pid;
+    uint8_t error_code = str_to_positive_int(args[1], (uint64_t*)&pid);
+    if(error_code == 1) {
+        puts("\nPlease provide a number for pid\n");
+        return;
+    }
+    if(error_code == 2) {
+        puts("\nPlease provide non negative number for pid\n");
+        return;
+    }
+    systemCall(13, pid, 0, 0);
 }
 
 
@@ -724,8 +742,6 @@ const char exec[5] = "exec\0";
 const char ps[3] = "ps\0";
 const char kill[5] = "kill\0";
 const char clock[6] = "clock\0";
-
-const char exit[5] = "exit\0";
 
 void command(char *buf, struct DirectoryStack* dir_stack) {
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
@@ -759,10 +775,6 @@ void command(char *buf, struct DirectoryStack* dir_stack) {
         handle_ps(args, dir_stack);
     } else if (strcmp(args[0], kill) == 0) {
         handle_kill(args, dir_stack);
-    } else if (strcmp(args[0], clock) == 0) {
-        handle_clock();
-    } else if (strcmp(args[0], exit) == 0) {
-        handle_exit();
     } else if (strcmp(args[0], help) == 0) {
         help_command();
     } else if(buf[0] == '\0'){
