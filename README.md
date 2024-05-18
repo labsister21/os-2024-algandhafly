@@ -1,11 +1,15 @@
-<h1 align="center">Tugas Besar IF2230 Sistem Operasi</h1>
-This repository contains an implementation of an Operating System.
+<h1 align="center">Algandhafly</h1>
+<h3 align="center">(Tugas Besar IF2230 Sistem Operasi)</h3>
 
 # ✨ Members
 - 13522014 Raden Rafly Hanggaraksa
 - 13522022 Renaldy Arief Susanto
 - 13522066 Nyoman Ganadipa
 - 13522084 Dhafin Fawwaz Ikramullah
+
+# Me when the context switch finally works
+![😭](erased.gif)
+
 
 # 📖 How to run
 Use WSL and make sure make is installed. To automatically build the .iso and run the OS with Qemu emulator, run
