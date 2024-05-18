@@ -241,7 +241,7 @@ int8_t write(struct FAT32DriverRequest request){
                 return 1;
             }
             // Check if file
-            else if(table[i].ext == request.ext){
+            else if(memcmp(table[i].ext, request.ext, 3)){
                 return 1;
             }
         }

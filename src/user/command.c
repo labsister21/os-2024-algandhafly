@@ -158,7 +158,7 @@ uint8_t path_to_dir_stack_from_cwd(char* path, struct DirectoryStack* dir_stack_
         bool found = false;
         for(uint32_t i = 0; i < 64; i++){
             if(is_empty(&dir_table.table[i])) continue;
-            if(memcmp(&dir_table.table[i].name, dir_stack->entry[idx].name, DIR_NAME_LENGTH) == 0){
+            if(memcmp(&dir_table.table[i].name, dir_stack->entry[idx].name, DIR_NAME_LENGTH) == 0 && memcmp(&dir_table.table[i].ext, dir_stack->entry[idx].ext, DIR_EXT_LENGTH) == 0){
                 parent_cluster = dir_table.table[i].cluster_low;
                 memcpy(&dir_stack->entry[idx], &dir_table.table[i], sizeof(struct FAT32DirectoryEntry));
                 found = true;
@@ -452,7 +452,7 @@ void handle_rm(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
     else parent_cluster_containing_file = peek_second_top(&input_path)->cluster_low;
 
     struct FAT32DirectoryEntry entry = {
-        .filesize = 0xFFFF,
+        .filesize = 0,
     };
 
     memcpy(entry.name, file_name, DIR_NAME_LENGTH);
