@@ -21,6 +21,11 @@
 #define Color_Yellow 14
 #define Color_White 15
 
+struct FramebufferState {
+    uint8_t cursor_x;
+    uint8_t cursor_y;
+} __attribute__((packed));
+
 void puts(char *str);
 void puts_color(char *str, uint8_t fg, uint8_t bg);
 void puts_clamped(char *str, uint8_t max_length);

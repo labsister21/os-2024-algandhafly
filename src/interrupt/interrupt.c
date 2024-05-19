@@ -106,8 +106,6 @@ void syscall(struct InterruptFrame frame) {
             framebuffer_set_cursor(frame.cpu.general.ebx, frame.cpu.general.ecx);
             framebuffer_state.cursor_x = frame.cpu.general.ecx;
             framebuffer_state.cursor_y = frame.cpu.general.ebx;
-            framebuffer_write_int(24, 0, framebuffer_state.cursor_x, 15, 0);
-            framebuffer_write_int(23, 0, framebuffer_state.cursor_y, 15, 0);
             break;
         case 11: // exec
             request->buffer_size = 0;
