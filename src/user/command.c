@@ -587,8 +587,49 @@ void handle_cp(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
 }
 
 void handle_mv(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
-    handle_cp(args, dir_stack);
-    handle_rm(args, dir_stack);
+    char* src = args[1];
+    char* dest = args[2];
+
+    if(src[0] == '\0'){
+        puts("\nPlease provide source file name\n");
+        return;
+    }
+    if(dest[0] == '\0'){
+        puts("\nPlease provide destination file name\n");
+        return;
+    }
+
+    struct DirectoryStack src_path = {.length = 0};
+    uint8_t error_code = path_to_dir_stack_from_cwd(src, dir_stack, &src_path);
+    if(error_code != 0) {
+        puts("\nInvalid source path\n");
+        return;
+    }
+    struct DirectoryStack dest_path = {.length = 0};
+    error_code = path_to_dir_stack_from_cwd(dest, dir_stack, &dest_path);
+    if(error_code == 1) {
+        puts("\nInvalid destination path\n");
+        return;
+    }
+
+    uint16_t parent_cluster_containing_src_file;
+    if(src_path.length == 1)parent_cluster_containing_src_file = current_parent_cluster(dir_stack);
+    else parent_cluster_containing_src_file = peek_second_top(&src_path)->cluster_low;
+
+    uint16_t parent_cluster_containing_dest_file;
+    if(dest_path.length == 1)parent_cluster_containing_dest_file = current_parent_cluster(dir_stack);
+    else parent_cluster_containing_dest_file = peek_second_top(&dest_path)->cluster_low;
+
+    struct FAT32DirectoryEntry source_entry;
+    memcpy(source_entry.name, peek_top(&src_path)->name, DIR_NAME_LENGTH);
+    memcpy(source_entry.ext, peek_top(&src_path)->ext, DIR_EXT_LENGTH);
+
+    struct FAT32DirectoryEntry dest_entry;
+    memcpy(dest_entry.name, peek_top(&dest_path)->name, DIR_NAME_LENGTH);
+    memcpy(dest_entry.ext, peek_top(&dest_path)->ext, DIR_EXT_LENGTH);
+
+
+    move_file_or_folder(&source_entry, &dest_entry, parent_cluster_containing_src_file, parent_cluster_containing_dest_file);
 }
 
 

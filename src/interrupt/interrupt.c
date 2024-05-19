@@ -166,6 +166,9 @@ void syscall(struct InterruptFrame frame) {
             // Get current frame buffer cursor
             get_current_cursor((struct FramebufferState*)frame.cpu.general.ebx);
             break;
+        case 21: // mv
+            *((uint32_t*)frame.cpu.general.edx) = move(*request, *(struct FAT32DriverRequest*)frame.cpu.general.ecx);
+            break;
 
         // Extra stuff
         case 30:

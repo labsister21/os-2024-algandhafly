@@ -405,3 +405,55 @@ int8_t delete(struct FAT32DriverRequest request){
     }
     return -1;
 }
+
+
+/**
+ * @return Error code: 0 success - 1 source not found in cluster - 2 destination already exist
+*/
+int8_t move(struct FAT32DriverRequest request_src, struct FAT32DriverRequest request_dest){
+    struct FAT32DirectoryTable src_dir_table;
+    read_clusters(&src_dir_table, request_src.parent_cluster_number, 1);
+    struct FAT32DirectoryEntry *src_table = src_dir_table.table;
+    
+    for (uint8_t i = 2; i < DIRECTORY_TABLE_SIZE; i++) {
+        if (!memcmp(src_table[i].name, request_src.name, 8) && !memcmp(src_table[i].ext, request_src.ext, 3)) {
+            // Found source
+            struct FAT32DirectoryTable dest_dir_table;
+            read_clusters(&dest_dir_table, request_dest.parent_cluster_number, 1);
+            struct FAT32DirectoryEntry *dest_table = dest_dir_table.table;
+
+            // Check if destination already exist
+            for(uint16_t j=2; j<DIRECTORY_TABLE_SIZE;j++){
+                // found same name
+                if(!memcmp(dest_table[j].name,request_src.name,8)){
+                    // case moving folder and destination is folder
+                    if(request_src.buffer_size == 0 && dest_table[j].attribute == ATTR_SUBDIRECTORY){
+                        return 1;
+                    }
+                    // case moving file and destination is file
+                    else if(request_src.buffer_size != 0 && memcmp(dest_table[j].ext, request_src.ext, 3)){
+                        return 1;
+                    }
+                }
+            }
+
+            // Find empty destination
+            for(uint16_t j=2; j<DIRECTORY_TABLE_SIZE;j++){
+                // Found empty
+                if(dest_table[j].user_attribute != UATTR_NOT_EMPTY){
+                    // write metadata
+                    memcpy(&dest_table[j], &src_table[i], sizeof(struct FAT32DirectoryEntry));
+                    memcpy(&dest_table[j].name, request_dest.name, 8);
+                    memcpy(&dest_table[j].ext, request_dest.ext, 3);
+                    // mark source as empty
+                    src_table[i].user_attribute = !UATTR_NOT_EMPTY;
+                    write_clusters(src_table, request_src.parent_cluster_number, 1);
+                    write_clusters(dest_table, request_dest.parent_cluster_number, 1);
+                    return 0;
+                }
+            }
+            return 1;
+        }
+    }
+    return 2; // not found
+}
