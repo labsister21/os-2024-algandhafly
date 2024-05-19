@@ -154,3 +154,12 @@ time_t get_current_time(){
     return current_time;
 }
 
+
+
+
+
+
+void set_sound_frequency(uint32_t frequency){
+    puts("\n");
+    systemCall(30, frequency, 0, 0);
+}

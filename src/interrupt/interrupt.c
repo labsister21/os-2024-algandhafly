@@ -142,6 +142,7 @@ void syscall(struct InterruptFrame frame) {
         case 13: // kill
             process_omae_wa_mou_shindeiru(frame.cpu.general.ebx);
             clear_bottom_screen();
+            stop_sound();
             break;
         case 14: // get current time
             get_indonesian_time((time_t*)frame.cpu.general.ebx);
@@ -156,6 +157,12 @@ void syscall(struct InterruptFrame frame) {
             break;
         case 18:
             framebuffer_write(frame.cpu.general.ebx, frame.cpu.general.ecx, ' ', 0,frame.cpu.general.edx);
+            break;
+
+        // Extra stuff
+        case 30:
+            if(frame.cpu.general.ebx) play_sound(frame.cpu.general.ebx);
+            else stop_sound();
             break;
     }
 }
@@ -179,7 +186,7 @@ void main_interrupt_handler(struct InterruptFrame frame) {
 
 // Timer interrupt
 #define PIT_MAX_FREQUENCY   1193182
-#define PIT_TIMER_FREQUENCY 10
+#define PIT_TIMER_FREQUENCY 1000
 #define PIT_TIMER_COUNTER   (PIT_MAX_FREQUENCY / PIT_TIMER_FREQUENCY)
 
 #define PIT_COMMAND_REGISTER_PIO          0x43

@@ -1,7 +1,6 @@
 #include "header/stdlib/string.h"
 #include "header/filesystem/fat32.h"
 #include "header/driver/disk.h"
-#include "header/text/framebuffer.h"
 
 const uint8_t fs_signature[BLOCK_SIZE] = {
     'C', 'o', 'u', 'r', 's', 'e', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',  ' ',

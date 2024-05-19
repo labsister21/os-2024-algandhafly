@@ -736,6 +736,7 @@ void handle_ps(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
 // 0 success, 1 not a number, 2 negative number
 uint8_t str_to_positive_int(char* str, uint64_t* num) {
     if(str[0] == '-') return 2;
+    if(str[0] == '\0') return 1;
     *num = 0; 
     for (int i = 0; str[i] != '\0'; i++) { 
         if(str[i] < 48 or str[i] > 57) return 1; // not a number
@@ -757,8 +758,20 @@ void handle_kill(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryS
     systemCall(13, pid, 0, 0);
 }
 
+void handle_sound(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]) {
+    uint64_t f;
+    uint8_t error_code = str_to_positive_int(args[1], (uint64_t*)&f);
+    if(error_code == 1) {
+        puts("\nPlease provide a frequency\n");
+        return;
+    }
+    if(error_code == 2) {
+        puts("\nPlease provide non negative number for frequency\n");
+        return;
+    }
 
-
+    set_sound_frequency(f);
+}
 const char clear[6] = "clear\0";
 const char help[5] = "help\0";
 const char cd[3] = "cd\0"; // cd	- Mengganti current working directory (termasuk .. untuk naik)
@@ -774,6 +787,9 @@ const char echo[5] = "echo\0"; // echo - can be used to write to file
 const char exec[5] = "exec\0";
 const char ps[3] = "ps\0";
 const char kill[5] = "kill\0";
+
+// Extra stuff
+const char sound[6] = "sound\0";
 
 void command(char *buf, struct DirectoryStack* dir_stack) {
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
@@ -809,7 +825,15 @@ void command(char *buf, struct DirectoryStack* dir_stack) {
         handle_kill(args, dir_stack);
     } else if (strcmp(args[0], help) == 0) {
         help_command();
-    } else if(buf[0] == '\0'){
+    } 
+    
+    // Extra stuff
+    else if (strcmp(args[0], sound) == 0) {
+        handle_sound(args);
+    } 
+    
+    
+    else if(buf[0] == '\0'){
         puts("\n");
         return; // prevent new line
     } else {

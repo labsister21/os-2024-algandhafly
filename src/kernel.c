@@ -15,6 +15,7 @@
 #include "header/user/directorystack.h"
 #include "header/process/process.h"
 #include "header/scheduler/scheduler.h"
+#include "header/driver/speaker.h"
 
 
 char frame[WIDTH][HEIGHT];
