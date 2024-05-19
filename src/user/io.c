@@ -71,6 +71,7 @@ void gets(char *buf) {
     systemCall(6, (uint32_t) buf, 0, 0);
 }
 
+
 void get_line(char *buf) {
     memset(buf, 0, 4000);
     uint16_t t = 0;
@@ -79,17 +80,39 @@ void get_line(char *buf) {
     char temp[100];
     memset(temp, 0, sizeof(temp));
 
+    struct {
+        uint8_t cursor_x;
+        uint8_t cursor_y;
+    } __attribute__((packed)) cursor;
+    systemCall(20, (uint32_t ) &cursor, 0, 0);
+
+    const uint8_t CURSOR_X = cursor.cursor_x;
+    const uint8_t CURSOR_Y = cursor.cursor_y;
 
     while (true) {
         systemCall(6, (uint32_t) temp, Color_White, Color_Black);
+
         if (temp[0] == '\0') {
             continue;
         }
 
+
         int i;
         for (i = 0; i < 100 && temp[i] != '\0'; i++) {
-            buf[t++] = temp[i];
+            if (temp[i] == '\b') {
+                if (t > 0) {
+                    t--;
+                    buf[t] = '\0';
+                }
+            } else {
+                buf[t++] = temp[i];
+            }
         }
+        systemCall(9, CURSOR_Y, CURSOR_X, 0);
+        systemCall(19, 0, buf, 0);
+        
+        
+
 
         temp[0] = '\0';
         for (int i = 0; i < 4000 && buf[i] != '\0'; i++) {

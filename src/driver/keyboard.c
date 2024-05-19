@@ -113,7 +113,7 @@ void insert_at_cursor() {
     keyboard_state.command_state.command_length++;
     keyboard_state.command_state.command[keyboard_state.command_state.cursor_at] = keyboard_state.keyboard_buffer;
 
-    if (keyboard_state.keyboard_buffer == '\n') {
+    if (keyboard_state.keyboard_buffer == '\n' || keyboard_state.keyboard_buffer == '\b') {
         return;
     }
     increment(&framebuffer_state);
@@ -130,7 +130,7 @@ void insert_at_cursor() {
  */
 void keyboard_isr(void){
     uint8_t scan_code = in(KEYBOARD_DATA_PORT);
-    framebuffer_write_int(24, 0, scan_code, White, Black);
+
 
 
     // handle shift pressing
@@ -173,6 +173,8 @@ void keyboard_isr(void){
         return;
     }
 
+
+
     if(keyboard_state.keyboard_input_on){
         int key_down_code = scan_code % (0b10000000);
         
@@ -196,19 +198,18 @@ void keyboard_isr(void){
         }
 
         if (keyboard_state.keyboard_buffer == '\b') {
-            if (keyboard_state.command_state.command_length > 0) {
-                remove_at_before_cursor();
-            } else {
-                pic_ack(IRQ_KEYBOARD);
-                return;
-            }
+            insert_at_cursor();
         } else if (keyboard_state.command_state.command_length < MAX_COMMAND_LENGTH) {
             insert_at_cursor();
         }
 
-        update_text(c);
     }
     pic_ack(IRQ_KEYBOARD);
+}
+
+void get_current_cursor(struct FramebufferState *state) {
+    state->cursor_x = framebuffer_state.cursor_x;
+    state->cursor_y = framebuffer_state.cursor_y;
 }
 
 void update_text(char c) {

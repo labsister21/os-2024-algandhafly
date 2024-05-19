@@ -106,6 +106,8 @@ void syscall(struct InterruptFrame frame) {
             framebuffer_set_cursor(frame.cpu.general.ebx, frame.cpu.general.ecx);
             framebuffer_state.cursor_x = frame.cpu.general.ecx;
             framebuffer_state.cursor_y = frame.cpu.general.ebx;
+            framebuffer_write_int(24, 0, framebuffer_state.cursor_x, 15, 0);
+            framebuffer_write_int(23, 0, framebuffer_state.cursor_y, 15, 0);
             break;
         case 11: // exec
             request->buffer_size = 0;
@@ -157,6 +159,14 @@ void syscall(struct InterruptFrame frame) {
             break;
         case 18:
             framebuffer_write(frame.cpu.general.ebx, frame.cpu.general.ecx, ' ', 0,frame.cpu.general.edx);
+            break;
+        case 19:
+            // Put
+            framebuffer_write_and_move_cursor_until_null(frame.cpu.general.ecx, 15, 0);
+            framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x, ' ', 15, 0);
+        case 20: 
+            // Get current frame buffer cursor
+            get_current_cursor((struct FramebufferState*)frame.cpu.general.ebx);
             break;
 
         // Extra stuff
