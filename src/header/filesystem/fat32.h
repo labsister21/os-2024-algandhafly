@@ -251,4 +251,6 @@ int8_t delete(struct FAT32DriverRequest request);
 
 int8_t move(struct FAT32DriverRequest request_src, struct FAT32DriverRequest request_dest);
 
+int8_t read_metadata(struct FAT32DriverRequest request);
+
 #endif

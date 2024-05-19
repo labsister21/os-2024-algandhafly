@@ -813,6 +813,33 @@ void handle_sound(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]) {
 
     set_sound_frequency(f);
 }
+
+void handle_info(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
+    char* path = args[1];
+    struct DirectoryStack file_path;
+    uint8_t error_code = path_to_dir_stack_from_cwd(path, dir_stack, &file_path);
+    if(error_code == 1) {
+        puts("\nInvalid path\n"); return;
+    }
+    if(error_code == 2) {
+        puts("\nFile don't exist\n"); return;
+    }
+
+    uint16_t parent_cluster_containing_file;
+    if(file_path.length == 1)parent_cluster_containing_file = current_parent_cluster(dir_stack);
+    else parent_cluster_containing_file = peek_second_top(&file_path)->cluster_low;
+
+    struct FAT32DirectoryEntry entry;
+    memcpy(entry.name, peek_top(&file_path)->name, DIR_NAME_LENGTH);
+    memcpy(entry.ext, peek_top(&file_path)->ext, DIR_EXT_LENGTH);
+
+    error_code = info_file(&entry, parent_cluster_containing_file);
+    if(error_code == 1) {
+        puts("\nFile or folder not found");
+    }
+}
+
+
 const char clear[6] = "clear\0";
 const char help[5] = "help\0";
 const char cd[3] = "cd\0"; // cd	- Mengganti current working directory (termasuk .. untuk naik)
@@ -831,6 +858,7 @@ const char kill[5] = "kill\0";
 
 // Extra stuff
 const char sound[6] = "sound\0";
+const char info[5] = "info\0";
 
 void command(char *buf, struct DirectoryStack* dir_stack) {
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
@@ -866,6 +894,8 @@ void command(char *buf, struct DirectoryStack* dir_stack) {
         handle_kill(args, dir_stack);
     } else if (strcmp(args[0], help) == 0) {
         help_command();
+    }  else if (strcmp(args[0], info) == 0) {
+        handle_info(args, dir_stack);
     } 
     
     // Extra stuff

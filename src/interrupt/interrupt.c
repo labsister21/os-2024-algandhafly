@@ -169,6 +169,50 @@ void syscall(struct InterruptFrame frame) {
         case 21: // mv
             *((uint32_t*)frame.cpu.general.edx) = move(*request, *(struct FAT32DriverRequest*)frame.cpu.general.ecx);
             break;
+        case 22: // info
+            uint8_t error_code_info;
+            struct FAT32DirectoryEntry entry;
+            request->buf = &entry;
+
+            error_code = read_metadata(
+                *request
+            );
+            if(error_code == 1) {
+                frame.cpu.general.ecx = 1;
+                return;
+            }
+
+
+            if(entry.attribute == ATTR_SUBDIRECTORY) {
+                kernel_puts("\n", White, Black);
+
+                kernel_puts("Folder: ", White, Black);
+                kernel_puts(entry.name, White, Black);
+                kernel_puts("\n", White, Black);
+            } else {
+                kernel_puts("\n", White, Black);
+                kernel_puts("File: ", White, Black);
+                kernel_puts(entry.name, White, Black);
+                kernel_puts("\n", White, Black);
+            }
+
+            kernel_puts("Size: ", White, Black);
+            framebuffer_write_int(framebuffer_state.cursor_y, framebuffer_state.cursor_x, entry.filesize, White, Black);
+            kernel_puts("\n", White, Black);
+
+            // time_t time;
+
+            // to_time_t(entry.create_date, entry.create_time, &time);
+            // kernel_puts("Created: ", White, Black);
+            // print_time_t(&time);
+            // kernel_puts("\n", White, Black);
+
+            // to_time_t(entry.modified_date, entry.modified_time, &time);
+            // kernel_puts("Modified: ", White, Black);
+            // print_time_t(&time);
+            // kernel_puts("\n", White, Black);
+            
+            break;
 
         // Extra stuff
         case 30:

@@ -1,6 +1,7 @@
 #include "header/stdlib/string.h"
 #include "header/filesystem/fat32.h"
 #include "header/driver/disk.h"
+#include "header/driver/clock.h"
 
 const uint8_t fs_signature[BLOCK_SIZE] = {
     'C', 'o', 'u', 'r', 's', 'e', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',  ' ',
@@ -196,6 +197,9 @@ int8_t read(struct FAT32DriverRequest request){
     return 3;
 }
 
+
+
+
 /**
  * FAT32 write, write a file or folder to file system.
  *
@@ -256,6 +260,16 @@ int8_t write(struct FAT32DriverRequest request){
     table[directory_location].cluster_low = locations[0] & 0xFFFF;
     table[directory_location].cluster_high = (locations[0] >> 16) & 0xFFFF;
     table[directory_location].user_attribute = UATTR_NOT_EMPTY;
+    
+    // time_t t;
+    // get_indonesian_time(&t);
+    // uint16_t date = date_to_byte(&t);
+    // uint16_t time = time_to_byte(&t);
+
+    // table[directory_location].create_date = date;
+    // table[directory_location].create_time = time;
+    // table[directory_location].modified_date = date;
+    // table[directory_location].modified_time = time;
 
 
     // === Create whether file or folder ===
@@ -457,3 +471,19 @@ int8_t move(struct FAT32DriverRequest request_src, struct FAT32DriverRequest req
     }
     return 2; // not found
 }
+
+// return 0 success - 1 not found
+int8_t read_metadata(struct FAT32DriverRequest request){
+    read_clusters(&fat32driver_state.dir_table_buf, request.parent_cluster_number, 1);
+    struct FAT32DirectoryEntry *table = fat32driver_state.dir_table_buf.table;
+    
+    for (uint8_t i = 0; i < DIRECTORY_TABLE_SIZE; i++) {
+        if (memcmp(table[i].name, request.name, 8) == 0) {
+            memcpy(request.buf, &table[i], sizeof(struct FAT32DirectoryEntry));
+            return 0; // success
+        }
+    }
+    return 1; // not found
+}
+
+
