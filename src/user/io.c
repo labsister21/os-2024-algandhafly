@@ -146,6 +146,9 @@ void get_line(char *buf) {
             } else if (temp[i] == '\n') {
                 buf[length_buf] = '\n'; 
             } else {
+                for (int j = length_buf; j > t; j--) {
+                    buf[j] = buf[j - 1];
+                }
                 buf[t] = temp[i];
                 t++;
                 length_buf++;
