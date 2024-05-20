@@ -26,7 +26,6 @@ uint8_t get_dir(char folder_name[DIR_NAME_LENGTH], uint16_t parent_cluster_numbe
     return error_code;
 }
 
-
 void get_dir_by_cluster(uint16_t current_cluster_number, struct FAT32DirectoryTable* dir_table) {
     struct FAT32DriverRequest request;
     request.parent_cluster_number = current_cluster_number;

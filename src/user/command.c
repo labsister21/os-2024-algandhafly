@@ -330,7 +330,8 @@ int handle_cd(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStac
 
 void handle_ls(struct DirectoryStack* dir_stack) {
     struct FAT32DirectoryTable dir_table;
-    get_dir(last_dir(dir_stack), prev_parent_cluster(dir_stack), &dir_table);
+    // get_dir_child(last_dir(dir_stack), prev_parent_cluster(dir_stack), &dir_table);
+    get_dir_by_cluster(current_parent_cluster(dir_stack), &dir_table);
 
     bool has_any = false;
     puts("\n");
@@ -659,7 +660,8 @@ void recursive_find(struct FAT32DirectoryTable* dir_table, char file_name[MAX_AR
 
         if(is_directory(&dir_table->table[i])) {
             struct FAT32DirectoryTable children;
-            get_dir(dir_table->table[i].name, cluster_number, &children);
+            // get_dir(dir_table->table[i].name, cluster_number, &children);
+            get_dir_by_cluster(dir_table->table[i].cluster_low, &children);
             recursive_find(&children, file_name, dir_table->table[i].cluster_low, dir_stack);
         }
 

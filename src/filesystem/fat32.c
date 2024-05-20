@@ -159,6 +159,22 @@ int8_t read_directory(struct FAT32DriverRequest request){
     return 2; // not found
 }
 
+int8_t read_directory_child(struct FAT32DriverRequest request){
+    read_clusters(&fat32driver_state.dir_table_buf, request.parent_cluster_number, 1);
+    struct FAT32DirectoryEntry *table = fat32driver_state.dir_table_buf.table;
+    
+    for (uint8_t i = 2; i < DIRECTORY_TABLE_SIZE; i++) {
+        if (memcmp(table[i].name, request.name, 8) == 0) {
+            if (table[i].attribute == ATTR_SUBDIRECTORY) {
+                read_clusters(request.buf, table[i].cluster_low, 1);
+                return 0; // success
+            }
+            else return 1; // not a folder
+        }
+    }
+    return 2; // not found
+}
+
 
 /**
  * FAT32 read, read a file from file system.
