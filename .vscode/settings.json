@@ -35,6 +35,7 @@
         "time.h": "c",
         "scheduler.h": "c",
         "process.h": "c",
-        "compare": "c"
+        "compare": "c",
+        "speaker.h": "c"
     },
 }

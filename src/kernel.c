@@ -17,7 +17,6 @@
 #include "header/scheduler/scheduler.h"
 #include "header/driver/speaker.h"
 
-
 char frame[WIDTH][HEIGHT];
 
 void handleEnterKey(int *row, int *col) {
@@ -29,6 +28,7 @@ void handleEnterKey(int *row, int *col) {
 void kernel_setup(void) {
 
     drawWelcomeScreen();
+    play_boot_music();
     kernel_puts("Welcome!!!\n", 15, 0);
     int x = 500000000; while(x--);
     
