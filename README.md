@@ -10,11 +10,34 @@
 # Me when the context switch finally works
 ![😭](erased.gif)
 
+# 💡 Features
+| Shell Command |  Description    |
+| ------------- | --------------- |
+| clear         | Clear the screen   |
+| help          | Show commands                |
+| cd <path>     | Change directory                |
+| ls            | Show all files and folder in Current Working Directory                |
+| mkdir <path>  | Make folder                |
+| cat <path>    | Write content of file to screen                |
+| cp <source path> <destination path>           | Copy file to destination                |
+| rm <path>           | show help                | remove file/folder
+| mv <source path> <destination path>           | Move file/folder to destination                |
+| find <file/folder name>         | Find all folder/file name                |
+| echo "<content>" > <path>         | Write to file                |
+| ps            | Show all running process                |
+| kill <pid>         | Kill process with pid                |
+
+| exec <path>        | Execute inserted user program. Currently `shell`, `custom`, `music`|
+
 
 # 📖 How to run
 Use WSL and make sure make is installed. To automatically build the .iso and run the OS with Qemu emulator, run
 ```
 make
+```
+To use preinserted storage data, create the file with name `sample-image.bin` in the bin folder. For example you can use [sample-image.bin](https://github.com/labsister21/Kit-OS-2024/blob/main/ch1/4%20-%20Filesystem/sample-image.bin) in the kit. Then run
+```
+make sample
 ```
 To only build the .iso file, run
 ```
