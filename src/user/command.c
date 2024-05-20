@@ -770,7 +770,11 @@ void handle_exec(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryS
 
 
 void handle_ps(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
-    systemCall(12, 0, 0, 0);
+    char ps_content[200];
+    systemCall(12, ps_content, 0, 0);
+
+    puts("\n");
+    puts(ps_content);
 }
 
 // negative not allowed

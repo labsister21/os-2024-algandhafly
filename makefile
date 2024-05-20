@@ -24,7 +24,7 @@ SAMPLE_DISK_NAME = sample-image
 COPY_SUFFIX = -copy
 
 # @qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso -no-reboot -d cpu_reset,int
-all: clean iso disk insert-shell insert-clock insert-custom insert-music
+all: clean iso disk insert-shell insert-clock insert-custom insert-music user-shell
 	@qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso -audiodev pa,id=speaker -machine pcspk-audiodev=speaker
 
 sample: clean iso copysampledisk insert-shell insert-clock insert-custom insert-music
