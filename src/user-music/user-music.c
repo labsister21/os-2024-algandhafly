@@ -55,7 +55,7 @@ int main(void) {
 543,// c?
 659,// e
     };
-    uint8_t sample_delay_ms = 100;
+    uint8_t sample_delay_ms = 50;
     uint8_t length = 32;
     
     play_music(bad_apple, sample_delay_ms, length);
