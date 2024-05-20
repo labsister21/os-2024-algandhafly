@@ -28,6 +28,11 @@ void handleEnterKey(int *row, int *col) {
 
 void kernel_setup(void) {
 
+    drawWelcomeScreen();
+    kernel_puts("Welcome!!!\n", 15, 0);
+    int x = 500000000; while(x--);
+    
+
     load_gdt(&_gdt_gdtr);
     pic_remap();
     initialize_idt();
@@ -54,8 +59,6 @@ void kernel_setup(void) {
     paging_use_page_directory(get_current_running_process()->context.page_dir);
     activate_timer_interrupt();
     scheduler_init();
-
-    
 
     
     while (true);
