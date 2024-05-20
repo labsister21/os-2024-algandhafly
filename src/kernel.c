@@ -29,7 +29,8 @@ void handleEnterKey(int *row, int *col) {
 void kernel_setup(void) {
 
     drawWelcomeScreen();
-    kernel_puts("Welcome!!!\n", 15, 0);
+    kernel_puts("Welcome!!!", 15, 0);
+    framebuffer_state.cursor_x = 0;
     int x = 500000000; while(x--);
     
 
