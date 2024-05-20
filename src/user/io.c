@@ -27,15 +27,18 @@ void put_char_color(char c, uint8_t fg, uint8_t bg){
 
     systemCall(20, (uint32_t ) &current_cursor, 0, 0);
     if (current_cursor.cursor_y >= 22) {
-        char *info = "Press enter to continue...\n";
-        systemCall(5, (uint32_t) info, 15, 0);
-        while (c != '\n') {
-            systemCall(6, (uint32_t) &c, 0, 0);
+        char *info = "Press enter to continue...\n\0";
+        uint16_t idx = 0;
+        while(info[idx] != '\0') systemCall(5, (uint32_t)info[idx++], Color_Yellow, 0);
+        
+        char key = '\0';
+        while (key != '\n') {
+            systemCall(6, (uint32_t) &key, 0, 0);
         }
         systemCall(8, 0, 0, 0);
         systemCall(9, 0, 0, 0);
     }
-    systemCall(5, (uint32_t) &c, fg, bg);
+    systemCall(5, (uint32_t) c, fg, bg);
 }
 
 void puts_clamped(char *str, uint8_t max_length) {

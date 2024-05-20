@@ -94,7 +94,8 @@ void syscall(struct InterruptFrame frame) {
             read_clusters(request->buf, request->parent_cluster_number, 1);
             break;
         case 5:
-            kernel_puts((char*)frame.cpu.general.ebx, frame.cpu.general.ecx, frame.cpu.general.edx);
+            // kernel_puts((char*)frame.cpu.general.ebx, frame.cpu.general.ecx, frame.cpu.general.edx);
+            kernel_put_char((char)frame.cpu.general.ebx, frame.cpu.general.ecx, frame.cpu.general.edx);
             break;
         case 6:
             get_command_buffer((char*)frame.cpu.general.ebx);
@@ -120,24 +121,54 @@ void syscall(struct InterruptFrame frame) {
             *((int8_t*) frame.cpu.general.ecx) = 0;
             break;
         case 12: // ps
-            kernel_puts("\n", 15, 0);
+            char ps_content[200];
+            // kernel_puts("\n", 15, 0);
+            uint16_t idx = 0;
             for (int i = 0; i < PROCESS_COUNT_MAX; i++) {
                 if (!_process_list[i].metadata.state == RUNNING) continue;
                 char x[2];
                 x[0] = '0' + i;
                 x[1] = '\0';
-                kernel_puts(x, 15, 0);
-                kernel_puts(" ", 15, 0);
-                kernel_puts(_process_list[i].metadata.name, 15, 0); //process name
+
+                // kernel_puts(x, 15, 0);
+                ps_content[idx++] = x[0];
+                ps_content[idx++] = ' ';
+                
+                // kernel_puts(" ", 15, 0);
+                ps_content[idx++] = ' ';
+                
+                // kernel_puts(_process_list[i].metadata.name, 15, 0); //process name
+                for(uint8_t j = 0; j < 8; j++){
+                    if(_process_list[i].metadata.name[j] == '\0'){
+                        ps_content[idx++] = '\n';
+                        break;
+                    }
+                    ps_content[idx++] = _process_list[i].metadata.name[j];
+                }
                 
                 if (_process_list[i].metadata.ext[0] == '\0') {
-                    kernel_puts("\n", 15, 0);
+                    // kernel_puts("\n", 15, 0);
+                    ps_content[idx++] = '\n';
                     continue;
                 }
-                kernel_puts(".", 15, 0);
-                kernel_puts(_process_list[i].metadata.ext, 15, 0);
-                kernel_puts("\n", 15, 0);
+                // kernel_puts(".", 15, 0);
+                ps_content[idx++] = '.';
+
+                // kernel_puts(_process_list[i].metadata.ext, 15, 0);
+                for(uint8_t j = 0; j < 3; j++){
+                    if(_process_list[i].metadata.ext[j] == '\0'){
+                        ps_content[idx++] = '\n';
+                        break;
+                    }
+                    ps_content[idx++] = _process_list[i].metadata.ext[j];
+                }
+
+                // kernel_puts("\n", 15, 0);
+                ps_content[idx++] = '\n';
             }
+            ps_content[idx++] = '\0';
+            memcpy(frame.cpu.general.ebx, ps_content, 200);
+
             break;
         case 13: // kill
             process_omae_wa_mou_shindeiru(frame.cpu.general.ebx);

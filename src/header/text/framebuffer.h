@@ -108,4 +108,6 @@ void decrement(struct FramebufferState *framebuffer_state);
 
 void clear_bottom_screen();
 
+void kernel_put_char(char c, uint8_t fg, uint8_t bg);
+
 #endif

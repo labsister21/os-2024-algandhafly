@@ -125,6 +125,18 @@ void kernel_puts(char *str, uint8_t fg, uint8_t bg)
     framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
 }
 
+void kernel_put_char(char c, uint8_t fg, uint8_t bg){
+    if(c == '\n'){
+        framebuffer_state.cursor_x = 0;
+        framebuffer_state.cursor_y++;
+        framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
+        return;
+    }
+    framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x, c, fg, bg);
+    increment(&framebuffer_state);
+    framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
+}
+
 void kernel_puts_with_overflow_handling(char *str, uint8_t fg, uint8_t bg)
 {
     size_t i = 0;
