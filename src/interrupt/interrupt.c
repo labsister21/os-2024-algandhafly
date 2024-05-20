@@ -140,7 +140,6 @@ void syscall(struct InterruptFrame frame) {
                 // kernel_puts(_process_list[i].metadata.name, 15, 0); //process name
                 for(uint8_t j = 0; j < 8; j++){
                     if(_process_list[i].metadata.name[j] == '\0'){
-                        ps_content[idx++] = '\n';
                         break;
                     }
                     ps_content[idx++] = _process_list[i].metadata.name[j];
@@ -157,7 +156,6 @@ void syscall(struct InterruptFrame frame) {
                 // kernel_puts(_process_list[i].metadata.ext, 15, 0);
                 for(uint8_t j = 0; j < 3; j++){
                     if(_process_list[i].metadata.ext[j] == '\0'){
-                        ps_content[idx++] = '\n';
                         break;
                     }
                     ps_content[idx++] = _process_list[i].metadata.ext[j];
@@ -214,22 +212,22 @@ void syscall(struct InterruptFrame frame) {
             }
 
 
-            if(entry.attribute == ATTR_SUBDIRECTORY) {
-                kernel_puts("\n", White, Black);
+            // if(entry.attribute == ATTR_SUBDIRECTORY) {
+            //     kernel_puts("\n", White, Black);
 
-                kernel_puts("Folder: ", White, Black);
-                kernel_puts(entry.name, White, Black);
-                kernel_puts("\n", White, Black);
-            } else {
-                kernel_puts("\n", White, Black);
-                kernel_puts("File: ", White, Black);
-                kernel_puts(entry.name, White, Black);
-                kernel_puts("\n", White, Black);
-            }
+            //     kernel_puts("Folder: ", White, Black);
+            //     kernel_puts(entry.name, White, Black);
+            //     kernel_puts("\n", White, Black);
+            // } else {
+            //     kernel_puts("\n", White, Black);
+            //     kernel_puts("File: ", White, Black);
+            //     kernel_puts(entry.name, White, Black);
+            //     kernel_puts("\n", White, Black);
+            // }
 
-            kernel_puts("Size: ", White, Black);
-            framebuffer_write_int(framebuffer_state.cursor_y, framebuffer_state.cursor_x, entry.filesize, White, Black);
-            kernel_puts("\n", White, Black);
+            // kernel_puts("Size: ", White, Black);
+            // framebuffer_write_int(framebuffer_state.cursor_y, framebuffer_state.cursor_x, entry.filesize, White, Black);
+            // kernel_puts("\n", White, Black);
 
             // time_t time;
 
