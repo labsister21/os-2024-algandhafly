@@ -126,12 +126,14 @@ void syscall(struct InterruptFrame frame) {
             uint16_t idx = 0;
             for (int i = 0; i < PROCESS_COUNT_MAX; i++) {
                 if (!_process_list[i].metadata.state == RUNNING) continue;
-                char x[2];
-                x[0] = '0' + i;
-                x[1] = '\0';
+                char x[3];
+                x[0] = i < 10 ? '0' : '1';
+                x[1] = '0' + i%10;
+                x[2] = '\0';
 
                 // kernel_puts(x, 15, 0);
                 ps_content[idx++] = x[0];
+                ps_content[idx++] = x[1];
                 ps_content[idx++] = ' ';
                 
                 // kernel_puts(" ", 15, 0);
