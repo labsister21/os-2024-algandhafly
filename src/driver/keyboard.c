@@ -3,12 +3,15 @@
 #include "header/cpu/portio.h"
 #include "header/stdlib/string.h"
 
+#define LEFT_ARROW 5
+#define RIGHT_ARROW 6
+
 const char keyboard_scancode_1_to_ascii_map[256] = {
     0, 0x1B, '1', '2', '3', '4', '5', '6',  '7', '8', '9',  '0',  '-', '=', '\b', '\t',  // 0-15
     'q',  'w', 'e', 'r', 't', 'y', 'u', 'i',  'o', 'p', '[',  ']', '\n',   0,  'a',  's',  // 16-31
     'd',  'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`',   0, '\\',  'z', 'x',  'c',  'v',  // 32-47
     'b',  'n', 'm', ',', '.', '/',   0, '*',    0, ' ',   0,    0,    0,   0,    0,    0,  // 48-63
-    0,    0,   0,   0,   0,   0,   0,   0,    0,   0, '-',    0,    0,   0,  '+',    0,  // 64-79
+    0,    0,   0,   0,   0,   0,   0,   0,    0,   0, '-',    LEFT_ARROW,    0,   RIGHT_ARROW,  '+',    0,  // 64-79
     0,    0,   0,   0,   0,   0,   0,   0,    0,   0,   0,    0,    0,   0,    0,    0,  // 80-95
     0,    0,   0,   0,   0,   0,   0,   0,    0,   0,   0,    0,    0,   0,    0,    0,  // 96-111
     0,    0,   0,   0,   0,   0,   0,   0,    0,   0,   0,    0,    0,   0,    0,    0,  // 112-127
@@ -59,8 +62,6 @@ void get_keyboard_buffer(char *buf){
  * Cursor
 */
 void cursor_move_left() {
-    if (keyboard_state.command_state.cursor_at == 0) return;
-
     if (framebuffer_state.cursor_x == 0 && framebuffer_state.cursor_y == 0) return;
 
     if (framebuffer_state.cursor_x == 0 && framebuffer_state.cursor_y > 0) {
@@ -69,14 +70,9 @@ void cursor_move_left() {
     } else {
         framebuffer_state.cursor_x--;
     }
-
-    keyboard_state.command_state.cursor_at--;
-    framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
 }
 
 void cursor_move_right() {
-    if (keyboard_state.command_state.cursor_at == keyboard_state.command_state.command_length) return;
-
     if (framebuffer_state.cursor_x == 79 && framebuffer_state.cursor_y == 24) return;
 
     if (framebuffer_state.cursor_x == 79 && framebuffer_state.cursor_y < 24) {
@@ -86,8 +82,6 @@ void cursor_move_right() {
         framebuffer_state.cursor_x++;
     }
 
-    keyboard_state.command_state.cursor_at++;
-    framebuffer_set_cursor(framebuffer_state.cursor_y, framebuffer_state.cursor_x);
 }
 
 void remove_at_before_cursor() {
@@ -113,7 +107,7 @@ void insert_at_cursor() {
     keyboard_state.command_state.command_length++;
     keyboard_state.command_state.command[keyboard_state.command_state.cursor_at] = keyboard_state.keyboard_buffer;
 
-    if (keyboard_state.keyboard_buffer == '\n') {
+    if (keyboard_state.keyboard_buffer == '\n' || keyboard_state.keyboard_buffer == '\b') {
         return;
     }
     increment(&framebuffer_state);
@@ -130,7 +124,7 @@ void insert_at_cursor() {
  */
 void keyboard_isr(void){
     uint8_t scan_code = in(KEYBOARD_DATA_PORT);
-    framebuffer_write_int(24, 0, scan_code, White, Black);
+
 
 
     // handle shift pressing
@@ -158,20 +152,23 @@ void keyboard_isr(void){
     }
 
     // Handle left and right arrow
+    keyboard_state.keyboard_buffer = keyboard_scancode_1_to_ascii_map[scan_code];
     if (scan_code == 0x4B) {
-        // cursor_move_left();
+        insert_at_cursor();
         pic_ack(IRQ_KEYBOARD);
         return;
     } else if (scan_code == 0x4D) {
-        // cursor_move_right();
+        insert_at_cursor();
         pic_ack(IRQ_KEYBOARD);
         return;
     }
 
-    if (keyboard_scancode_1_to_ascii_map[scan_code] == 0) {
+    if (keyboard_state.keyboard_buffer == 0) {
         pic_ack(IRQ_KEYBOARD);
         return;
     }
+
+
 
     if(keyboard_state.keyboard_input_on){
         int key_down_code = scan_code % (0b10000000);
@@ -196,19 +193,18 @@ void keyboard_isr(void){
         }
 
         if (keyboard_state.keyboard_buffer == '\b') {
-            if (keyboard_state.command_state.command_length > 0) {
-                remove_at_before_cursor();
-            } else {
-                pic_ack(IRQ_KEYBOARD);
-                return;
-            }
+            insert_at_cursor();
         } else if (keyboard_state.command_state.command_length < MAX_COMMAND_LENGTH) {
             insert_at_cursor();
         }
 
-        update_text(c);
     }
     pic_ack(IRQ_KEYBOARD);
+}
+
+void get_current_cursor(struct FramebufferState *state) {
+    state->cursor_x = framebuffer_state.cursor_x;
+    state->cursor_y = framebuffer_state.cursor_y;
 }
 
 void update_text(char c) {

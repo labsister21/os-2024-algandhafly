@@ -587,8 +587,49 @@ void handle_cp(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
 }
 
 void handle_mv(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
-    handle_cp(args, dir_stack);
-    handle_rm(args, dir_stack);
+    char* src = args[1];
+    char* dest = args[2];
+
+    if(src[0] == '\0'){
+        puts("\nPlease provide source file name\n");
+        return;
+    }
+    if(dest[0] == '\0'){
+        puts("\nPlease provide destination file name\n");
+        return;
+    }
+
+    struct DirectoryStack src_path = {.length = 0};
+    uint8_t error_code = path_to_dir_stack_from_cwd(src, dir_stack, &src_path);
+    if(error_code != 0) {
+        puts("\nInvalid source path\n");
+        return;
+    }
+    struct DirectoryStack dest_path = {.length = 0};
+    error_code = path_to_dir_stack_from_cwd(dest, dir_stack, &dest_path);
+    if(error_code == 1) {
+        puts("\nInvalid destination path\n");
+        return;
+    }
+
+    uint16_t parent_cluster_containing_src_file;
+    if(src_path.length == 1)parent_cluster_containing_src_file = current_parent_cluster(dir_stack);
+    else parent_cluster_containing_src_file = peek_second_top(&src_path)->cluster_low;
+
+    uint16_t parent_cluster_containing_dest_file;
+    if(dest_path.length == 1)parent_cluster_containing_dest_file = current_parent_cluster(dir_stack);
+    else parent_cluster_containing_dest_file = peek_second_top(&dest_path)->cluster_low;
+
+    struct FAT32DirectoryEntry source_entry;
+    memcpy(source_entry.name, peek_top(&src_path)->name, DIR_NAME_LENGTH);
+    memcpy(source_entry.ext, peek_top(&src_path)->ext, DIR_EXT_LENGTH);
+
+    struct FAT32DirectoryEntry dest_entry;
+    memcpy(dest_entry.name, peek_top(&dest_path)->name, DIR_NAME_LENGTH);
+    memcpy(dest_entry.ext, peek_top(&dest_path)->ext, DIR_EXT_LENGTH);
+
+
+    move_file_or_folder(&source_entry, &dest_entry, parent_cluster_containing_src_file, parent_cluster_containing_dest_file);
 }
 
 
@@ -736,6 +777,7 @@ void handle_ps(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectorySta
 // 0 success, 1 not a number, 2 negative number
 uint8_t str_to_positive_int(char* str, uint64_t* num) {
     if(str[0] == '-') return 2;
+    if(str[0] == '\0') return 1;
     *num = 0; 
     for (int i = 0; str[i] != '\0'; i++) { 
         if(str[i] < 48 or str[i] > 57) return 1; // not a number
@@ -757,6 +799,45 @@ void handle_kill(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryS
     systemCall(13, pid, 0, 0);
 }
 
+void handle_sound(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH]) {
+    uint64_t f;
+    uint8_t error_code = str_to_positive_int(args[1], (uint64_t*)&f);
+    if(error_code == 1) {
+        puts("\nPlease provide a frequency\n");
+        return;
+    }
+    if(error_code == 2) {
+        puts("\nPlease provide non negative number for frequency\n");
+        return;
+    }
+
+    set_sound_frequency(f);
+}
+
+void handle_info(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStack* dir_stack){
+    char* path = args[1];
+    struct DirectoryStack file_path;
+    uint8_t error_code = path_to_dir_stack_from_cwd(path, dir_stack, &file_path);
+    if(error_code == 1) {
+        puts("\nInvalid path\n"); return;
+    }
+    if(error_code == 2) {
+        puts("\nFile don't exist\n"); return;
+    }
+
+    uint16_t parent_cluster_containing_file;
+    if(file_path.length == 1)parent_cluster_containing_file = current_parent_cluster(dir_stack);
+    else parent_cluster_containing_file = peek_second_top(&file_path)->cluster_low;
+
+    struct FAT32DirectoryEntry entry;
+    memcpy(entry.name, peek_top(&file_path)->name, DIR_NAME_LENGTH);
+    memcpy(entry.ext, peek_top(&file_path)->ext, DIR_EXT_LENGTH);
+
+    error_code = info_file(&entry, parent_cluster_containing_file);
+    if(error_code == 1) {
+        puts("\nFile or folder not found");
+    }
+}
 
 
 const char clear[6] = "clear\0";
@@ -774,6 +855,10 @@ const char echo[5] = "echo\0"; // echo - can be used to write to file
 const char exec[5] = "exec\0";
 const char ps[3] = "ps\0";
 const char kill[5] = "kill\0";
+
+// Extra stuff
+const char sound[6] = "sound\0";
+const char info[5] = "info\0";
 
 void command(char *buf, struct DirectoryStack* dir_stack) {
     char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH];
@@ -809,7 +894,17 @@ void command(char *buf, struct DirectoryStack* dir_stack) {
         handle_kill(args, dir_stack);
     } else if (strcmp(args[0], help) == 0) {
         help_command();
-    } else if(buf[0] == '\0'){
+    }  else if (strcmp(args[0], info) == 0) {
+        handle_info(args, dir_stack);
+    } 
+    
+    // Extra stuff
+    else if (strcmp(args[0], sound) == 0) {
+        handle_sound(args);
+    } 
+    
+    
+    else if(buf[0] == '\0'){
         puts("\n");
         return; // prevent new line
     } else {

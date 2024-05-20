@@ -31,6 +31,9 @@ uint8_t read_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster, ch
 uint8_t delete_file_or_dir(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster);
 uint8_t write_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster, char* buf);
 
+uint8_t move_file_or_folder(struct FAT32DirectoryEntry *entry_source, struct FAT32DirectoryEntry *entry_dest, uint16_t source_parent_cluster, uint16_t target_parent_cluster);
+
+uint8_t info_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster);
 // Codes:
 // 0: Read
 // 1: Read Directory

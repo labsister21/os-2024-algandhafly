@@ -24,14 +24,14 @@ SAMPLE_DISK_NAME = sample-image
 COPY_SUFFIX = -copy
 
 # @qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso -no-reboot -d cpu_reset,int
-all: clean iso disk insert-shell insert-clock insert-custom
-	@qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso
+all: clean iso disk insert-shell insert-clock insert-custom insert-music
+	@qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso -audiodev pa,id=speaker -machine pcspk-audiodev=speaker
 
-sample: clean iso copysampledisk insert-shell insert-clock insert-custom
+sample: clean iso copysampledisk insert-shell insert-clock insert-custom insert-music
 	@qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso
 
 run: 
-	@qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso
+	@qemu-system-i386 -s -drive file=$(OUTPUT_FOLDER)/$(DISK_NAME).bin,format=raw,if=ide,index=0,media=disk -cdrom $(OUTPUT_FOLDER)/$(ISO_NAME).iso -audiodev pa,id=speaker -machine pcspk-audiodev=speaker
 
 disk:
 	@qemu-img create -f raw $(OUTPUT_FOLDER)/$(DISK_NAME).bin 4M
@@ -64,7 +64,7 @@ $(OUTPUT_FOLDER)/%.o: %.s
 kernel: $(OUTPUT_FOLDER)/$(OBJ_KERNEL) $(OBJS)
 	@echo Linking object files...
 	# Filter out the specific file
-	$(eval FILTERED_OBJS := $(filter-out $(wildcard $(OUTPUT_FOLDER)/user/*.o) $(wildcard $(OUTPUT_FOLDER)/user-shell/*.o) $(wildcard $(OUTPUT_FOLDER)/user-clock/*.o) $(wildcard $(OUTPUT_FOLDER)/user-custom/*.o), $(OBJS)))
+	$(eval FILTERED_OBJS := $(filter-out $(wildcard $(OUTPUT_FOLDER)/user/*.o) $(wildcard $(OUTPUT_FOLDER)/user-*/*.o), $(OBJS)))
 	$(LIN) $(LFLAGS) -o $(OUTPUT_FOLDER)/kernel $(OUTPUT_FOLDER)/$(OBJ_KERNEL) $(FILTERED_OBJS)
 	@rm -f *.o
 	@echo Linking object files finished!
@@ -204,4 +204,35 @@ insert-custom: inserter user-custom $(OUTPUT_FOLDER)/$(DISK_NAME).bin
 	@echo Inserting custom into root directory...
 	@cd $(OUTPUT_FOLDER); ./inserter custom 2 $(DISK_NAME).bin
 	@echo Inserting custom into root directory finished!
+	@echo
+
+
+
+
+# USER_MUSIC
+USER_MUSIC_MAIN = user-music
+USER_MUSIC_MAIN_SRC = $(USER_MUSIC_MAIN).c
+USER_MUSIC_MAIN_OBJ = $(USER_MUSIC_MAIN_SRC:.c=.o)
+
+
+user-music:
+	@$(ASM) $(AFLAGS) $(SOURCE_FOLDER)/user-music/crt0.s -o crt0.o
+	$(CC) $(CFLAGS) -fno-pie -c -o $(OUTPUT_FOLDER)/user-music/${USER_MUSIC_MAIN_OBJ} $(SOURCE_FOLDER)/user-music/${USER_MUSIC_MAIN_SRC}
+
+	@$(LIN) -T $(SOURCE_FOLDER)/user-music/user-linker.ld -melf_i386 --oformat=binary \
+		crt0.o $(OUTPUT_FOLDER)/user-music/${USER_MUSIC_MAIN_OBJ} -o $(OUTPUT_FOLDER)/music
+
+	@echo Linking object music object files and generate flat binary...
+
+	@$(LIN) -T $(SOURCE_FOLDER)/user-music/user-linker.ld -melf_i386 --oformat=elf32-i386 \
+		crt0.o $(OUTPUT_FOLDER)/user-music/${USER_MUSIC_MAIN_OBJ} -o $(OUTPUT_FOLDER)/music_elf
+	@echo Linking object music object files and generate ELF32 for debugging...
+
+	@size --target=binary $(OUTPUT_FOLDER)/music
+	@rm -f *.o
+
+insert-music: inserter user-music $(OUTPUT_FOLDER)/$(DISK_NAME).bin
+	@echo Inserting music into root directory...
+	@cd $(OUTPUT_FOLDER); ./inserter music 2 $(DISK_NAME).bin
+	@echo Inserting music into root directory finished!
 	@echo

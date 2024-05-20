@@ -142,6 +142,7 @@ void syscall(struct InterruptFrame frame) {
         case 13: // kill
             process_omae_wa_mou_shindeiru(frame.cpu.general.ebx);
             clear_bottom_screen();
+            stop_sound();
             break;
         case 14: // get current time
             get_indonesian_time((time_t*)frame.cpu.general.ebx);
@@ -156,6 +157,67 @@ void syscall(struct InterruptFrame frame) {
             break;
         case 18:
             framebuffer_write(frame.cpu.general.ebx, frame.cpu.general.ecx, ' ', 0,frame.cpu.general.edx);
+            break;
+        case 19:
+            // Put
+            framebuffer_write_and_move_cursor_until_null(frame.cpu.general.ecx, 15, 0);
+            framebuffer_write(framebuffer_state.cursor_y, framebuffer_state.cursor_x, ' ', 15, 0);
+        case 20: 
+            // Get current frame buffer cursor
+            get_current_cursor((struct FramebufferState*)frame.cpu.general.ebx);
+            break;
+        case 21: // mv
+            *((uint32_t*)frame.cpu.general.edx) = move(*request, *(struct FAT32DriverRequest*)frame.cpu.general.ecx);
+            break;
+        case 22: // info
+            uint8_t error_code_info;
+            struct FAT32DirectoryEntry entry;
+            request->buf = &entry;
+
+            error_code = read_metadata(
+                *request
+            );
+            if(error_code == 1) {
+                frame.cpu.general.ecx = 1;
+                return;
+            }
+
+
+            if(entry.attribute == ATTR_SUBDIRECTORY) {
+                kernel_puts("\n", White, Black);
+
+                kernel_puts("Folder: ", White, Black);
+                kernel_puts(entry.name, White, Black);
+                kernel_puts("\n", White, Black);
+            } else {
+                kernel_puts("\n", White, Black);
+                kernel_puts("File: ", White, Black);
+                kernel_puts(entry.name, White, Black);
+                kernel_puts("\n", White, Black);
+            }
+
+            kernel_puts("Size: ", White, Black);
+            framebuffer_write_int(framebuffer_state.cursor_y, framebuffer_state.cursor_x, entry.filesize, White, Black);
+            kernel_puts("\n", White, Black);
+
+            // time_t time;
+
+            // to_time_t(entry.create_date, entry.create_time, &time);
+            // kernel_puts("Created: ", White, Black);
+            // print_time_t(&time);
+            // kernel_puts("\n", White, Black);
+
+            // to_time_t(entry.modified_date, entry.modified_time, &time);
+            // kernel_puts("Modified: ", White, Black);
+            // print_time_t(&time);
+            // kernel_puts("\n", White, Black);
+            
+            break;
+
+        // Extra stuff
+        case 30:
+            if(frame.cpu.general.ebx) play_sound(frame.cpu.general.ebx);
+            else stop_sound();
             break;
     }
 }
@@ -179,7 +241,7 @@ void main_interrupt_handler(struct InterruptFrame frame) {
 
 // Timer interrupt
 #define PIT_MAX_FREQUENCY   1193182
-#define PIT_TIMER_FREQUENCY 10
+#define PIT_TIMER_FREQUENCY 1000
 #define PIT_TIMER_COUNTER   (PIT_MAX_FREQUENCY / PIT_TIMER_FREQUENCY)
 
 #define PIT_COMMAND_REGISTER_PIO          0x43

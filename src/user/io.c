@@ -3,6 +3,10 @@
 #include <stddef.h>
 #include <string.h>
 
+#define LEFT_ARROW 5
+#define RIGHT_ARROW 6
+
+
 void puts(char *str) {
     systemCall(5, (uint32_t) str, Color_White, Color_Black);
 }
@@ -71,30 +75,96 @@ void gets(char *buf) {
     systemCall(6, (uint32_t) buf, 0, 0);
 }
 
+
+
+void increment (struct FramebufferState *framebuffer_state) {
+    framebuffer_state->cursor_x++;
+    if (framebuffer_state->cursor_x == 80) {
+        framebuffer_state->cursor_x = 0;
+        framebuffer_state->cursor_y++;
+    }
+}
+
+void decrement (struct FramebufferState *framebuffer_state) {
+    if (framebuffer_state->cursor_x == 0) {
+        framebuffer_state->cursor_x = 79;
+        framebuffer_state->cursor_y--;
+    } else {
+        framebuffer_state->cursor_x--;
+    }
+}
+
+
 void get_line(char *buf) {
     memset(buf, 0, 4000);
+    uint16_t length_buf = 0;
     uint16_t t = 0;
 
 
     char temp[100];
     memset(temp, 0, sizeof(temp));
 
+    struct {
+        uint8_t cursor_x;
+        uint8_t cursor_y;
+    } __attribute__((packed)) cursor;
+    systemCall(20, (uint32_t ) &cursor, 0, 0);
+
+    const uint8_t CURSOR_X = cursor.cursor_x;
+    const uint8_t CURSOR_Y = cursor.cursor_y;
 
     while (true) {
         systemCall(6, (uint32_t) temp, Color_White, Color_Black);
+
         if (temp[0] == '\0') {
             continue;
         }
 
+
         int i;
         for (i = 0; i < 100 && temp[i] != '\0'; i++) {
-            buf[t++] = temp[i];
+            if (temp[i] == '\b') {
+                if (t > 0) {
+                    length_buf--;
+                    t--;
+                    for (int j = t; j < length_buf; j++) {
+                        buf[j] = buf[j + 1];
+                    }
+                    buf[length_buf] = '\0';
+                    decrement(&cursor);
+                }
+            } else if (temp[i] == LEFT_ARROW) {
+                if (t > 0) {
+                    t--;
+                    decrement(&cursor);
+                }
+            } else if (temp[i] == RIGHT_ARROW) {
+                if (t < 4000 && buf[t] != '\0') {
+                    t++;
+                    increment(&cursor);
+                }
+            } else if (temp[i] == '\n') {
+                buf[length_buf] = '\n'; 
+            } else {
+                buf[t] = temp[i];
+                t++;
+                length_buf++;
+                increment(&cursor);
+            }
         }
 
+
+        
+
+        systemCall(9, CURSOR_Y, CURSOR_X, 0);
+        systemCall(19, 0, buf, 0);
+        systemCall(9, cursor.cursor_y, cursor.cursor_x, 0);
+        
+        
         temp[0] = '\0';
         for (int i = 0; i < 4000 && buf[i] != '\0'; i++) {
             if (buf[i] == '\n') {
-                buf[i] = '\0';                
+                buf[i] = '\0';               
                 return;
             }
         }

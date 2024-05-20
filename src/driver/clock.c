@@ -157,3 +157,57 @@ void refresh_screen_clock(){
 
     update_clock_in_screen(&current_time);
 }
+
+// Convert time_t to uint16_t
+// year 0 - 4095
+// month 1 - 12
+// day 1 - 31
+uint16_t date_to_byte(time_t* t){
+    uint16_t b = 0;
+    b |= t->year << 9;
+    b |= t->month << 5;
+    b |= t->day;
+    return b;
+}
+
+// hour 0 - 23
+// minute 0 - 59
+// second 0 - 59
+uint16_t time_to_byte(time_t* t){
+    uint16_t b = 0;
+    b |= t->hour << 11;
+    b |= t->minute << 5;
+    b |= t->second;
+    return b;
+}
+
+
+void to_time_t(uint16_t date, uint16_t time, time_t* t){
+    t->year = date >> 9;
+    t->month = (date >> 5) & 0xF;
+    t->day = date & 0x1F;
+
+    t->hour = time >> 11;
+    t->minute = (time >> 5) & 0x3F;
+    t->second = time & 0x1F;
+}
+
+void print_time_t(time_t* t){
+    uint32_t x = framebuffer_state.cursor_x;
+    uint32_t y = framebuffer_state.cursor_y;
+
+    framebuffer_write_int(y, x, t->year, White, Black);
+    framebuffer_write(y, x+4, '/', White, Black);
+    framebuffer_write_int(y, x+5, t->month, White, Black);
+    framebuffer_write(y, x+7, '/', White, Black);
+    framebuffer_write_int(y, x+8, t->day, White, Black);
+    framebuffer_write(y, x+10, ' ', White, Black);
+
+    framebuffer_write_int(y, x+11, t->hour, White, Black);
+    framebuffer_write(y, x+13, ':', White, Black);
+    framebuffer_write_int(y, x+14, t->minute, White, Black);
+    framebuffer_write(y, x+16, ':', White, Black);
+    framebuffer_write_int(y, x+17, t->second, White, Black);
+
+
+}

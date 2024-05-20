@@ -117,6 +117,36 @@ uint8_t write_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster, c
     return error_code;
 }
 
+uint8_t move_file_or_folder(struct FAT32DirectoryEntry *entry_source, struct FAT32DirectoryEntry *entry_dest, uint16_t source_parent_cluster, uint16_t target_parent_cluster){
+    struct FAT32DriverRequest request_source = {
+        .parent_cluster_number = source_parent_cluster,
+    };
+    memcpy(request_source.name, entry_source->name, DIR_NAME_LENGTH);
+    memcpy(request_source.ext, entry_source->ext, DIR_EXT_LENGTH);
+
+    struct FAT32DriverRequest request_dest = {
+        .parent_cluster_number = target_parent_cluster,
+    };
+    memcpy(request_dest.name, entry_dest->name, DIR_NAME_LENGTH);
+    memcpy(request_dest.ext, entry_dest->ext, DIR_EXT_LENGTH);
+
+    uint8_t error_code;
+    systemCall(21, (uint32_t )&request_source, (uint32_t )&request_dest, (uint32_t )&error_code);
+    return error_code;
+}
+
+uint8_t info_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster){
+    struct FAT32DriverRequest request = {
+        .parent_cluster_number = parent_cluster,
+    };
+    memcpy(request.name, entry->name, DIR_NAME_LENGTH);
+    memcpy(request.ext, entry->ext, DIR_EXT_LENGTH);
+
+    uint8_t error_code;
+    systemCall(22, (uint32_t )&request, (uint32_t )&error_code, 0);
+    return error_code;
+}
+
 
 // exec
 uint8_t execute_file(struct FAT32DirectoryEntry *entry, uint16_t parent_cluster){
@@ -154,3 +184,12 @@ time_t get_current_time(){
     return current_time;
 }
 
+
+
+
+
+
+void set_sound_frequency(uint32_t frequency){
+    puts("\n");
+    systemCall(30, frequency, 0, 0);
+}
