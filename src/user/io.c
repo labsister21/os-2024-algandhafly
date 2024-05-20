@@ -8,13 +8,33 @@
 
 
 void puts(char *str) {
-    systemCall(5, (uint32_t) str, Color_White, Color_Black);
+    puts_color(str, 15, 0);
 }
 void puts_color(char *str, uint8_t fg, uint8_t bg) {
-    systemCall(5, (uint32_t) str, fg, bg);
+    int i = 0;
+    while (str[i] != '\0') {
+        put_char_color(str[i], fg, bg);
+        i++;
+    }
 }
 
 void put_char_color(char c, uint8_t fg, uint8_t bg){
+    
+    struct {
+        uint8_t cursor_x;
+        uint8_t cursor_y;
+    } __attribute__((packed)) current_cursor;
+
+    systemCall(20, (uint32_t ) &current_cursor, 0, 0);
+    if (current_cursor.cursor_y >= 22) {
+        char *info = "Press enter to continue...\n";
+        systemCall(5, (uint32_t) info, 15, 0);
+        while (c != '\n') {
+            systemCall(6, (uint32_t) &c, 0, 0);
+        }
+        systemCall(8, 0, 0, 0);
+        systemCall(9, 0, 0, 0);
+    }
     systemCall(5, (uint32_t) &c, fg, bg);
 }
 
@@ -68,7 +88,7 @@ void put_int(int num) {
 }
 
 void put_char(char c) {
-    systemCall(5, (uint32_t) &c, 0, 0);
+    put_char_color(c, 15, 0);
 }
 
 void gets(char *buf) {

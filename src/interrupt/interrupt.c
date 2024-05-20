@@ -94,7 +94,7 @@ void syscall(struct InterruptFrame frame) {
             read_clusters(request->buf, request->parent_cluster_number, 1);
             break;
         case 5:
-            kernel_puts_with_overflow_handling((char*)frame.cpu.general.ebx, frame.cpu.general.ecx, frame.cpu.general.edx);
+            kernel_puts((char*)frame.cpu.general.ebx, frame.cpu.general.ecx, frame.cpu.general.edx);
             break;
         case 6:
             get_command_buffer((char*)frame.cpu.general.ebx);
