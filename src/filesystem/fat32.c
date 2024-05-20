@@ -147,31 +147,20 @@ int8_t read_directory(struct FAT32DriverRequest request){
     read_clusters(&fat32driver_state.dir_table_buf, request.parent_cluster_number, 1);
     struct FAT32DirectoryEntry *table = fat32driver_state.dir_table_buf.table;
     
+    uint8_t error_code = 0;
     for (uint8_t i = 0; i < DIRECTORY_TABLE_SIZE; i++) {
         if (memcmp(table[i].name, request.name, 8) == 0) {
             if (table[i].attribute == ATTR_SUBDIRECTORY) {
                 read_clusters(request.buf, table[i].cluster_low, 1);
                 return 0; // success
             }
-            else return 1; // not a folder
-        }
-    }
-    return 2; // not found
-}
-
-int8_t read_directory_child(struct FAT32DriverRequest request){
-    read_clusters(&fat32driver_state.dir_table_buf, request.parent_cluster_number, 1);
-    struct FAT32DirectoryEntry *table = fat32driver_state.dir_table_buf.table;
-    
-    for (uint8_t i = 2; i < DIRECTORY_TABLE_SIZE; i++) {
-        if (memcmp(table[i].name, request.name, 8) == 0) {
-            if (table[i].attribute == ATTR_SUBDIRECTORY) {
-                read_clusters(request.buf, table[i].cluster_low, 1);
-                return 0; // success
+            else {
+                error_code = 1; // not a folder
             }
-            else return 1; // not a folder
         }
     }
+    if(error_code == 1) return 1; // not a folder
+
     return 2; // not found
 }
 
@@ -186,13 +175,17 @@ int8_t read(struct FAT32DriverRequest request){
     read_clusters(&fat32driver_state.dir_table_buf, request.parent_cluster_number, 1);
     struct FAT32DirectoryEntry *table = fat32driver_state.dir_table_buf.table;
 
+    uint8_t is_not_a_file_error_code = 0;
+
     for(uint8_t i = 0; i < DIRECTORY_TABLE_SIZE;i++){
         // If name same and extension same
         if(table[i].user_attribute == UATTR_NOT_EMPTY && !memcmp(table[i].name,request.name,8) && !memcmp(table[i].ext,request.ext,3)){
             
             // Check if it's a file or not
             if(table[i].attribute == ATTR_SUBDIRECTORY){
-                return 1; // Is not a File
+                // return 1; // Is not a File
+                is_not_a_file_error_code = 1;
+                continue;
             }
             // Check if the request has enough buffer size
             if(request.buffer_size < table[i].filesize){
@@ -209,6 +202,8 @@ int8_t read(struct FAT32DriverRequest request){
             return 0;
         }
     }   
+    if(is_not_a_file_error_code == 1) return 1; // not found file but found folder along the way
+
     // Not found
     return 3;
 }

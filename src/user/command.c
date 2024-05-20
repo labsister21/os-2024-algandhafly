@@ -302,20 +302,29 @@ int handle_cd(char args[MAX_COMMAND_ARGS][MAX_ARGS_LENGTH], struct DirectoryStac
             struct FAT32DirectoryTable dir_table;
             bool found = 0;
             get_dir(last_dir(dir_stack), prev_parent_cluster(dir_stack), &dir_table);
+
+            uint8_t is_not_folder_error_code = 0;
             for(uint32_t i = 2; i < 64; i++){
                 if(is_empty(&dir_table.table[i])) continue;
                 if(memcmp(dir_table.table[i].name, &input_path.entry[j].name, DIR_NAME_LENGTH) == 0){
                     if(is_directory(&dir_table.table[i])) {
                         push_dir(dir_stack, &dir_table.table[i]);
+                        found = 1;
+                        break;
                     } else {
-                        puts("\n");
-                        puts(input_path.entry[j].name);
-                        puts(" is not a folder.");
-                        return 0;
+                        // puts("\n");
+                        // puts(input_path.entry[j].name);
+                        // puts(" is not a folder.");
+                        // return 0;
+                        is_not_folder_error_code = 1;
                     }
-                    found = 1;
-                    break;
                 }
+            }
+            if(found == 0 && is_not_folder_error_code == 1) {
+                puts("\n");
+                puts(input_path.entry[j].name);
+                puts(" is not a folder.");
+                return 1;
             }
             if (found) continue ;
             else ;
