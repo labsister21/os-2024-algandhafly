@@ -26,7 +26,6 @@
 | echo "<content>" > <path>         | Write to file                |
 | ps            | Show all running process                |
 | kill <pid>         | Kill process with pid                |
-
 | exec <path>        | Execute inserted user program. Currently `shell`, `custom`, `music`|
 
 
