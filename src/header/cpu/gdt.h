@@ -12,6 +12,13 @@
 #define GDT_KERNEL_CODE_SEGMENT_SELECTOR 0x8
 #define GDT_KERNEL_DATA_SEGMENT_SELECTOR 0x10
 
+#define GDT_USER_CODE_SEGMENT_SELECTOR 0x18
+#define GDT_USER_DATA_SEGMENT_SELECTOR 0x20
+#define GDT_TSS_SELECTOR               0x28
+
+// Set GDT_TSS_SELECTOR with proper TSS values, accessing _interrupt_tss_entry
+void gdt_install_tss(void);
+
 extern struct GDTR _gdt_gdtr;
 
 /**
@@ -19,11 +26,19 @@ extern struct GDTR _gdt_gdtr;
  * Struct defined exactly as Intel Manual Segment Descriptor definition (Figure 3-8 Segment Descriptor).
  * Manual can be downloaded at www.intel.com/content/www/us/en/architecture-and-technology/64-ia-32-architectures-software-developer-vol-3a-part-1-manual.html/ 
  *
- * @param segment_low  16-bit lower-bit segment limit
- * @param base_low     16-bit lower-bit base address
- * @param base_mid     8-bit middle-bit base address
- * @param type_bit     4-bit contain type flags
- * @param non_system   1-bit contain system
+ * @param segment_low                   16-bit lower-bit segment limit
+ * @param base_low                      16-bit lower-bit base address
+ * @param base_mid                      8-bit  middle-bit base address
+ * @param type_bit                      4-bit  contain type flags
+ * @param non_system                    1-bit  contain system
+ * @param descriptor_privilege_level    2-bit  DPL
+ * @param segment_present               1-bit  P
+ * @param segment_limit_high            4-bit  LIMIT
+ * @param available                     1-bit  AVL
+ * @param code_segment                  1-bit  L
+ * @param default_operation_size        1-bit  D/B
+ * @param granularity                   1-bit  G
+ * @param base_high                     8-bit  BASE
  */
 struct SegmentDescriptor {
     // First 32-bit
@@ -33,8 +48,17 @@ struct SegmentDescriptor {
     // Next 16-bit (Bit 32 to 47)
     uint8_t base_mid;
     uint8_t type_bit   : 4;
-    uint8_t non_system : 1;
-    // TODO : Continue SegmentDescriptor definition
+    uint8_t non_system : 1;                     // S
+    uint8_t descriptor_privilege_level : 2;     // DPL
+    uint8_t segment_present : 1;                // P
+
+    // Next 16-bit (Bit 48 to 63)
+    uint8_t segment_limit_high : 4;             // LIMIT
+    uint8_t available : 1;                      // AVL
+    uint8_t code_segment : 1;                   // L
+    uint8_t default_operation_size : 1;         // D/B
+    uint8_t granularity : 1;                    // G
+    uint8_t base_high;                          // BASE
 
 } __attribute__((packed));
 
